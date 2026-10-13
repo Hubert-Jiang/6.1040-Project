@@ -7,12 +7,13 @@ const client = createHttpClient<BeaverBazaarWireHttp>({ baseUrl: "/api" });
 interface ListingItem {
   listing: string;
   auction: string;
+  seller: string;
+  sellerAlias: string;
   item: string;
   price: number;
   increment: number;
   buyout: number | null;
   highestBidder: string | null;
-  sellerAlias: string;
 }
 
 interface NotificationItem {
@@ -63,16 +64,395 @@ function escapeHtml(str: string | null | undefined): string {
     .replace(/'/g, "&#039;");
 }
 
+// Top-level cached DOM element references queried once at initialization
+const elements = {
+  // Notifications Menu
+  btnNotifMenuToggle: document.querySelector<HTMLButtonElement>("#btn-notif-menu-toggle")!,
+  notifMenuBadge: document.querySelector<HTMLSpanElement>("#notif-menu-badge")!,
+  notificationsDropdown: document.querySelector<HTMLDivElement>("#notifications-dropdown")!,
+  notifDropdownUserTitle: document.querySelector<HTMLSpanElement>("#notif-dropdown-user-title")!,
+  notifDropdownUnreadCount: document.querySelector<HTMLSpanElement>("#notif-dropdown-unread-count")!,
+  btnRefreshNotifications: document.querySelector<HTMLButtonElement>("#btn-refresh-notifications")!,
+  notifDropdownEmpty: document.querySelector<HTMLDivElement>("#notif-dropdown-empty")!,
+  notifDropdownList: document.querySelector<HTMLDivElement>("#notif-dropdown-list")!,
+
+  // Status Banner
+  statusBanner: document.querySelector<HTMLDivElement>("#status-banner")!,
+
+  // Component 1: Auth & User Switcher
+  sessionActiveBadge: document.querySelector<HTMLSpanElement>("#session-active-badge")!,
+  currentUserBadge: document.querySelector<HTMLSpanElement>("#current-user-badge")!,
+  btnLogout: document.querySelector<HTMLButtonElement>("#btn-logout")!,
+  loginPresetButtons: document.querySelectorAll<HTMLButtonElement>("[data-login-preset]"),
+  customLoginForm: document.querySelector<HTMLFormElement>("#custom-login-form")!,
+  customUsernameInput: document.querySelector<HTMLInputElement>("#custom-username")!,
+
+  // Component 2: Profile Settings
+  profileActiveUserBadge: document.querySelector<HTMLSpanElement>("#profile-active-user-badge")!,
+  profileEmptyState: document.querySelector<HTMLDivElement>("#profile-empty-state")!,
+  profileForm: document.querySelector<HTMLFormElement>("#profile-form")!,
+  profileEditingNotice: document.querySelector<HTMLDivElement>("#profile-editing-notice")!,
+  profileNameInput: document.querySelector<HTMLInputElement>("#profile-name")!,
+  profileContactInput: document.querySelector<HTMLInputElement>("#profile-contact")!,
+  btnSaveProfile: document.querySelector<HTMLButtonElement>("#btn-save-profile")!,
+
+  // Component 3: Post Listing Form
+  listingEmptyState: document.querySelector<HTMLDivElement>("#listing-empty-state")!,
+  createListingForm: document.querySelector<HTMLFormElement>("#create-listing-form")!,
+  listingItemInput: document.querySelector<HTMLInputElement>("#listing-item")!,
+  listingStartPriceInput: document.querySelector<HTMLInputElement>("#listing-start-price")!,
+  listingIncrementInput: document.querySelector<HTMLInputElement>("#listing-increment")!,
+  listingBuyoutInput: document.querySelector<HTMLInputElement>("#listing-buyout")!,
+  btnPostListing: document.querySelector<HTMLButtonElement>("#btn-post-listing")!,
+
+  // Component 4: Private Settlement Inbox
+  inboxCountBadge: document.querySelector<HTMLSpanElement>("#inbox-count-badge")!,
+  inboxSignedOutState: document.querySelector<HTMLDivElement>("#inbox-signed-out-state")!,
+  inboxEmptyState: document.querySelector<HTMLDivElement>("#inbox-empty-state")!,
+  inboxList: document.querySelector<HTMLDivElement>("#inbox-list")!,
+
+  // Component 5: Marketplace Feed
+  feedCount: document.querySelector<HTMLSpanElement>("#feed-count")!,
+  btnRefreshFeed: document.querySelector<HTMLButtonElement>("#btn-refresh-feed")!,
+  feedEmptyState: document.querySelector<HTMLDivElement>("#feed-empty-state")!,
+  feedGrid: document.querySelector<HTMLDivElement>("#feed-grid")!,
+};
+
+/**
+ * Display alert status message to user via safe textContent
+ */
 function setStatus(message: string | null, type: "success" | "error" | "info" = "info") {
   state.statusMessage = message;
   state.statusType = type;
-  render();
+  if (!message) {
+    elements.statusBanner.hidden = true;
+    elements.statusBanner.textContent = "";
+    elements.statusBanner.className = "alert";
+  } else {
+    elements.statusBanner.hidden = false;
+    elements.statusBanner.className = `alert alert-${type}`;
+    elements.statusBanner.textContent = message;
+  }
 }
 
 /**
- * Component 2: Profile Query & Synchronization Action
- * Fetches the registered contact profile for the currently active session.
+ * Update Component 1 (Auth & User Switcher) and session-dependent visibility
  */
+function updateAuthUI() {
+  const isLoggedIn = !!state.session;
+  elements.sessionActiveBadge.hidden = !isLoggedIn;
+  elements.currentUserBadge.textContent = state.user ?? "Not Signed In";
+  elements.btnLogout.hidden = !isLoggedIn;
+
+  // Preset button active state
+  elements.loginPresetButtons.forEach((btn) => {
+    const preset = btn.getAttribute("data-login-preset");
+    btn.classList.toggle("btn-active", state.user === preset);
+  });
+
+  // Profile section toggle
+  elements.profileActiveUserBadge.hidden = !isLoggedIn;
+  elements.profileActiveUserBadge.textContent = state.user ? `Active: ${state.user}` : "";
+  elements.profileEmptyState.hidden = isLoggedIn;
+  elements.profileForm.hidden = !isLoggedIn;
+  if (state.user) {
+    elements.profileEditingNotice.innerHTML = `Currently editing contact details for <strong>${escapeHtml(state.user)}</strong>.`;
+  }
+
+  // Listing creation section toggle
+  elements.listingEmptyState.hidden = isLoggedIn;
+  elements.createListingForm.hidden = !isLoggedIn;
+
+  // Inbox section toggle
+  elements.inboxSignedOutState.hidden = isLoggedIn;
+}
+
+/**
+ * Update Component 2 (Profile Settings inputs) without overwriting active focus
+ */
+function updateProfileUI() {
+  if (document.activeElement !== elements.profileNameInput) {
+    elements.profileNameInput.value = state.name;
+  }
+  if (document.activeElement !== elements.profileContactInput) {
+    elements.profileContactInput.value = state.contact;
+  }
+}
+
+/**
+ * Update Top-Right Notifications Menu and Component 4 Settlement Inbox
+ */
+function updateNotificationsUI() {
+  const count = state.notifications.length;
+  const hasNotifs = count > 0;
+  const isLoggedIn = !!state.session;
+
+  // Top header button & badge
+  elements.notifMenuBadge.textContent = String(count);
+  elements.notifMenuBadge.classList.toggle("notif-badge-active", hasNotifs);
+  elements.btnNotifMenuToggle.classList.toggle("btn-active", state.notificationsMenuOpen);
+  elements.notificationsDropdown.hidden = !state.notificationsMenuOpen;
+
+  // Dropdown header
+  elements.notifDropdownUserTitle.textContent = `🔔 Inbox (${state.user ?? "Not Signed In"})`;
+  elements.notifDropdownUnreadCount.textContent = `${count} unread`;
+
+  // Dropdown list
+  if (!isLoggedIn) {
+    elements.notifDropdownEmpty.hidden = false;
+    elements.notifDropdownEmpty.innerHTML = `<p>Sign in to view your settlement notifications.</p>`;
+    elements.notifDropdownList.replaceChildren();
+  } else if (!hasNotifs) {
+    elements.notifDropdownEmpty.hidden = false;
+    elements.notifDropdownEmpty.innerHTML = `
+      <p>No notifications.</p>
+      <p class="form-help">When an auction closes, private contact exchange details appear here.</p>
+    `;
+    elements.notifDropdownList.replaceChildren();
+  } else {
+    elements.notifDropdownEmpty.hidden = true;
+    const items = state.notifications.map((n) => {
+      const itemEl = document.createElement("div");
+      itemEl.className = "notif-dropdown-item";
+
+      const msgEl = document.createElement("div");
+      msgEl.className = "notif-dropdown-msg";
+      msgEl.textContent = `🔔 ${n.message}`;
+
+      const footerEl = document.createElement("div");
+      footerEl.className = "notif-dropdown-footer";
+
+      const dismissBtn = document.createElement("button");
+      dismissBtn.type = "button";
+      dismissBtn.className = "btn btn-xs btn-dismiss";
+      dismissBtn.textContent = "Dismiss";
+      dismissBtn.addEventListener("click", () => dismissNotification(n.notification));
+
+      footerEl.appendChild(dismissBtn);
+      itemEl.append(msgEl, footerEl);
+      return itemEl;
+    });
+    elements.notifDropdownList.replaceChildren(...items);
+  }
+
+  // Component 4: Settlement Inbox Card
+  if (!isLoggedIn) {
+    elements.inboxCountBadge.hidden = true;
+    elements.inboxSignedOutState.hidden = false;
+    elements.inboxEmptyState.hidden = true;
+    elements.inboxList.hidden = true;
+    elements.inboxList.replaceChildren();
+  } else {
+    elements.inboxSignedOutState.hidden = true;
+    elements.inboxCountBadge.hidden = !hasNotifs;
+    elements.inboxCountBadge.textContent = `${count} New`;
+
+    if (!hasNotifs) {
+      elements.inboxEmptyState.hidden = false;
+      elements.inboxList.hidden = true;
+      elements.inboxList.replaceChildren();
+    } else {
+      elements.inboxEmptyState.hidden = true;
+      elements.inboxList.hidden = false;
+
+      const inboxCards = state.notifications.map((n) => {
+        const card = document.createElement("div");
+        card.className = "notification-item";
+
+        const msg = document.createElement("div");
+        msg.className = "notification-message";
+        msg.textContent = `🔔 ${n.message}`;
+
+        const dismissBtn = document.createElement("button");
+        dismissBtn.type = "button";
+        dismissBtn.className = "btn btn-sm btn-dismiss";
+        dismissBtn.textContent = "Dismiss";
+        dismissBtn.addEventListener("click", () => dismissNotification(n.notification));
+
+        card.append(msg, dismissBtn);
+        return card;
+      });
+      elements.inboxList.replaceChildren(...inboxCards);
+    }
+  }
+}
+
+/**
+ * Update Component 5 (Marketplace Feed) using replaceChildren
+ */
+function updateFeedUI() {
+  const count = state.listings.length;
+  elements.feedCount.textContent = String(count);
+
+  if (count === 0) {
+    elements.feedEmptyState.hidden = false;
+    elements.feedGrid.hidden = true;
+    elements.feedGrid.replaceChildren();
+    return;
+  }
+
+  elements.feedEmptyState.hidden = true;
+  elements.feedGrid.hidden = false;
+
+  const cards = state.listings.map((item) => {
+    const card = document.createElement("div");
+    card.className = "listing-card";
+
+    // Title
+    const title = document.createElement("div");
+    title.className = "listing-title";
+    title.textContent = item.item;
+
+    // Price Row
+    const priceRow = document.createElement("div");
+    priceRow.className = "listing-price-row";
+
+    const curPrice = document.createElement("span");
+    curPrice.className = "listing-current-price";
+    curPrice.textContent = `$${item.price}`;
+
+    const inc = document.createElement("span");
+    inc.className = "listing-increment";
+    inc.textContent = `(+$${item.increment} min increment)`;
+
+    priceRow.append(curPrice, inc);
+
+    if (item.buyout !== null) {
+      const buyoutSpan = document.createElement("span");
+      buyoutSpan.className = "listing-buyout";
+      buyoutSpan.textContent = `⚡ $${item.buyout} Instant Buyout`;
+      priceRow.appendChild(buyoutSpan);
+    } else {
+      const noBuyoutSpan = document.createElement("span");
+      noBuyoutSpan.className = "listing-increment";
+      noBuyoutSpan.textContent = "No buyout set";
+      priceRow.appendChild(noBuyoutSpan);
+    }
+
+    // Meta Row (Seller alias & Highest bidder)
+    const metaRow = document.createElement("div");
+    metaRow.className = "listing-meta";
+
+    const sellerPill = document.createElement("div");
+    sellerPill.className = "meta-pill";
+    sellerPill.innerHTML = `<span>Seller:</span> <span class="pseudonym-tag">${escapeHtml(item.sellerAlias)}</span> <span class="session-badge">(Masked Alias)</span>`;
+
+    const bidderPill = document.createElement("div");
+    bidderPill.className = "meta-pill";
+    if (item.highestBidder) {
+      bidderPill.innerHTML = `<span>Highest Bidder:</span> <strong class="pseudonym-tag">${escapeHtml(item.highestBidder)}</strong>`;
+    } else {
+      bidderPill.innerHTML = `<span>Highest Bidder:</span> <em>No bids placed yet</em>`;
+    }
+
+    metaRow.append(sellerPill, bidderPill);
+    card.append(title, priceRow, metaRow);
+
+    // Bidding Actions
+    if (!state.session) {
+      const notice = document.createElement("div");
+      notice.className = "form-help";
+      notice.style.marginTop = "0.5rem";
+      notice.textContent = "Sign in above to place bids or buy out this item.";
+      card.appendChild(notice);
+    } else {
+      const isSeller = state.user !== null && state.user === item.seller;
+      const minBid = item.highestBidder !== null ? item.price + item.increment : item.price;
+
+      const actions = document.createElement("div");
+      actions.className = "listing-actions";
+
+      const controls = document.createElement("div");
+      controls.className = "bid-controls";
+
+      if (isSeller) {
+        // Seller actions: Sellers manage their listing and can finalize when bids exist
+        const sellerBadge = document.createElement("span");
+        sellerBadge.className = "session-badge";
+        sellerBadge.textContent = "Your Listing";
+        controls.appendChild(sellerBadge);
+
+        if (item.highestBidder !== null) {
+          const closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "btn btn-sm btn-close-auction";
+          closeBtn.textContent = `🏁 Close & Finalize ($${item.price})`;
+          closeBtn.title = "Finalize auction early with current highest bidder (Seller action)";
+          closeBtn.addEventListener("click", () => closeAuction(item.auction, item.listing));
+          controls.appendChild(closeBtn);
+        } else {
+          const waitingNotice = document.createElement("span");
+          waitingNotice.className = "form-help";
+          waitingNotice.style.marginLeft = "0.5rem";
+          waitingNotice.textContent = "Waiting for bids";
+          controls.appendChild(waitingNotice);
+        }
+      } else {
+        // Buyer actions: Bid amount automatically defaults to minBid; min bid button removed
+        const customForm = document.createElement("form");
+        customForm.className = "custom-bid-form";
+        customForm.style.display = "inline-flex";
+        customForm.style.gap = "0.35rem";
+        customForm.style.alignItems = "center";
+
+        const numInput = document.createElement("input");
+        numInput.type = "number";
+        numInput.placeholder = "$";
+        numInput.value = String(minBid);
+        numInput.min = String(minBid);
+        numInput.step = "1";
+        numInput.required = true;
+
+        const submitBidBtn = document.createElement("button");
+        submitBidBtn.type = "submit";
+        submitBidBtn.className = "btn btn-sm";
+        submitBidBtn.textContent = "Bid";
+
+        customForm.append(numInput, submitBidBtn);
+        customForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const val = parseFloat(numInput.value);
+          if (!isNaN(val) && val >= 0) {
+            submitBid(item.auction, item.listing, val);
+          }
+        });
+        controls.appendChild(customForm);
+
+        // Instant Buyout Button
+        if (item.buyout !== null) {
+          const buyoutBtn = document.createElement("button");
+          buyoutBtn.type = "button";
+          buyoutBtn.className = "btn btn-sm btn-buyout";
+          buyoutBtn.textContent = `⚡ Buyout $${item.buyout}`;
+          buyoutBtn.addEventListener("click", () => submitBid(item.auction, item.listing, item.buyout!));
+          controls.appendChild(buyoutBtn);
+        }
+      }
+
+      actions.appendChild(controls);
+      card.appendChild(actions);
+    }
+
+    return card;
+  });
+
+  elements.feedGrid.replaceChildren(...cards);
+}
+
+/**
+ * Master UI paint function that coordinates granular updater calls
+ */
+function renderAll() {
+  updateAuthUI();
+  updateProfileUI();
+  updateNotificationsUI();
+  updateFeedUI();
+}
+
+// ==========================================
+// API Actions
+// ==========================================
+
 async function loadProfile() {
   if (!state.session) {
     state.name = "";
@@ -91,7 +471,6 @@ async function loadProfile() {
     console.warn("Could not query active profile:", err);
   }
 
-  // Fallback to preset defaults if profile has not been persisted on the server yet
   const preset = PRESETS.find((p) => p.username === state.user);
   if (preset) {
     state.name = preset.defaultName;
@@ -102,15 +481,11 @@ async function loadProfile() {
   }
 }
 
-/**
- * Component 6: Notification Retrieval Action
- * Queries incoming private settlement notifications for the active user.
- */
 async function loadNotifications(silent = false) {
   if (!state.session) {
     if (state.notifications.length > 0) {
       state.notifications = [];
-      render();
+      updateNotificationsUI();
     }
     return;
   }
@@ -124,7 +499,7 @@ async function loadNotifications(silent = false) {
         fresh.some((n, i) => n.notification !== state.notifications[i]?.notification);
       state.notifications = fresh;
       if (changed || !silent) {
-        render();
+        updateNotificationsUI();
       }
     }
   } catch (err) {
@@ -132,9 +507,6 @@ async function loadNotifications(silent = false) {
   }
 }
 
-/**
- * Component 6: Notification Dismissal Action
- */
 async function dismissNotification(notification: string) {
   if (!state.session) return;
   try {
@@ -153,9 +525,6 @@ async function dismissNotification(notification: string) {
   }
 }
 
-/**
- * Component 1: Authentication & User Switcher Actions
- */
 async function login(username: string) {
   if (!username.trim()) return;
   state.loading = true;
@@ -171,17 +540,15 @@ async function login(username: string) {
     state.user = username.trim();
     state.session = res.session;
 
-    // Dynamically update profile fields according to the active session
     await loadProfile();
     await loadNotifications();
-
     setStatus(`Signed in as ${state.user}`, "success");
     await loadFeed();
   } catch (err) {
     setStatus(`Network error signing in: ${String(err)}`, "error");
   } finally {
     state.loading = false;
-    render();
+    renderAll();
   }
 }
 
@@ -200,12 +567,9 @@ async function logout() {
   state.notifications = [];
   state.notificationsMenuOpen = false;
   setStatus("Signed out successfully.", "info");
-  render();
+  renderAll();
 }
 
-/**
- * Component 2: Profile Settings Action
- */
 async function updateProfile(name: string, contact: string) {
   if (!state.session) {
     setStatus("Please sign in first.", "error");
@@ -231,21 +595,18 @@ async function updateProfile(name: string, contact: string) {
 
     state.name = name.trim();
     state.contact = contact.trim();
-    setStatus(`Contact profile updated for ${state.user}!`, "success");
+    setStatus("Contact profile updated successfully! Private settlement details saved.", "success");
   } catch (err) {
     setStatus(`Error updating profile: ${String(err)}`, "error");
   } finally {
     state.loading = false;
-    render();
+    updateProfileUI();
   }
 }
 
-/**
- * Component 4: Listing Creator Action
- */
 async function createListing(item: string, startPrice: number, increment: number, buyout: number | null) {
   if (!state.session) {
-    setStatus("Please sign in first.", "error");
+    setStatus("Please sign in to post a listing.", "error");
     return;
   }
   if (!item.trim()) {
@@ -281,18 +642,15 @@ async function createListing(item: string, startPrice: number, increment: number
     }
 
     setStatus(`Listing "${item.trim()}" posted successfully!`, "success");
+    elements.createListingForm.reset();
     await loadFeed();
   } catch (err) {
     setStatus(`Error posting listing: ${String(err)}`, "error");
   } finally {
     state.loading = false;
-    render();
   }
 }
 
-/**
- * Component 5: Bidding & Buyout Action
- */
 async function submitBid(auction: string, item: string, amount: number) {
   if (!state.session) {
     setStatus("Please sign in to place a bid.", "error");
@@ -335,14 +693,9 @@ async function submitBid(auction: string, item: string, amount: number) {
     setStatus(`Error placing bid: ${String(err)}`, "error");
   } finally {
     state.loading = false;
-    render();
   }
 }
 
-/**
- * Component 5: Manual Auction Closure Action (Seller Action)
- * Closes an active auction and triggers bilateral settlement notifications to seller and buyer.
- */
 async function closeAuction(auction: string, item: string) {
   if (!state.session) {
     setStatus("Please sign in first.", "error");
@@ -376,13 +729,9 @@ async function closeAuction(auction: string, item: string) {
     setStatus(`Error closing auction: ${String(err)}`, "error");
   } finally {
     state.loading = false;
-    render();
   }
 }
 
-/**
- * Component 3: Marketplace Feed Action
- */
 async function loadFeed(silent = false) {
   try {
     const res = await client["/marketplace/feed"]({});
@@ -401,585 +750,89 @@ async function loadFeed(silent = false) {
       );
     state.listings = fresh;
     if (changed || !silent) {
-      render();
+      updateFeedUI();
     }
   } catch (err) {
     if (!silent) setStatus(`Error loading feed: ${String(err)}`, "error");
   }
 }
 
-/**
- * Pure DOM render function that paints UI components 1 through 6
- */
-function render() {
-  const app = document.getElementById("app");
-  if (!app) return;
+// ==========================================
+// Permanent Event Listener Registration (Bound Once)
+// ==========================================
 
-  app.innerHTML = `
-    <div class="container">
-      <!-- App Header Bar with Top-Right Notifications Menu (Notifying concept) -->
-      <header class="header-bar">
-        <div class="header-brand">
-          <h1>BeaverBazaar 🦫</h1>
-          <p>MIT Dormspam Marketplace with Pseudonymous Bidding</p>
-        </div>
-
-        <!-- Top-Right Notifications Menu -->
-        <div class="notifications-menu-wrapper">
-          <button
-            type="button"
-            id="btn-notif-menu-toggle"
-            class="btn-notif-menu ${state.notificationsMenuOpen ? "btn-active" : ""}"
-            aria-label="Toggle notifications menu">
-            <span>🔔</span>
-            <span>Notifications</span>
-            <span class="notif-badge ${state.notifications.length > 0 ? "notif-badge-active" : ""}">
-              ${state.notifications.length}
-            </span>
-          </button>
-
-          ${
-            state.notificationsMenuOpen
-              ? `
-            <div class="notifications-dropdown">
-              <div class="notifications-dropdown-header">
-                <div>
-                  <span>🔔 Inbox (${escapeHtml(state.user ?? "Not Signed In")})</span>
-                  <span class="notification-count">${state.notifications.length} unread</span>
-                </div>
-                <button
-                  type="button"
-                  id="btn-refresh-notifications"
-                  class="btn btn-xs"
-                  title="Refresh Notifications">
-                  ↻
-                </button>
-              </div>
-
-              <div class="notifications-dropdown-body">
-                ${
-                  !state.session
-                    ? `<div class="empty-state" style="padding: 1.5rem 0.5rem;"><p>Sign in to view your settlement notifications.</p></div>`
-                    : state.notifications.length === 0
-                    ? `<div class="empty-state" style="padding: 1.5rem 0.5rem;"><p>No notifications.</p><p class="form-help">When an auction closes, private contact exchange details appear here.</p></div>`
-                    : `
-                  <div class="notification-list">
-                    ${state.notifications
-                      .map(
-                        (n) => `
-                      <div class="notif-dropdown-item">
-                        <div class="notif-dropdown-msg">
-                          🔔 ${escapeHtml(n.message)}
-                        </div>
-                        <div class="notif-dropdown-footer">
-                          <button
-                            type="button"
-                            class="btn btn-xs btn-dismiss"
-                            data-dismiss-id="${escapeHtml(n.notification)}">
-                            Dismiss
-                          </button>
-                        </div>
-                      </div>
-                    `,
-                      )
-                      .join("")}
-                  </div>
-                `
-                }
-              </div>
-            </div>
-          `
-              : ""
-          }
-        </div>
-      </header>
-
-      <!-- Status Alert Banner -->
-      ${
-        state.statusMessage
-          ? `<div class="alert alert-${state.statusType}">${escapeHtml(state.statusMessage)}</div>`
-          : ""
-      }
-
-      <!-- Component 1: User Switcher & Auth Bar -->
-      <section class="card">
-        <div class="card-title">
-          <span>1. Touchstone User Switcher</span>
-          ${state.session ? `<span class="session-badge">Session Active</span>` : ""}
-        </div>
-        <div class="auth-bar">
-          <div class="auth-status">
-            <div>
-              <span>Current User: </span>
-              <span class="user-badge">${escapeHtml(state.user ?? "Not Signed In")}</span>
-            </div>
-            ${
-              state.session
-                ? `<button id="btn-logout" class="btn btn-sm">Sign Out</button>`
-                : ""
-            }
-          </div>
-
-          <div class="user-switcher-actions">
-            <span>Quick Switch:</span>
-            ${PRESETS.map(
-              (p) => `
-              <button
-                class="btn btn-sm ${state.user === p.username ? "btn-active" : ""}"
-                data-login-preset="${escapeHtml(p.username)}">
-                ${escapeHtml(p.label)} (${escapeHtml(p.username)})
-              </button>
-            `,
-            ).join("")}
-          </div>
-
-          <form id="custom-login-form" class="custom-login-form">
-            <input
-              type="text"
-              id="custom-username"
-              placeholder="Or enter custom Kerberos email (e.g. charlie@mit.edu)"
-              value="${escapeHtml(state.user ? "" : "")}" />
-            <button type="submit" class="btn btn-primary btn-sm">Sign In</button>
-          </form>
-        </div>
-      </section>
-
-      <!-- Component 2: Profile Settings Card -->
-      <section class="card">
-        <div class="card-title">
-          <span>2. My Contact Profile</span>
-          ${state.user ? `<span class="session-badge">Active: ${escapeHtml(state.user)}</span>` : ""}
-        </div>
-        ${
-          state.session
-            ? `
-          <form id="profile-form">
-            <div class="form-help" style="margin-bottom: 0.75rem;">
-              Currently editing contact details for <strong>${escapeHtml(state.user)}</strong>.
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="profile-name">Display Name</label>
-              <input
-                type="text"
-                id="profile-name"
-                placeholder="e.g. Alice Doe"
-                value="${escapeHtml(state.name)}"
-                required />
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="profile-contact">Preferred Contact (Phone or Email)</label>
-              <input
-                type="text"
-                id="profile-contact"
-                placeholder="e.g. 617-555-0101 or alice@mit.edu"
-                value="${escapeHtml(state.contact)}"
-                required />
-              <div class="form-help">
-                🔒 Your contact info is strictly hidden while auctions are active, and only disclosed privately to the winning counterparty.
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary" ${state.loading ? "disabled" : ""}>
-              Save Contact Profile
-            </button>
-          </form>
-        `
-            : `
-          <div class="empty-state">
-            <p>Please sign in above to view and manage your contact profile.</p>
-          </div>
-        `
-        }
-      </section>
-
-      <!-- Component 4: Listing Creator Form -->
-      <section class="card">
-        <div class="card-title">
-          <span>3. Post a New Auction Listing</span>
-        </div>
-        ${
-          state.session
-            ? `
-          <form id="create-listing-form">
-            <div class="input-group">
-              <label class="input-label" for="listing-item">Item Title / Description</label>
-              <input
-                type="text"
-                id="listing-item"
-                placeholder="e.g. Vintage Road Bike (Great Condition)"
-                required />
-            </div>
-
-            <div class="form-row">
-              <div class="input-group">
-                <label class="input-label" for="listing-start-price">Starting Price ($)</label>
-                <input
-                  type="number"
-                  id="listing-start-price"
-                  placeholder="60"
-                  min="0"
-                  step="1"
-                  required />
-              </div>
-              <div class="input-group">
-                <label class="input-label" for="listing-increment">Min Increment ($)</label>
-                <input
-                  type="number"
-                  id="listing-increment"
-                  placeholder="5"
-                  min="1"
-                  step="1"
-                  required />
-              </div>
-              <div class="input-group">
-                <label class="input-label" for="listing-buyout">Buyout Price ($ optional, 0 for giveaway)</label>
-                <input
-                  type="number"
-                  id="listing-buyout"
-                  placeholder="75 (or 0)"
-                  min="0"
-                  step="1" />
-              </div>
-            </div>
-
-            <div class="form-help" style="margin-bottom: 0.75rem;">
-              🎭 Anonymity Notice: Your listing is posted under a unique contextual pseudonym to shield your identity from public campus dormspam feeds.
-            </div>
-
-            <button type="submit" class="btn btn-primary" ${state.loading ? "disabled" : ""}>
-              Post Auction Listing
-            </button>
-          </form>
-        `
-            : `
-          <div class="empty-state">
-            <p>Please sign in above to post an auction listing.</p>
-          </div>
-        `
-        }
-      </section>
-
-      <!-- Component 6: Notifications & Settlement Inbox -->
-      <section class="card">
-        <div class="card-title">
-          <span>4. Private Settlement Inbox</span>
-          ${
-            state.session && state.notifications.length > 0
-              ? `<span class="notification-count">${state.notifications.length} New</span>`
-              : ""
-          }
-        </div>
-        ${
-          state.session
-            ? state.notifications.length === 0
-              ? `
-              <div class="empty-state">
-                <p>No new notifications. When an auction closes or you win an item, private contact exchange details appear here.</p>
-              </div>
-            `
-              : `
-              <div class="notification-list">
-                ${state.notifications
-                  .map(
-                    (n) => `
-                  <div class="notification-item">
-                    <div class="notification-message">
-                      🔔 ${escapeHtml(n.message)}
-                    </div>
-                    <button
-                      class="btn btn-sm btn-dismiss"
-                      data-dismiss-id="${escapeHtml(n.notification)}">
-                      Dismiss
-                    </button>
-                  </div>
-                `,
-                  )
-                  .join("")}
-              </div>
-            `
-            : `
-          <div class="empty-state">
-            <p>Please sign in above to view your settlement notifications.</p>
-          </div>
-        `
-        }
-      </section>
-
-      <!-- Component 3 & 5: Active Marketplace Feed & Bidding / Buyout Action -->
-      <section class="card">
-        <div class="feed-header">
-          <div class="card-title" style="margin-bottom: 0;">
-            <span>5. Active Marketplace Feed (${state.listings.length})</span>
-          </div>
-          <button id="btn-refresh-feed" class="btn btn-sm">↻ Refresh Feed</button>
-        </div>
-
-        ${
-          state.listings.length === 0
-            ? `
-          <div class="empty-state">
-            <div class="empty-state-icon">📦</div>
-            <p>No active listings found in the marketplace feed.</p>
-            <p class="form-help">Items will appear here once posted by sellers.</p>
-          </div>
-        `
-            : `
-          <div class="feed-grid">
-            ${state.listings
-              .map(
-                (item) => `
-              <div class="listing-card">
-                <div class="listing-title">${escapeHtml(item.item)}</div>
-
-                <div class="listing-price-row">
-                  <span class="listing-current-price">$${item.price}</span>
-                  <span class="listing-increment">(+$${item.increment} min increment)</span>
-                  ${
-                    item.buyout !== null
-                      ? `<span class="listing-buyout">⚡ $${item.buyout} Instant Buyout</span>`
-                      : `<span class="listing-increment">No buyout set</span>`
-                  }
-                </div>
-
-                <div class="listing-meta">
-                  <div class="meta-pill">
-                    <span>Seller:</span>
-                    <span class="pseudonym-tag">${escapeHtml(item.sellerAlias)}</span>
-                    <span class="session-badge">(Masked Alias)</span>
-                  </div>
-                  <div class="meta-pill">
-                    <span>Highest Bidder:</span>
-                    <span>${
-                      item.highestBidder
-                        ? `<strong class="pseudonym-tag">${escapeHtml(item.highestBidder)}</strong>`
-                        : "<em>No bids placed yet</em>"
-                    }</span>
-                  </div>
-                </div>
-
-                <!-- Component 5: Bidding & Buyout Action -->
-                ${
-                  state.session
-                    ? (() => {
-                        const minBid = item.highestBidder !== null ? item.price + item.increment : item.price;
-                        const bidLabel = item.highestBidder !== null ? `Bid $${minBid}` : `Opening Bid $${minBid}`;
-                        return `
-                  <div class="listing-actions">
-                    <div class="bid-controls">
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-quick-bid"
-                        data-quick-bid
-                        data-auction-id="${escapeHtml(item.auction)}"
-                        data-listing-id="${escapeHtml(item.listing)}"
-                        data-bid-amount="${minBid}">
-                        ${bidLabel}
-                      </button>
-
-                      <form
-                        class="custom-bid-form"
-                        data-auction-id="${escapeHtml(item.auction)}"
-                        data-listing-id="${escapeHtml(item.listing)}"
-                        style="display: inline-flex; gap: 0.35rem; align-items: center;">
-                        <input
-                          type="number"
-                          placeholder="$"
-                          value="${minBid}"
-                          min="${minBid}"
-                          step="1"
-                          required />
-                        <button type="submit" class="btn btn-sm">Bid</button>
-                      </form>
-
-                      ${
-                        item.buyout !== null
-                          ? `
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-buyout"
-                          data-buyout
-                          data-auction-id="${escapeHtml(item.auction)}"
-                          data-listing-id="${escapeHtml(item.listing)}"
-                          data-buyout-amount="${item.buyout}">
-                          ⚡ Buyout $${item.buyout}
-                        </button>
-                      `
-                          : ""
-                      }
-
-                      ${
-                        item.highestBidder !== null
-                          ? `
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-close-auction"
-                          data-close-auction
-                          data-auction-id="${escapeHtml(item.auction)}"
-                          data-listing-id="${escapeHtml(item.listing)}"
-                          title="Finalize auction early with current highest bidder (Seller action)">
-                          🏁 Close & Finalize ($${item.price})
-                        </button>
-                      `
-                          : ""
-                      }
-                    </div>
-                  </div>
-                `;
-                      })()
-                    : `
-                  <div class="form-help" style="margin-top: 0.5rem;">
-                    Sign in above to place bids or buy out this item.
-                  </div>
-                `
-                }
-              </div>
-            `,
-              )
-              .join("")}
-          </div>
-        `
-        }
-      </section>
-    </div>
-  `;
-
-  // Attach event listeners
-  document.getElementById("btn-logout")?.addEventListener("click", () => logout());
-
-  document.querySelectorAll("[data-login-preset]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement;
-      const username = target.getAttribute("data-login-preset");
-      if (username) login(username);
-    });
+// 1. User Switcher Presets
+elements.loginPresetButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const username = btn.getAttribute("data-login-preset");
+    if (username) login(username);
   });
+});
 
-  document.getElementById("custom-login-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("custom-username") as HTMLInputElement;
-    if (input && input.value) login(input.value);
-  });
+// 2. Custom Login Form
+elements.customLoginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const username = elements.customUsernameInput.value.trim();
+  if (username) {
+    elements.customUsernameInput.value = "";
+    login(username);
+  }
+});
 
-  document.getElementById("profile-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nameInput = document.getElementById("profile-name") as HTMLInputElement;
-    const contactInput = document.getElementById("profile-contact") as HTMLInputElement;
-    if (nameInput && contactInput) {
-      updateProfile(nameInput.value, contactInput.value);
-    }
-  });
+// 3. Logout Button
+elements.btnLogout.addEventListener("click", () => logout());
 
-  document.getElementById("create-listing-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const itemInput = document.getElementById("listing-item") as HTMLInputElement;
-    const priceInput = document.getElementById("listing-start-price") as HTMLInputElement;
-    const incInput = document.getElementById("listing-increment") as HTMLInputElement;
-    const buyoutInput = document.getElementById("listing-buyout") as HTMLInputElement;
+// 4. Profile Form
+elements.profileForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = elements.profileNameInput.value.trim();
+  const contact = elements.profileContactInput.value.trim();
+  if (name && contact) {
+    updateProfile(name, contact);
+  }
+});
 
-    if (itemInput && priceInput && incInput) {
-      const item = itemInput.value;
-      const startPrice = parseFloat(priceInput.value);
-      const increment = parseFloat(incInput.value);
-      const buyout = buyoutInput && buyoutInput.value.trim() !== "" ? parseFloat(buyoutInput.value) : null;
-      createListing(item, startPrice, increment, buyout);
-    }
-  });
+// 5. Create Listing Form
+elements.createListingForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const item = elements.listingItemInput.value.trim();
+  const startPrice = parseFloat(elements.listingStartPriceInput.value);
+  const increment = parseFloat(elements.listingIncrementInput.value);
+  const buyoutRaw = elements.listingBuyoutInput.value.trim();
+  const buyout = buyoutRaw !== "" ? parseFloat(buyoutRaw) : null;
+  createListing(item, startPrice, increment, buyout);
+});
 
-  document.querySelectorAll(".btn-quick-bid, [data-quick-bid]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement;
-      const auction = target.getAttribute("data-auction-id");
-      const item = target.getAttribute("data-listing-id");
-      const rawAmount = target.getAttribute("data-bid-amount");
-      if (rawAmount !== null && rawAmount !== undefined) {
-        const amount = parseFloat(rawAmount);
-        if (auction && item && !isNaN(amount) && amount >= 0) {
-          submitBid(auction, item, amount);
-        }
-      }
-    });
-  });
+// 6. Notifications Toggle & Refresh
+elements.btnNotifMenuToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  state.notificationsMenuOpen = !state.notificationsMenuOpen;
+  updateNotificationsUI();
+});
 
-  document.querySelectorAll(".custom-bid-form").forEach((form) => {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const target = e.currentTarget as HTMLFormElement;
-      const auction = target.getAttribute("data-auction-id");
-      const item = target.getAttribute("data-listing-id");
-      const input = target.querySelector("input[type='number']") as HTMLInputElement;
-      if (auction && item && input && input.value !== "") {
-        const amount = parseFloat(input.value);
-        if (!isNaN(amount) && amount >= 0) submitBid(auction, item, amount);
-      }
-    });
-  });
+elements.btnRefreshNotifications.addEventListener("click", (e) => {
+  e.stopPropagation();
+  loadNotifications();
+});
 
-  document.querySelectorAll(".btn-buyout, [data-buyout-amount]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement;
-      const auction = target.getAttribute("data-auction-id");
-      const item = target.getAttribute("data-listing-id");
-      const rawBuyout = target.getAttribute("data-buyout-amount");
-      if (rawBuyout !== null && rawBuyout !== undefined) {
-        const buyout = parseFloat(rawBuyout);
-        if (auction && item && !isNaN(buyout) && buyout >= 0) {
-          submitBid(auction, item, buyout);
-        }
-      }
-    });
-  });
+// 7. Refresh Feed Button
+elements.btnRefreshFeed.addEventListener("click", () => {
+  loadFeed();
+  loadNotifications();
+});
 
-  document.querySelectorAll("[data-dismiss-id]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement;
-      const notificationId = target.getAttribute("data-dismiss-id");
-      if (notificationId) {
-        dismissNotification(notificationId);
-      }
-    });
-  });
-
-  // Notifications Menu Toggle & Refresh
-  document.getElementById("btn-notif-menu-toggle")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    state.notificationsMenuOpen = !state.notificationsMenuOpen;
-    render();
-  });
-
-  document.getElementById("btn-refresh-notifications")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    loadNotifications();
-  });
-
-  // Manual Auction Close & Finalize
-  document.querySelectorAll(".btn-close-auction, [data-close-auction]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const target = e.currentTarget as HTMLElement;
-      const auction = target.getAttribute("data-auction-id");
-      const item = target.getAttribute("data-listing-id");
-      if (auction && item) {
-        closeAuction(auction, item);
-      }
-    });
-  });
-
-  document.getElementById("btn-refresh-feed")?.addEventListener("click", () => {
-    loadFeed();
-    loadNotifications();
-  });
-}
-
-// Dismiss notification dropdown when clicking anywhere outside the menu wrapper
+// 8. Outside Click Listener for Notifications Dropdown
 window.addEventListener("click", (e) => {
   if (state.notificationsMenuOpen) {
     const target = e.target as HTMLElement;
     if (!target.closest(".notifications-menu-wrapper")) {
       state.notificationsMenuOpen = false;
-      render();
+      updateNotificationsUI();
     }
   }
 });
 
-// Periodic background polling (every 3s) to keep notifications and feed fresh
+// 9. Periodic Background Polling (3s interval) to silently keep notifications and feed fresh
 setInterval(() => {
   if (state.session && !state.loading) {
     loadNotifications(true);
@@ -987,10 +840,11 @@ setInterval(() => {
   }
 }, 3000);
 
-// Initial bootstrap: auto-login as Alice to provide immediate friendly interactive view
+// ==========================================
+// Bootstrap
+// ==========================================
 async function init() {
   await login("alice@mit.edu");
 }
 
 init();
-

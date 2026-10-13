@@ -182,9 +182,9 @@ Authored path: `BeaverBazaar.Marketplace.ListingDetail`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 41.
 
 ```former
-Former "listing detail" — inputs (listing); bindings (item, active, auction, sellerAlias, highestBidder, price, increment, buyout, auctionActive); promises at most one record — forms:
+Former "listing detail" — inputs (listing); bindings (item, active, auction, sellerAlias, seller, highestBidder, price, increment, buyout, auctionActive); promises at most one record — forms:
   a record of
-    where Listing._get (listing) has (active, item)
+    where Listing._get (listing) has (active, item, owner: seller)
     where Auction._byItem (item: listing) has (active: auctionActive, auction, buyout, highestBidder, increment, owner: sellerAlias, price)
     active
     auction
@@ -195,6 +195,7 @@ Former "listing detail" — inputs (listing); bindings (item, active, auction, s
     item
     listing
     price
+    seller
     sellerAlias
 ```
 
@@ -204,10 +205,10 @@ Authored path: `BeaverBazaar.Marketplace.MarketplaceFeed`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 39.
 
 ```former
-Former "marketplace feed" — inputs (); bindings (auction, listing, sellerAlias, item, price, increment, buyout, highestBidder); promises exactly one record — forms:
+Former "marketplace feed" — inputs (); bindings (auction, listing, sellerAlias, seller, item, price, increment, buyout, highestBidder); promises exactly one record — forms:
   a record of
     listings: each Auction._active () has (auction, buyout, highestBidder, increment, item: listing, owner: sellerAlias, price)
-      where Listing._get (listing) has (item)
+      where Listing._get (listing) has (item, owner: seller)
       form a record of
         auction
         buyout
@@ -216,6 +217,7 @@ Former "marketplace feed" — inputs (); bindings (auction, listing, sellerAlias
         item
         listing
         price
+        seller
         sellerAlias
 ```
 

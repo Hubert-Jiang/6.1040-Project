@@ -29,7 +29,7 @@ export const UserProfile = former("user profile", ({ user }, { name, contact }) 
 
 export const MarketplaceFeed = former(
   "marketplace feed",
-  (_input, { auction, listing, sellerAlias, item, price, increment, buyout, highestBidder }) =>
+  (_input, { auction, listing, sellerAlias, seller, item, price, increment, buyout, highestBidder }) =>
     form({
       listings: each(
         Auction._active({}).is({
@@ -42,11 +42,12 @@ export const MarketplaceFeed = former(
           buyout,
         }),
       )
-        .where(Listing._get({ listing }).is({ item }))
+        .where(Listing._get({ listing }).is({ item, owner: seller }))
         .form({
           auction,
           listing,
           sellerAlias,
+          seller,
           item,
           price,
           increment,
@@ -65,6 +66,7 @@ export const ListingDetail = former(
       active,
       auction,
       sellerAlias,
+      seller,
       highestBidder,
       price,
       increment,
@@ -73,7 +75,7 @@ export const ListingDetail = former(
     },
   ) =>
     where(
-      Listing._get({ listing }).is({ item, active }),
+      Listing._get({ listing }).is({ item, active, owner: seller }),
       Auction._byItem({ item: listing }).is({
         auction,
         owner: sellerAlias,
@@ -89,6 +91,7 @@ export const ListingDetail = former(
       active,
       auction,
       sellerAlias,
+      seller,
       highestBidder,
       price,
       increment,

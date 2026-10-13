@@ -104,6 +104,7 @@ export type BeaverBazaarWire = {
         "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
         "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>[0], ["item"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>]>>;
         "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["price"]>>;
+        "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["owner"]>>;
         "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["owner"]>>;
       } | null;
     };
@@ -121,6 +122,7 @@ export type BeaverBazaarWire = {
           "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
           "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["item"]>]>>;
           "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["price"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["owner"]>>;
           "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["owner"]>>;
         }[];
       };
@@ -270,6 +272,7 @@ export type BeaverBazaarWireHttp = {
         "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
         "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>[0], ["item"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>]>>;
         "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["price"]>>;
+        "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["owner"]>>;
         "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["owner"]>>;
       } | null;
     };
@@ -287,6 +290,7 @@ export type BeaverBazaarWireHttp = {
           "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
           "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["item"]>]>>;
           "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["price"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["owner"]>>;
           "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["owner"]>>;
         }[];
       };
