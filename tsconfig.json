@@ -9,6 +9,8 @@
     "strict": true,
     "skipLibCheck": true,
     "types": ["bun", "node"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "vue",
     "paths": {
       "@design/*": ["./design/*"]
     }
