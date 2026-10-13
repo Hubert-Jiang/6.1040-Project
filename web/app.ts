@@ -27,6 +27,7 @@ interface AppState {
   contact: string;
   listings: ListingItem[];
   notifications: NotificationItem[];
+  notificationsMenuOpen: boolean;
   statusMessage: string | null;
   statusType: "success" | "error" | "info";
   loading: boolean;
@@ -40,6 +41,7 @@ const state: AppState = {
   contact: "",
   listings: [],
   notifications: [],
+  notificationsMenuOpen: false,
   statusMessage: null,
   statusType: "info",
   loading: false,
@@ -104,21 +106,29 @@ async function loadProfile() {
  * Component 6: Notification Retrieval Action
  * Queries incoming private settlement notifications for the active user.
  */
-async function loadNotifications() {
+async function loadNotifications(silent = false) {
   if (!state.session) {
-    state.notifications = [];
+    if (state.notifications.length > 0) {
+      state.notifications = [];
+      render();
+    }
     return;
   }
 
   try {
     const res = await client["/notifications/list"]({ session: state.session });
     if (!("error" in res) && res.notifications) {
-      state.notifications = res.notifications.notifications;
+      const fresh = res.notifications.notifications;
+      const changed =
+        fresh.length !== state.notifications.length ||
+        fresh.some((n, i) => n.notification !== state.notifications[i]?.notification);
+      state.notifications = fresh;
+      if (changed || !silent) {
+        render();
+      }
     }
   } catch (err) {
-    console.warn("Could not query notifications:", err);
-  } finally {
-    render();
+    if (!silent) console.warn("Could not query notifications:", err);
   }
 }
 
@@ -188,6 +198,7 @@ async function logout() {
   state.name = "";
   state.contact = "";
   state.notifications = [];
+  state.notificationsMenuOpen = false;
   setStatus("Signed out successfully.", "info");
   render();
 }
@@ -329,20 +340,71 @@ async function submitBid(auction: string, item: string, amount: number) {
 }
 
 /**
+ * Component 5: Manual Auction Closure Action (Seller Action)
+ * Closes an active auction and triggers bilateral settlement notifications to seller and buyer.
+ */
+async function closeAuction(auction: string, item: string) {
+  if (!state.session) {
+    setStatus("Please sign in first.", "error");
+    return;
+  }
+
+  state.loading = true;
+  try {
+    const res = await client["/auctions/close"]({
+      session: state.session,
+      auction,
+      item,
+    });
+
+    if ("error" in res) {
+      const err = String(res.error);
+      let msg = `Could not close auction: ${err}`;
+      if (err.includes("NOT_OWNER")) {
+        msg = "Only the listing seller can close this auction.";
+      } else if (err.includes("ALREADY_CLOSED")) {
+        msg = "This auction is already closed.";
+      }
+      setStatus(msg, "error");
+      return;
+    }
+
+    setStatus("Auction closed successfully! Settlement notifications dispatched to both seller and winning buyer.", "success");
+    await loadFeed();
+    await loadNotifications();
+  } catch (err) {
+    setStatus(`Error closing auction: ${String(err)}`, "error");
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+/**
  * Component 3: Marketplace Feed Action
  */
-async function loadFeed() {
+async function loadFeed(silent = false) {
   try {
     const res = await client["/marketplace/feed"]({});
     if ("error" in res) {
-      setStatus(`Failed to load feed: ${String(res.error)}`, "error");
+      if (!silent) setStatus(`Failed to load feed: ${String(res.error)}`, "error");
       return;
     }
-    state.listings = res.feed.listings;
+    const fresh = res.feed.listings;
+    const changed =
+      fresh.length !== state.listings.length ||
+      fresh.some(
+        (l, i) =>
+          l.auction !== state.listings[i]?.auction ||
+          l.price !== state.listings[i]?.price ||
+          l.highestBidder !== state.listings[i]?.highestBidder,
+      );
+    state.listings = fresh;
+    if (changed || !silent) {
+      render();
+    }
   } catch (err) {
-    setStatus(`Error loading feed: ${String(err)}`, "error");
-  } finally {
-    render();
+    if (!silent) setStatus(`Error loading feed: ${String(err)}`, "error");
   }
 }
 
@@ -355,10 +417,81 @@ function render() {
 
   app.innerHTML = `
     <div class="container">
-      <!-- App Header -->
-      <header class="header">
-        <h1>BeaverBazaar 🦫</h1>
-        <p>MIT Dormspam Marketplace with Pseudonymous Bidding</p>
+      <!-- App Header Bar with Top-Right Notifications Menu (Notifying concept) -->
+      <header class="header-bar">
+        <div class="header-brand">
+          <h1>BeaverBazaar 🦫</h1>
+          <p>MIT Dormspam Marketplace with Pseudonymous Bidding</p>
+        </div>
+
+        <!-- Top-Right Notifications Menu -->
+        <div class="notifications-menu-wrapper">
+          <button
+            type="button"
+            id="btn-notif-menu-toggle"
+            class="btn-notif-menu ${state.notificationsMenuOpen ? "btn-active" : ""}"
+            aria-label="Toggle notifications menu">
+            <span>🔔</span>
+            <span>Notifications</span>
+            <span class="notif-badge ${state.notifications.length > 0 ? "notif-badge-active" : ""}">
+              ${state.notifications.length}
+            </span>
+          </button>
+
+          ${
+            state.notificationsMenuOpen
+              ? `
+            <div class="notifications-dropdown">
+              <div class="notifications-dropdown-header">
+                <div>
+                  <span>🔔 Inbox (${escapeHtml(state.user ?? "Not Signed In")})</span>
+                  <span class="notification-count">${state.notifications.length} unread</span>
+                </div>
+                <button
+                  type="button"
+                  id="btn-refresh-notifications"
+                  class="btn btn-xs"
+                  title="Refresh Notifications">
+                  ↻
+                </button>
+              </div>
+
+              <div class="notifications-dropdown-body">
+                ${
+                  !state.session
+                    ? `<div class="empty-state" style="padding: 1.5rem 0.5rem;"><p>Sign in to view your settlement notifications.</p></div>`
+                    : state.notifications.length === 0
+                    ? `<div class="empty-state" style="padding: 1.5rem 0.5rem;"><p>No notifications.</p><p class="form-help">When an auction closes, private contact exchange details appear here.</p></div>`
+                    : `
+                  <div class="notification-list">
+                    ${state.notifications
+                      .map(
+                        (n) => `
+                      <div class="notif-dropdown-item">
+                        <div class="notif-dropdown-msg">
+                          🔔 ${escapeHtml(n.message)}
+                        </div>
+                        <div class="notif-dropdown-footer">
+                          <button
+                            type="button"
+                            class="btn btn-xs btn-dismiss"
+                            data-dismiss-id="${escapeHtml(n.notification)}">
+                            Dismiss
+                          </button>
+                        </div>
+                      </div>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                `
+                }
+              </div>
+            </div>
+          `
+              : ""
+          }
+        </div>
       </header>
 
       <!-- Status Alert Banner -->
@@ -672,6 +805,22 @@ function render() {
                       `
                           : ""
                       }
+
+                      ${
+                        item.highestBidder !== null
+                          ? `
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-close-auction"
+                          data-close-auction
+                          data-auction-id="${escapeHtml(item.auction)}"
+                          data-listing-id="${escapeHtml(item.listing)}"
+                          title="Finalize auction early with current highest bidder (Seller action)">
+                          🏁 Close & Finalize ($${item.price})
+                        </button>
+                      `
+                          : ""
+                      }
                     </div>
                   </div>
                 `;
@@ -789,11 +938,54 @@ function render() {
     });
   });
 
+  // Notifications Menu Toggle & Refresh
+  document.getElementById("btn-notif-menu-toggle")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    state.notificationsMenuOpen = !state.notificationsMenuOpen;
+    render();
+  });
+
+  document.getElementById("btn-refresh-notifications")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    loadNotifications();
+  });
+
+  // Manual Auction Close & Finalize
+  document.querySelectorAll(".btn-close-auction, [data-close-auction]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLElement;
+      const auction = target.getAttribute("data-auction-id");
+      const item = target.getAttribute("data-listing-id");
+      if (auction && item) {
+        closeAuction(auction, item);
+      }
+    });
+  });
+
   document.getElementById("btn-refresh-feed")?.addEventListener("click", () => {
     loadFeed();
     loadNotifications();
   });
 }
+
+// Dismiss notification dropdown when clicking anywhere outside the menu wrapper
+window.addEventListener("click", (e) => {
+  if (state.notificationsMenuOpen) {
+    const target = e.target as HTMLElement;
+    if (!target.closest(".notifications-menu-wrapper")) {
+      state.notificationsMenuOpen = false;
+      render();
+    }
+  }
+});
+
+// Periodic background polling (every 3s) to keep notifications and feed fresh
+setInterval(() => {
+  if (state.session && !state.loading) {
+    loadNotifications(true);
+    loadFeed(true);
+  }
+}, 3000);
 
 // Initial bootstrap: auto-login as Alice to provide immediate friendly interactive view
 async function init() {
@@ -801,3 +993,4 @@ async function init() {
 }
 
 init();
+
