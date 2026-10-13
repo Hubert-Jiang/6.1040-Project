@@ -144,6 +144,39 @@ describe("AuctioningConcept", () => {
     ).rejects.toThrow(InvalidBuyout);
   });
 
+  test("giveaway and zero-price partitions: startPrice = 0, opening bid = 0, buyout = 0", async () => {
+    const auctioning = new AuctioningConcept();
+    // Partition: startPrice = 0, increment = 5, buyout = 0 (free giveaway with instant buyout option)
+    const { auction } = await auctioning.create({
+      owner: "seller",
+      item: "free-sofa",
+      startPrice: 0,
+      increment: 5,
+      buyout: 0,
+    });
+    expect(auction).toBeDefined();
+
+    const got = await auctioning._get({ auction });
+    expect(got[0].price).toBe(0);
+    expect(got[0].buyout).toBe(0);
+    expect(got[0].highestBidder).toBeNull();
+
+    // Partition: opening bid with amount == 0 succeeds when startPrice == 0
+    await auctioning.bid({ bidder: "luckyBuyer", auction, amount: 0 });
+    const afterOpening = await auctioning._get({ auction });
+    expect(afterOpening[0].price).toBe(0);
+    expect(afterOpening[0].highestBidder).toBe("luckyBuyer");
+
+    // Partition: subsequent bid must be at least price + increment (0 + 5 = 5)
+    expect(auctioning.bid({ bidder: "otherBuyer", auction, amount: 2 })).rejects.toThrow(
+      BidTooLow,
+    );
+    await auctioning.bid({ bidder: "otherBuyer", auction, amount: 5 });
+    const afterSubsequent = await auctioning._get({ auction });
+    expect(afterSubsequent[0].price).toBe(5);
+    expect(afterSubsequent[0].highestBidder).toBe("otherBuyer");
+  });
+
   test("bid restriction partitions: owner bidding, below minimum, inactive auction", async () => {
     const auctioning = new AuctioningConcept();
     const { auction } = await auctioning.create({

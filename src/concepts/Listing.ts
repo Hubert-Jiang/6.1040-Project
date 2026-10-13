@@ -8,7 +8,7 @@ export class AlreadyInactive extends Error {}
 export interface ListingDoc {
   _id: string;
   owner: string;
-  item: unknown;
+  item: string;
   active: boolean;
 }
 
@@ -25,7 +25,7 @@ export class ListingConcept {
     }
   }
 
-  async create({ owner, item }: { owner: string; item: unknown }): Promise<{ listing: string }> {
+  async create({ owner, item }: { owner: string; item: string }): Promise<{ listing: string }> {
     const listing = this.freshId();
     const doc: ListingDoc = { _id: listing, owner, item, active: true };
     if (this.collection) {
@@ -43,7 +43,7 @@ export class ListingConcept {
   }: {
     owner: string;
     listing: string;
-    item: unknown;
+    item: string;
   }): Promise<{ listing: string }> {
     const doc = await this.#get(listing);
     if (!doc) {
@@ -114,14 +114,14 @@ export class ListingConcept {
     listing,
   }: {
     listing: string;
-  }): Promise<Array<{ listing: string; owner: string; item: unknown; active: boolean }>> {
+  }): Promise<Array<{ listing: string; owner: string; item: string; active: boolean }>> {
     const doc = await this.#get(listing);
     if (!doc) return [];
     return [{ listing: doc._id, owner: doc.owner, item: doc.item, active: doc.active }];
   }
 
   async _all(_input: Record<string, never>): Promise<
-    Array<{ listing: string; owner: string; item: unknown; active: boolean }>
+    Array<{ listing: string; owner: string; item: string; active: boolean }>
   > {
     if (this.collection) {
       const docs = await this.collection.find().sort({ _id: 1 }).toArray();
@@ -132,7 +132,7 @@ export class ListingConcept {
   }
 
   async _active(_input: Record<string, never>): Promise<
-    Array<{ listing: string; owner: string; item: unknown }>
+    Array<{ listing: string; owner: string; item: string }>
   > {
     if (this.collection) {
       const docs = await this.collection.find({ active: true }).sort({ _id: 1 }).toArray();

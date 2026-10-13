@@ -15,7 +15,7 @@ const server = Bun.serve({
     "/api/*": api,
     "/health": async () => {
       try {
-        await db.collection("reserving.reservations").findOne({}, { maxTimeMS: 2000, timeoutMS: 3000 });
+        await db.collection("listing.listings").findOne({}, { maxTimeMS: 2000, timeoutMS: 3000 });
         return Response.json({ status: "ok" }, { headers: { "Cache-Control": "no-store" } });
       } catch {
         return Response.json(

@@ -15,12 +15,18 @@ interface ListingItem {
   sellerAlias: string;
 }
 
+interface NotificationItem {
+  notification: string;
+  message: string;
+}
+
 interface AppState {
   user: string | null;
   session: string | null;
   name: string;
   contact: string;
   listings: ListingItem[];
+  notifications: NotificationItem[];
   statusMessage: string | null;
   statusType: "success" | "error" | "info";
   loading: boolean;
@@ -33,6 +39,7 @@ const state: AppState = {
   name: "",
   contact: "",
   listings: [],
+  notifications: [],
   statusMessage: null,
   statusType: "info",
   loading: false,
@@ -94,6 +101,49 @@ async function loadProfile() {
 }
 
 /**
+ * Component 6: Notification Retrieval Action
+ * Queries incoming private settlement notifications for the active user.
+ */
+async function loadNotifications() {
+  if (!state.session) {
+    state.notifications = [];
+    return;
+  }
+
+  try {
+    const res = await client["/notifications/list"]({ session: state.session });
+    if (!("error" in res) && res.notifications) {
+      state.notifications = res.notifications.notifications;
+    }
+  } catch (err) {
+    console.warn("Could not query notifications:", err);
+  } finally {
+    render();
+  }
+}
+
+/**
+ * Component 6: Notification Dismissal Action
+ */
+async function dismissNotification(notification: string) {
+  if (!state.session) return;
+  try {
+    const res = await client["/notifications/dismiss"]({
+      session: state.session,
+      notification,
+    });
+    if ("error" in res) {
+      setStatus(`Failed to dismiss notification: ${String(res.error)}`, "error");
+      return;
+    }
+    setStatus("Notification dismissed.", "info");
+    await loadNotifications();
+  } catch (err) {
+    setStatus(`Error dismissing notification: ${String(err)}`, "error");
+  }
+}
+
+/**
  * Component 1: Authentication & User Switcher Actions
  */
 async function login(username: string) {
@@ -113,6 +163,7 @@ async function login(username: string) {
 
     // Dynamically update profile fields according to the active session
     await loadProfile();
+    await loadNotifications();
 
     setStatus(`Signed in as ${state.user}`, "success");
     await loadFeed();
@@ -136,6 +187,7 @@ async function logout() {
   state.session = null;
   state.name = "";
   state.contact = "";
+  state.notifications = [];
   setStatus("Signed out successfully.", "info");
   render();
 }
@@ -178,6 +230,105 @@ async function updateProfile(name: string, contact: string) {
 }
 
 /**
+ * Component 4: Listing Creator Action
+ */
+async function createListing(item: string, startPrice: number, increment: number, buyout: number | null) {
+  if (!state.session) {
+    setStatus("Please sign in first.", "error");
+    return;
+  }
+  if (!item.trim()) {
+    setStatus("Please enter an item title / description.", "error");
+    return;
+  }
+  if (isNaN(startPrice) || startPrice < 0) {
+    setStatus("Starting price must be a non-negative number ($0 or higher).", "error");
+    return;
+  }
+  if (isNaN(increment) || increment <= 0) {
+    setStatus("Minimum increment must be greater than 0.", "error");
+    return;
+  }
+  if (buyout !== null && (buyout < 0 || buyout < startPrice)) {
+    setStatus("Instant buyout price must be non-negative ($0 or higher) and at least the starting price.", "error");
+    return;
+  }
+
+  state.loading = true;
+  try {
+    const res = await client["/listings/create"]({
+      session: state.session,
+      item: item.trim(),
+      startPrice,
+      increment,
+      buyout,
+    });
+
+    if ("error" in res) {
+      setStatus(`Failed to post listing: ${String(res.error)}`, "error");
+      return;
+    }
+
+    setStatus(`Listing "${item.trim()}" posted successfully!`, "success");
+    await loadFeed();
+  } catch (err) {
+    setStatus(`Error posting listing: ${String(err)}`, "error");
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+/**
+ * Component 5: Bidding & Buyout Action
+ */
+async function submitBid(auction: string, item: string, amount: number) {
+  if (!state.session) {
+    setStatus("Please sign in to place a bid.", "error");
+    return;
+  }
+  if (isNaN(amount) || amount < 0) {
+    setStatus("Please enter a valid non-negative bid amount ($0 or higher).", "error");
+    return;
+  }
+
+  state.loading = true;
+  try {
+    const res = await client["/auctions/bid"]({
+      session: state.session,
+      auction,
+      item,
+      amount,
+    });
+
+    if ("error" in res) {
+      const err = String(res.error);
+      let friendlyError = `Bid rejected: ${err}`;
+      if (err.includes("OWNER_CANNOT_BID")) {
+        friendlyError = "Bid rejected: You are the seller of this listing and cannot bid on your own auction.";
+      } else if (err.includes("BID_TOO_LOW")) {
+        friendlyError = "Bid rejected: Bid must meet the starting price (for opening bid) or exceed current price by the minimum increment.";
+      } else if (err.includes("AUCTION_INACTIVE") || err.includes("ALREADY_CLOSED")) {
+        friendlyError = "Bid rejected: This auction has already closed.";
+      } else if (err.includes("UNKNOWN_SESSION")) {
+        friendlyError = "Session expired or invalid. Please switch/sign in again.";
+      }
+      setStatus(friendlyError, "error");
+      return;
+    }
+
+    setStatus(`Successfully submitted bid of $${amount}!`, "success");
+    await loadFeed();
+    await loadNotifications();
+  } catch (err) {
+    setStatus(`Error placing bid: ${String(err)}`, "error");
+  } finally {
+    state.loading = false;
+    render();
+  }
+}
+
+/**
  * Component 3: Marketplace Feed Action
  */
 async function loadFeed() {
@@ -196,7 +347,7 @@ async function loadFeed() {
 }
 
 /**
- * Pure DOM render function that paints UI components 1, 2, and 3
+ * Pure DOM render function that paints UI components 1 through 6
  */
 function render() {
   const app = document.getElementById("app");
@@ -307,11 +458,124 @@ function render() {
         }
       </section>
 
-      <!-- Component 3: Marketplace Feed -->
+      <!-- Component 4: Listing Creator Form -->
+      <section class="card">
+        <div class="card-title">
+          <span>3. Post a New Auction Listing</span>
+        </div>
+        ${
+          state.session
+            ? `
+          <form id="create-listing-form">
+            <div class="input-group">
+              <label class="input-label" for="listing-item">Item Title / Description</label>
+              <input
+                type="text"
+                id="listing-item"
+                placeholder="e.g. Vintage Road Bike (Great Condition)"
+                required />
+            </div>
+
+            <div class="form-row">
+              <div class="input-group">
+                <label class="input-label" for="listing-start-price">Starting Price ($)</label>
+                <input
+                  type="number"
+                  id="listing-start-price"
+                  placeholder="60"
+                  min="0"
+                  step="1"
+                  required />
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="listing-increment">Min Increment ($)</label>
+                <input
+                  type="number"
+                  id="listing-increment"
+                  placeholder="5"
+                  min="1"
+                  step="1"
+                  required />
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="listing-buyout">Buyout Price ($ optional, 0 for giveaway)</label>
+                <input
+                  type="number"
+                  id="listing-buyout"
+                  placeholder="75 (or 0)"
+                  min="0"
+                  step="1" />
+              </div>
+            </div>
+
+            <div class="form-help" style="margin-bottom: 0.75rem;">
+              🎭 Anonymity Notice: Your listing is posted under a unique contextual pseudonym to shield your identity from public campus dormspam feeds.
+            </div>
+
+            <button type="submit" class="btn btn-primary" ${state.loading ? "disabled" : ""}>
+              Post Auction Listing
+            </button>
+          </form>
+        `
+            : `
+          <div class="empty-state">
+            <p>Please sign in above to post an auction listing.</p>
+          </div>
+        `
+        }
+      </section>
+
+      <!-- Component 6: Notifications & Settlement Inbox -->
+      <section class="card">
+        <div class="card-title">
+          <span>4. Private Settlement Inbox</span>
+          ${
+            state.session && state.notifications.length > 0
+              ? `<span class="notification-count">${state.notifications.length} New</span>`
+              : ""
+          }
+        </div>
+        ${
+          state.session
+            ? state.notifications.length === 0
+              ? `
+              <div class="empty-state">
+                <p>No new notifications. When an auction closes or you win an item, private contact exchange details appear here.</p>
+              </div>
+            `
+              : `
+              <div class="notification-list">
+                ${state.notifications
+                  .map(
+                    (n) => `
+                  <div class="notification-item">
+                    <div class="notification-message">
+                      🔔 ${escapeHtml(n.message)}
+                    </div>
+                    <button
+                      class="btn btn-sm btn-dismiss"
+                      data-dismiss-id="${escapeHtml(n.notification)}">
+                      Dismiss
+                    </button>
+                  </div>
+                `,
+                  )
+                  .join("")}
+              </div>
+            `
+            : `
+          <div class="empty-state">
+            <p>Please sign in above to view your settlement notifications.</p>
+          </div>
+        `
+        }
+      </section>
+
+      <!-- Component 3 & 5: Active Marketplace Feed & Bidding / Buyout Action -->
       <section class="card">
         <div class="feed-header">
           <div class="card-title" style="margin-bottom: 0;">
-            <span>3. Active Marketplace Feed (${state.listings.length})</span>
+            <span>5. Active Marketplace Feed (${state.listings.length})</span>
           </div>
           <button id="btn-refresh-feed" class="btn btn-sm">↻ Refresh Feed</button>
         </div>
@@ -358,6 +622,66 @@ function render() {
                     }</span>
                   </div>
                 </div>
+
+                <!-- Component 5: Bidding & Buyout Action -->
+                ${
+                  state.session
+                    ? (() => {
+                        const minBid = item.highestBidder !== null ? item.price + item.increment : item.price;
+                        const bidLabel = item.highestBidder !== null ? `Bid $${minBid}` : `Opening Bid $${minBid}`;
+                        return `
+                  <div class="listing-actions">
+                    <div class="bid-controls">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-quick-bid"
+                        data-quick-bid
+                        data-auction-id="${escapeHtml(item.auction)}"
+                        data-listing-id="${escapeHtml(item.listing)}"
+                        data-bid-amount="${minBid}">
+                        ${bidLabel}
+                      </button>
+
+                      <form
+                        class="custom-bid-form"
+                        data-auction-id="${escapeHtml(item.auction)}"
+                        data-listing-id="${escapeHtml(item.listing)}"
+                        style="display: inline-flex; gap: 0.35rem; align-items: center;">
+                        <input
+                          type="number"
+                          placeholder="$"
+                          value="${minBid}"
+                          min="${minBid}"
+                          step="1"
+                          required />
+                        <button type="submit" class="btn btn-sm">Bid</button>
+                      </form>
+
+                      ${
+                        item.buyout !== null
+                          ? `
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-buyout"
+                          data-buyout
+                          data-auction-id="${escapeHtml(item.auction)}"
+                          data-listing-id="${escapeHtml(item.listing)}"
+                          data-buyout-amount="${item.buyout}">
+                          ⚡ Buyout $${item.buyout}
+                        </button>
+                      `
+                          : ""
+                      }
+                    </div>
+                  </div>
+                `;
+                      })()
+                    : `
+                  <div class="form-help" style="margin-top: 0.5rem;">
+                    Sign in above to place bids or buy out this item.
+                  </div>
+                `
+                }
               </div>
             `,
               )
@@ -395,8 +719,79 @@ function render() {
     }
   });
 
+  document.getElementById("create-listing-form")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const itemInput = document.getElementById("listing-item") as HTMLInputElement;
+    const priceInput = document.getElementById("listing-start-price") as HTMLInputElement;
+    const incInput = document.getElementById("listing-increment") as HTMLInputElement;
+    const buyoutInput = document.getElementById("listing-buyout") as HTMLInputElement;
+
+    if (itemInput && priceInput && incInput) {
+      const item = itemInput.value;
+      const startPrice = parseFloat(priceInput.value);
+      const increment = parseFloat(incInput.value);
+      const buyout = buyoutInput && buyoutInput.value.trim() !== "" ? parseFloat(buyoutInput.value) : null;
+      createListing(item, startPrice, increment, buyout);
+    }
+  });
+
+  document.querySelectorAll(".btn-quick-bid, [data-quick-bid]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLElement;
+      const auction = target.getAttribute("data-auction-id");
+      const item = target.getAttribute("data-listing-id");
+      const rawAmount = target.getAttribute("data-bid-amount");
+      if (rawAmount !== null && rawAmount !== undefined) {
+        const amount = parseFloat(rawAmount);
+        if (auction && item && !isNaN(amount) && amount >= 0) {
+          submitBid(auction, item, amount);
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll(".custom-bid-form").forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const target = e.currentTarget as HTMLFormElement;
+      const auction = target.getAttribute("data-auction-id");
+      const item = target.getAttribute("data-listing-id");
+      const input = target.querySelector("input[type='number']") as HTMLInputElement;
+      if (auction && item && input && input.value !== "") {
+        const amount = parseFloat(input.value);
+        if (!isNaN(amount) && amount >= 0) submitBid(auction, item, amount);
+      }
+    });
+  });
+
+  document.querySelectorAll(".btn-buyout, [data-buyout-amount]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLElement;
+      const auction = target.getAttribute("data-auction-id");
+      const item = target.getAttribute("data-listing-id");
+      const rawBuyout = target.getAttribute("data-buyout-amount");
+      if (rawBuyout !== null && rawBuyout !== undefined) {
+        const buyout = parseFloat(rawBuyout);
+        if (auction && item && !isNaN(buyout) && buyout >= 0) {
+          submitBid(auction, item, buyout);
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-dismiss-id]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const target = e.currentTarget as HTMLElement;
+      const notificationId = target.getAttribute("data-dismiss-id");
+      if (notificationId) {
+        dismissNotification(notificationId);
+      }
+    });
+  });
+
   document.getElementById("btn-refresh-feed")?.addEventListener("click", () => {
     loadFeed();
+    loadNotifications();
   });
 }
 
