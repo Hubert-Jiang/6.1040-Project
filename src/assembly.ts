@@ -9,16 +9,25 @@ import { SessioningConcept } from "./concepts/Sessioning.ts";
 import { applicationConceptSet } from "./concepts.ts";
 import { db } from "./db.ts";
 
-export function assembleApplication() {
+export interface ConceptOverrides {
+  Session?: SessioningConcept;
+  Profile?: ProfilingConcept;
+  Listing?: ListingConcept;
+  Pseudonym?: PseudonymingConcept;
+  Auction?: AuctioningConcept;
+  Notify?: NotifyingConcept;
+}
+
+export function assembleApplication(overrides?: ConceptOverrides) {
   return assemble({
     conceptSet: applicationConceptSet,
     instances: {
-      Session: new SessioningConcept(db),
-      Profile: new ProfilingConcept(db),
-      Listing: new ListingConcept(db),
-      Pseudonym: new PseudonymingConcept(db),
-      Auction: new AuctioningConcept(db),
-      Notify: new NotifyingConcept(db),
+      Session: overrides?.Session ?? new SessioningConcept(db),
+      Profile: overrides?.Profile ?? new ProfilingConcept(db),
+      Listing: overrides?.Listing ?? new ListingConcept(db),
+      Pseudonym: overrides?.Pseudonym ?? new PseudonymingConcept(db),
+      Auction: overrides?.Auction ?? new AuctioningConcept(db),
+      Notify: overrides?.Notify ?? new NotifyingConcept(db),
     },
     composition: { BeaverBazaar: composition },
     // Print what went wrong. Otherwise a failure only shows up as INTERNAL_ERROR.

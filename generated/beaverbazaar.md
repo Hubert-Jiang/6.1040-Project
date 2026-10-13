@@ -783,7 +783,7 @@ not listed here have no explicit input contract.
 - `/auth/login` — requires `username`
 - `/auth/logout` — requires `session`
 - `/auth/me` — requires `session`
-- `/listings/create` — requires `buyout`, `increment`, `item`, `session`, `startPrice`
+- `/listings/create` — requires `session`, `item`, `startPrice`, `increment`; fills `buyout` with null when absent
 - `/listings/get` — requires `listing`
 - `/notifications/dismiss` — requires `notification`, `session`
 - `/notifications/list` — requires `session`

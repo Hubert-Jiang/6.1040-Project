@@ -77,7 +77,7 @@ export type BeaverBazaarWire = {
   };
   "/listings/create": {
     input: {
-      "buyout": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["buyout"]>>;
+      "buyout"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["buyout"]>>;
       "increment": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["increment"]>>;
       "item": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["item"]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
@@ -231,7 +231,7 @@ export type BeaverBazaarWireHttp = {
   };
   "/listings/create": {
     input: {
-      "buyout": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["buyout"]>>;
+      "buyout"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["buyout"]>>;
       "increment": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["increment"]>>;
       "item": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["item"]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;

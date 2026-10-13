@@ -155,6 +155,12 @@ export const CreateAuctionListing = endpoint(
         }),
       )
       .then(respond({ listing, auction })),
+  {
+    input: {
+      required: ["session", "item", "startPrice", "increment"],
+      defaults: { buyout: null },
+    },
+  },
 );
 
 export const GetFeed = endpoint("/marketplace/feed", () =>

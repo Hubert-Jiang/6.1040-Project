@@ -45,12 +45,12 @@ export class AuctioningConcept {
     item: string;
     startPrice: number;
     increment: number;
-    buyout?: number;
+    buyout?: number | null;
   }): Promise<{ auction: string }> {
     if (startPrice < 0 || increment <= 0) {
       throw new InvalidPrice("Start price must be non-negative and increment must be positive.");
     }
-    if (buyout !== undefined && buyout < startPrice) {
+    if (buyout !== undefined && buyout !== null && buyout < startPrice) {
       throw new InvalidBuyout("Buyout price must be greater than or equal to start price.");
     }
 
