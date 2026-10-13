@@ -1,17 +1,43 @@
 # Application types
 
-Guests type their own name, and each reservation holds one table at one time.
+BeaverBazaar connects MIT community members to buy and sell second-hand goods
+through pseudo-anonymous auctions tied to public listings.
 
 ```types
-concrete Name
-  The name a guest types in when reserving.
+concrete User
+  An MIT student authenticated via Kerberos and Touchstone.
 
-concrete Table
-  A table at a certain time, such as friday-7pm-table-4.
+concrete Alias
+  A trackable, anonymous pseudonym string scoped to a listing context.
+
+concrete Item
+  The physical item metadata, such as title, description, and images.
+
+concrete Message
+  A notification message text delivered to a user.
 ```
 
 ```instances
-instantiate Reserving with
-  User is Name
-  Resource is Table
+instantiate Sessioning as Session with
+  Subject is User
+
+instantiate Profiling as Profile with
+  User is User
+
+instantiate Listing with
+  User is User
+  Item is Item
+
+instantiate Pseudonyming as Pseudonym with
+  Context is Listing.Listing
+  User is User
+
+instantiate Auctioning as Auction with
+  Owner is Alias
+  Item is Listing.Listing
+  Bidder is Alias
+
+instantiate Notifying as Notify with
+  User is User
+  Message is Message
 ```
