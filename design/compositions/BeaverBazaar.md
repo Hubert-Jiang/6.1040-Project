@@ -51,7 +51,7 @@ A buyer [submits a bid on an active auction](reaction:BeaverBazaar.Marketplace.S
 assigns the buyer a unique pseudonym within the listing's context and submits the bid under that alias, concealing
 the buyer's identity from public feeds.
 
-If a submitted bid meets or exceeds the buyout price, the system automatically closes the auction on buyout.
+If a submitted bid meets or exceeds the buyout price, the system automatically [closes the auction on buyout](reaction:BeaverBazaar.Marketplace.CloseOnBuyout).
 A seller may also manually [close an active auction](reaction:BeaverBazaar.Marketplace.CloseAuction) once satisfied, or
 [delete an auction before any bids have been placed](reaction:BeaverBazaar.Marketplace.DeleteAuction). Deleting an auction
 removes the associated listing.
@@ -64,12 +64,12 @@ BeaverBazaar.Marketplace.DeleteAuction at /auctions/delete
 
 ## Status Synchronization and Private Settlement
 
-Closing an auction synchronizes the listing status to deactivate it,
+Closing an auction synchronizes the listing status to [deactivate it](reaction:BeaverBazaar.Marketplace.SyncAuctionListingStatus),
 withdrawing the listing from the public active feed to prevent further bidding.
 
-When an auction closes with a winning bidder, the system dispatches private closing notifications.
+When an auction closes with a winning bidder, the system dispatches [private closing notifications to the seller](reaction:BeaverBazaar.Notifications.NotifySellerOnClose).
 This resolves the seller's and buyer's aliases back to their real student identities, retrieves their registered
-contact methods from their profiles, and delivers private notification messages to both parties containing each other's contact details
+contact methods from their profiles, and [delivers private closing notifications to the buyer](reaction:BeaverBazaar.Notifications.NotifyBuyerOnClose) containing each other's contact details
 so they can coordinate physical pickup and payment offline.
 
 A student reads their incoming messages through the [user notifications read](former:BeaverBazaar.Notifications.UserNotifications)
@@ -80,3 +80,18 @@ A student [dismisses a handled notification](reaction:BeaverBazaar.Notifications
 BeaverBazaar.Notifications.ListNotifications at /notifications/list
 BeaverBazaar.Notifications.DismissNotification at /notifications/dismiss
 ```
+
+```computations
+isBuyoutMet(amount: Number, buyout?: Number) : Record
+  Checks whether the placed bid amount meets or exceeds the auction buyout price.
+
+isBuyerPresent(highestBidder?: String) : Record
+  Checks whether an auction has a recorded winning bidder upon closing.
+
+formatBuyerNotification(item: String, sellerName?: String, sellerContact?: String) : Record
+  Formats the private notification message sent to the winning buyer with seller contact details.
+
+formatSellerNotification(item: String, buyerName?: String, buyerContact?: String) : Record
+  Formats the private notification message sent to the seller with winning buyer contact details.
+```
+

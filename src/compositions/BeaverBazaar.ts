@@ -1,8 +1,23 @@
 import { endpoint, receive, respond } from "@mit-sdg/sync-engine/boundary";
-import { each, form, former, where } from "@mit-sdg/sync-engine/language";
-import { concepts } from "../concepts.ts";
+import {
+  compute,
+  each,
+  form,
+  former,
+  reaction,
+  when,
+  where,
+  whether,
+} from "@mit-sdg/sync-engine/language";
+import { concepts, computations } from "../concepts.ts";
 
 const { Session, Profile, Listing, Pseudonym, Auction, Notify } = concepts;
+const {
+  isBuyoutMet,
+  isBuyerPresent,
+  formatBuyerNotification,
+  formatSellerNotification,
+} = computations;
 
 // ==========================================
 // Formers (Read Models)
@@ -12,24 +27,73 @@ export const UserProfile = former("user profile", ({ user }, { name, contact }) 
   where(Profile._get({ user }).is({ name, contact })).form({ name, contact }),
 ).optional();
 
-export const MarketplaceFeed = former("marketplace feed", (_input, { listing, owner, item }) =>
-  form({
-    listings: each(Listing._active({}).is({ listing, owner, item })).form({
-      listing,
-      owner,
-      item,
+export const MarketplaceFeed = former(
+  "marketplace feed",
+  (_input, { auction, listing, sellerAlias, item, price, increment, buyout, highestBidder }) =>
+    form({
+      listings: each(
+        Auction._active({}).is({
+          auction,
+          owner: sellerAlias,
+          item: listing,
+          highestBidder,
+          price,
+          increment,
+          buyout,
+        }),
+      )
+        .where(Listing._get({ listing }).is({ item }))
+        .form({
+          auction,
+          listing,
+          sellerAlias,
+          item,
+          price,
+          increment,
+          buyout,
+          highestBidder,
+        }),
     }),
-  }),
 );
 
 export const ListingDetail = former(
   "listing detail",
-  ({ listing }, { owner, item, active }) =>
-    where(Listing._get({ listing }).is({ listing, owner, item, active })).form({
-      listing,
-      owner,
+  (
+    { listing },
+    {
       item,
       active,
+      auction,
+      sellerAlias,
+      highestBidder,
+      price,
+      increment,
+      buyout,
+      auctionActive,
+    },
+  ) =>
+    where(
+      Listing._get({ listing }).is({ item, active }),
+      Auction._byItem({ item: listing }).is({
+        auction,
+        owner: sellerAlias,
+        highestBidder,
+        price,
+        increment,
+        buyout,
+        active: auctionActive,
+      }),
+    ).form({
+      listing,
+      item,
+      active,
+      auction,
+      sellerAlias,
+      highestBidder,
+      price,
+      increment,
+      buyout,
+      auctionActive,
     }),
 ).optional();
 
@@ -151,6 +215,90 @@ export const DismissNotification = endpoint(
 );
 
 // ==========================================
+// Reactions (Automated Synchronization)
+// ==========================================
+
+export const CloseOnBuyout = reaction(
+  ({ auction, amount, owner, buyout }) =>
+    when(Auction.bid({ auction, amount }).responds({}))
+      .where(
+        Auction._get({ auction }).is({ owner, buyout }),
+        compute(isBuyoutMet, { amount, buyout }, { met: true }),
+      )
+      .then(Auction.close({ owner, auction })),
+);
+
+export const SyncAuctionListingStatus = reaction(
+  ({ auction, listing, sellerAlias, sellerUser }) =>
+    when(Auction.close({ auction }).responds({}))
+      .where(
+        Auction._get({ auction }).is({ item: listing, owner: sellerAlias }),
+        Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
+      )
+      .then(Listing.deactivate({ owner: sellerUser, listing })),
+);
+
+export const NotifySellerOnClose = reaction(
+  ({
+    auction,
+    listing,
+    sellerAlias,
+    buyerAlias,
+    sellerUser,
+    buyerUser,
+    item,
+    buyerName,
+    buyerContact,
+    sellerMessage,
+  }) =>
+    when(Auction.close({ auction }).responds({}))
+      .where(
+        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias }),
+        compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
+        Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
+        Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
+        Listing._get({ listing }).is({ item }),
+        whether(Profile._get({ user: buyerUser }).is({ name: buyerName, contact: buyerContact })),
+        compute(
+          formatSellerNotification,
+          { item, buyerName, buyerContact },
+          { message: sellerMessage },
+        ),
+      )
+      .then(Notify.notify({ user: sellerUser, message: sellerMessage })),
+);
+
+export const NotifyBuyerOnClose = reaction(
+  ({
+    auction,
+    listing,
+    sellerAlias,
+    buyerAlias,
+    sellerUser,
+    buyerUser,
+    item,
+    sellerName,
+    sellerContact,
+    buyerMessage,
+  }) =>
+    when(Auction.close({ auction }).responds({}))
+      .where(
+        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias }),
+        compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
+        Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
+        Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
+        Listing._get({ listing }).is({ item }),
+        whether(Profile._get({ user: sellerUser }).is({ name: sellerName, contact: sellerContact })),
+        compute(
+          formatBuyerNotification,
+          { item, sellerName, sellerContact },
+          { message: buyerMessage },
+        ),
+      )
+      .then(Notify.notify({ user: buyerUser, message: buyerMessage })),
+);
+
+// ==========================================
 // Composition Export
 // ==========================================
 
@@ -173,10 +321,14 @@ export const composition = {
     DeleteAuction,
     MarketplaceFeed,
     ListingDetail,
+    CloseOnBuyout,
+    SyncAuctionListingStatus,
   },
   Notifications: {
     ListNotifications,
     DismissNotification,
     UserNotifications,
+    NotifySellerOnClose,
+    NotifyBuyerOnClose,
   },
 };

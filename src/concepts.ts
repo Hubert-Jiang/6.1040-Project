@@ -82,13 +82,76 @@ const Notify = registerConcept({
   refusals: { NO_SUCH_NOTIFICATION: NoSuchNotification },
 });
 
-export const applicationConceptSet = conceptSet({
-  Session,
-  Profile,
-  Listing,
-  Pseudonym,
-  Auction,
-  Notify,
-});
+export function isBuyoutMet({
+  amount,
+  buyout,
+}: {
+  amount: number;
+  buyout?: number;
+}): { met: boolean } {
+  return {
+    met: typeof buyout === "number" && amount >= buyout,
+  };
+}
 
-export const { concepts } = applicationConceptSet;
+export function isBuyerPresent({
+  highestBidder,
+}: {
+  highestBidder?: string;
+}): { hasWinner: boolean } {
+  return {
+    hasWinner: typeof highestBidder === "string" && highestBidder.length > 0,
+  };
+}
+
+export function formatBuyerNotification({
+  item,
+  sellerName,
+  sellerContact,
+}: {
+  item: string;
+  sellerName?: string;
+  sellerContact?: string;
+}): { message: string } {
+  const contact = sellerContact ? ` (${sellerContact})` : "";
+  const name = sellerName || "the seller";
+  return {
+    message: `You won the auction for "${item}"! Contact ${name}${contact} to arrange pickup and payment.`,
+  };
+}
+
+export function formatSellerNotification({
+  item,
+  buyerName,
+  buyerContact,
+}: {
+  item: string;
+  buyerName?: string;
+  buyerContact?: string;
+}): { message: string } {
+  const contact = buyerContact ? ` (${buyerContact})` : "";
+  const name = buyerName || "the buyer";
+  return {
+    message: `Your auction for "${item}" has ended! Contact winner ${name}${contact} to arrange pickup and payment.`,
+  };
+}
+
+export const applicationConceptSet = conceptSet(
+  {
+    Session,
+    Profile,
+    Listing,
+    Pseudonym,
+    Auction,
+    Notify,
+  },
+  {
+    isBuyoutMet,
+    isBuyerPresent,
+    formatBuyerNotification,
+    formatSellerNotification,
+  },
+);
+
+export const { concepts, computations } = applicationConceptSet;
+

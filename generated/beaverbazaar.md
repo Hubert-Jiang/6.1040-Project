@@ -164,6 +164,13 @@ Concrete types:
 - `Message` — [Application types](../design/types.md), line 16.
 - `User` — [Application types](../design/types.md), line 7.
 
+## Computations
+
+- `formatBuyerNotification(item: String, sellerName?: String, sellerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 91.
+- `formatSellerNotification(item: String, buyerName?: String, buyerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 94.
+- `isBuyerPresent(highestBidder?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 88.
+- `isBuyoutMet(amount: Number, buyout?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 85.
+
 ## Formers
 
 _Formers name result shapes evaluated when asked. The source former owns_
@@ -175,13 +182,20 @@ Authored path: `BeaverBazaar.Marketplace.ListingDetail`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 39.
 
 ```former
-Former "listing detail" — inputs (listing); bindings (owner, item, active); promises at most one record — forms:
+Former "listing detail" — inputs (listing); bindings (item, active, auction, sellerAlias, highestBidder, price, increment, buyout, auctionActive); promises at most one record — forms:
   a record of
-    where Listing._get (listing) has (active, item, listing, owner)
+    where Listing._get (listing) has (active, item)
+    where Auction._byItem (item: listing) has (active: auctionActive, auction, buyout, highestBidder, increment, owner: sellerAlias, price)
     active
+    auction
+    auctionActive
+    buyout
+    highestBidder
+    increment
     item
     listing
-    owner
+    price
+    sellerAlias
 ```
 
 ### marketplace feed
@@ -190,13 +204,19 @@ Authored path: `BeaverBazaar.Marketplace.MarketplaceFeed`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 37.
 
 ```former
-Former "marketplace feed" — inputs (); bindings (listing, owner, item); promises exactly one record — forms:
+Former "marketplace feed" — inputs (); bindings (auction, listing, sellerAlias, item, price, increment, buyout, highestBidder); promises exactly one record — forms:
   a record of
-    listings: each Listing._active () has (item, listing, owner)
+    listings: each Auction._active () has (auction, buyout, highestBidder, increment, item: listing, owner: sellerAlias, price)
+      where Listing._get (listing) has (item)
       form a record of
+        auction
+        buyout
+        highestBidder
+        increment
         item
         listing
-        owner
+        price
+        sellerAlias
 ```
 
 ### user notifications
@@ -358,6 +378,20 @@ where
   earlier, RequestBoundary.request (auction, item, path: "/auctions/close", requestId, session)
 then
   RequestBoundary.respond (auction, requestId)
+```
+
+### BeaverBazaar.Marketplace.CloseOnBuyout
+
+Authored path: `BeaverBazaar.Marketplace.CloseOnBuyout`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 54.
+
+```reaction
+when Auction.bid (amount, auction)
+where
+  Auction._get (auction) has (buyout, owner)
+  (met: true) is isBuyoutMet (amount, buyout)
+then
+  Auction.close (auction, owner)
 ```
 
 ### BeaverBazaar.Marketplace.CreateAuctionListing
@@ -558,6 +592,20 @@ then
   RequestBoundary.respond (auction, requestId)
 ```
 
+### BeaverBazaar.Marketplace.SyncAuctionListingStatus
+
+Authored path: `BeaverBazaar.Marketplace.SyncAuctionListingStatus`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 67.
+
+```reaction
+when Auction.close (auction)
+where
+  Auction._get (auction) has (item: listing, owner: sellerAlias)
+  Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
+then
+  Listing.deactivate (listing, owner: sellerUser)
+```
+
 ### BeaverBazaar.Notifications.DismissNotification
 
 Authored path: `BeaverBazaar.Notifications.DismissNotification`.
@@ -622,6 +670,44 @@ where
   earlier, RequestBoundary.request (path: "/notifications/list", requestId, session)
 then
   RequestBoundary.respond (notifications: former "user notifications" with (user), requestId)
+```
+
+### BeaverBazaar.Notifications.NotifyBuyerOnClose
+
+Authored path: `BeaverBazaar.Notifications.NotifyBuyerOnClose`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 72.
+
+```reaction
+when Auction.close (auction)
+where
+  Auction._get (auction) has (highestBidder: buyerAlias, item: listing, owner: sellerAlias)
+  (hasWinner: true) is isBuyerPresent (highestBidder: buyerAlias)
+  Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
+  Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
+  Listing._get (listing) has (item)
+  whether Profile._get (user: sellerUser) has (contact: sellerContact, name: sellerName)
+  (message: buyerMessage) is formatBuyerNotification (item, sellerContact, sellerName)
+then
+  Notify.notify (message: buyerMessage, user: buyerUser)
+```
+
+### BeaverBazaar.Notifications.NotifySellerOnClose
+
+Authored path: `BeaverBazaar.Notifications.NotifySellerOnClose`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 70.
+
+```reaction
+when Auction.close (auction)
+where
+  Auction._get (auction) has (highestBidder: buyerAlias, item: listing, owner: sellerAlias)
+  (hasWinner: true) is isBuyerPresent (highestBidder: buyerAlias)
+  Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
+  Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
+  Listing._get (listing) has (item)
+  whether Profile._get (user: buyerUser) has (contact: buyerContact, name: buyerName)
+  (message: sellerMessage) is formatSellerNotification (buyerContact, buyerName, item)
+then
+  Notify.notify (message: sellerMessage, user: sellerUser)
 ```
 
 ### BeaverBazaar.Profile.UpdateProfile
