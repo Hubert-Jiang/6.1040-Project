@@ -79,7 +79,16 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     if ("error" in bobProfile) throw new Error(String(bobProfile.error));
     expect(bobProfile.profile).toBeDefined();
 
-    // 1c. Unauthorized session partition: unknown session token refused
+    // 1c. Verify active session profile query returns isolated profile per session
+    const aliceGetProfile = await client["/profile/get"]({ session: aliceSession });
+    if ("error" in aliceGetProfile) throw new Error(String(aliceGetProfile.error));
+    expect(aliceGetProfile.profile).toEqual({ name: "Alice Doe", contact: "617-555-0101" });
+
+    const bobGetProfile = await client["/profile/get"]({ session: bobSession });
+    if ("error" in bobGetProfile) throw new Error(String(bobGetProfile.error));
+    expect(bobGetProfile.profile).toEqual({ name: "Bob Smith", contact: "bob@mit.edu" });
+
+    // 1d. Unauthorized session partition: unknown session token refused
     const unauthProfile = await client["/profile/update"]({
       session: "invalid-token",
       name: "Hacker",

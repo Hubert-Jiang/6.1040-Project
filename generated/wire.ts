@@ -151,6 +151,18 @@ export type BeaverBazaarWire = {
     };
     error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
   };
+  "/profile/get": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "profile": {
+        "contact": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Profile"]["_get"]>>>, ["contact"]>>;
+        "name": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Profile"]["_get"]>>>, ["name"]>>;
+      } | null;
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
   "/profile/update": {
     input: {
       "contact": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Profile"]["update"]>[0], ["contact"]>>;
@@ -302,6 +314,18 @@ export type BeaverBazaarWireHttp = {
           "notification": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Notify"]["_all"]>>>, ["notification"]>>;
         }[];
       };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/profile/get": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "profile": {
+        "contact": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Profile"]["_get"]>>>, ["contact"]>>;
+        "name": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Profile"]["_get"]>>>, ["name"]>>;
+      } | null;
     };
     error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };

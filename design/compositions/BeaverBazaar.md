@@ -22,10 +22,12 @@ BeaverBazaar.Auth.SignOut at /auth/logout
 
 Students configure their preferred contact methods (such as a phone number) for post-auction coordination.
 A student [updates their contact profile](reaction:BeaverBazaar.Profile.UpdateProfile) with their name and
-phone number. The [user profile](former:BeaverBazaar.Profile.UserProfile) presents the student's saved contact details.
+phone number. The [user profile](former:BeaverBazaar.Profile.UserProfile) presents the student's saved contact details,
+accessed via the [profile query endpoint](reaction:BeaverBazaar.Profile.GetProfile).
 
 ```endpoints
 BeaverBazaar.Profile.UpdateProfile at /profile/update
+BeaverBazaar.Profile.GetProfile at /profile/get
 ```
 
 ## Marketplace Feed and Listing Management

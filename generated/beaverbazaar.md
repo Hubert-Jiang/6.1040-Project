@@ -166,10 +166,10 @@ Concrete types:
 
 ## Computations
 
-- `formatBuyerNotification(item: String, sellerName?: String, sellerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 91.
-- `formatSellerNotification(item: String, buyerName?: String, buyerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 94.
-- `isBuyerPresent(highestBidder?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 88.
-- `isBuyoutMet(amount: Number, buyout?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 85.
+- `formatBuyerNotification(item: String, sellerName?: String, sellerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 93.
+- `formatSellerNotification(item: String, buyerName?: String, buyerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 96.
+- `isBuyerPresent(highestBidder?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 90.
+- `isBuyoutMet(amount: Number, buyout?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 87.
 
 ## Formers
 
@@ -179,7 +179,7 @@ _the authored explanation; this section records the generated shape._
 ### listing detail
 
 Authored path: `BeaverBazaar.Marketplace.ListingDetail`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 39.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 41.
 
 ```former
 Former "listing detail" — inputs (listing); bindings (item, active, auction, sellerAlias, highestBidder, price, increment, buyout, auctionActive); promises at most one record — forms:
@@ -201,7 +201,7 @@ Former "listing detail" — inputs (listing); bindings (item, active, auction, s
 ### marketplace feed
 
 Authored path: `BeaverBazaar.Marketplace.MarketplaceFeed`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 37.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 39.
 
 ```former
 Former "marketplace feed" — inputs (); bindings (auction, listing, sellerAlias, item, price, increment, buyout, highestBidder); promises exactly one record — forms:
@@ -222,7 +222,7 @@ Former "marketplace feed" — inputs (); bindings (auction, listing, sellerAlias
 ### user notifications
 
 Authored path: `BeaverBazaar.Notifications.UserNotifications`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 75.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 77.
 
 ```former
 Former "user notifications" — inputs (user); bindings (notification, message); promises exactly one record — forms:
@@ -329,8 +329,8 @@ then
 ### BeaverBazaar.Marketplace.CloseAuction
 
 Authored path: `BeaverBazaar.Marketplace.CloseAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 55.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 61.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 57.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 63.
 
 ```reaction
 when RequestBoundary.request (auction, item, path: "/auctions/close", requestId, session)
@@ -341,8 +341,8 @@ then
 ### BeaverBazaar.Marketplace.CloseAuction#2
 
 Authored path: `BeaverBazaar.Marketplace.CloseAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 55.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 61.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 57.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 63.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Marketplace.CloseAuction
@@ -355,8 +355,8 @@ then
 ### BeaverBazaar.Marketplace.CloseAuction#3
 
 Authored path: `BeaverBazaar.Marketplace.CloseAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 55.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 61.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 57.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 63.
 
 ```reaction
 when Pseudonym.getAlias (context: item, user, alias), asked by BeaverBazaar.Marketplace.CloseAuction#2
@@ -369,8 +369,8 @@ then
 ### BeaverBazaar.Marketplace.CloseAuction#4
 
 Authored path: `BeaverBazaar.Marketplace.CloseAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 55.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 61.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 57.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 63.
 
 ```reaction
 when Auction.close (auction, owner: alias), asked by BeaverBazaar.Marketplace.CloseAuction#3
@@ -383,7 +383,7 @@ then
 ### BeaverBazaar.Marketplace.CloseOnBuyout
 
 Authored path: `BeaverBazaar.Marketplace.CloseOnBuyout`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 54.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 56.
 
 ```reaction
 when Auction.bid (amount, auction)
@@ -397,8 +397,8 @@ then
 ### BeaverBazaar.Marketplace.CreateAuctionListing
 
 Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 33.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 43.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 35.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 45.
 
 ```reaction
 when RequestBoundary.request (buyout, increment, item, path: "/listings/create", requestId, session, startPrice)
@@ -409,8 +409,8 @@ then
 ### BeaverBazaar.Marketplace.CreateAuctionListing#2
 
 Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 33.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 43.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 35.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 45.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Marketplace.CreateAuctionListing
@@ -423,8 +423,8 @@ then
 ### BeaverBazaar.Marketplace.CreateAuctionListing#3
 
 Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 33.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 43.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 35.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 45.
 
 ```reaction
 when Listing.create (item, owner: user, listing), asked by BeaverBazaar.Marketplace.CreateAuctionListing#2
@@ -435,8 +435,8 @@ then
 ### BeaverBazaar.Marketplace.CreateAuctionListing#4
 
 Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 33.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 43.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 35.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 45.
 
 ```reaction
 when Pseudonym.getAlias (context: listing, user, alias), asked by BeaverBazaar.Marketplace.CreateAuctionListing#3
@@ -449,8 +449,8 @@ then
 ### BeaverBazaar.Marketplace.CreateAuctionListing#5
 
 Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 33.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 43.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 35.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 45.
 
 ```reaction
 when Auction.create (buyout, increment, item: listing, owner: alias, startPrice, auction), asked by BeaverBazaar.Marketplace.CreateAuctionListing#4
@@ -463,8 +463,8 @@ then
 ### BeaverBazaar.Marketplace.DeleteAuction
 
 Authored path: `BeaverBazaar.Marketplace.DeleteAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 56.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 58.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 64.
 
 ```reaction
 when RequestBoundary.request (auction, item, path: "/auctions/delete", requestId, session)
@@ -475,8 +475,8 @@ then
 ### BeaverBazaar.Marketplace.DeleteAuction#2
 
 Authored path: `BeaverBazaar.Marketplace.DeleteAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 56.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 58.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 64.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Marketplace.DeleteAuction
@@ -489,8 +489,8 @@ then
 ### BeaverBazaar.Marketplace.DeleteAuction#3
 
 Authored path: `BeaverBazaar.Marketplace.DeleteAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 56.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 58.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 64.
 
 ```reaction
 when Pseudonym.getAlias (context: item, user, alias), asked by BeaverBazaar.Marketplace.DeleteAuction#2
@@ -503,8 +503,8 @@ then
 ### BeaverBazaar.Marketplace.DeleteAuction#4
 
 Authored path: `BeaverBazaar.Marketplace.DeleteAuction`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 56.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 58.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 64.
 
 ```reaction
 when Auction.delete (auction, owner: alias), asked by BeaverBazaar.Marketplace.DeleteAuction#3
@@ -517,8 +517,8 @@ then
 ### BeaverBazaar.Marketplace.GetFeed
 
 Authored path: `BeaverBazaar.Marketplace.GetFeed`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 38.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 44.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 40.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 46.
 
 ```reaction
 when RequestBoundary.request (path: "/marketplace/feed", requestId)
@@ -529,8 +529,8 @@ then
 ### BeaverBazaar.Marketplace.GetListing
 
 Authored path: `BeaverBazaar.Marketplace.GetListing`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 40.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 45.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 42.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 47.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/listings/get", requestId)
@@ -541,8 +541,8 @@ then
 ### BeaverBazaar.Marketplace.SubmitBid
 
 Authored path: `BeaverBazaar.Marketplace.SubmitBid`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 50.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 60.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 52.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
 
 ```reaction
 when RequestBoundary.request (amount, auction, item, path: "/auctions/bid", requestId, session)
@@ -553,8 +553,8 @@ then
 ### BeaverBazaar.Marketplace.SubmitBid#2
 
 Authored path: `BeaverBazaar.Marketplace.SubmitBid`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 50.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 60.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 52.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Marketplace.SubmitBid
@@ -567,8 +567,8 @@ then
 ### BeaverBazaar.Marketplace.SubmitBid#3
 
 Authored path: `BeaverBazaar.Marketplace.SubmitBid`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 50.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 60.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 52.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
 
 ```reaction
 when Pseudonym.getAlias (context: item, user, alias), asked by BeaverBazaar.Marketplace.SubmitBid#2
@@ -581,8 +581,8 @@ then
 ### BeaverBazaar.Marketplace.SubmitBid#4
 
 Authored path: `BeaverBazaar.Marketplace.SubmitBid`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 50.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 60.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 52.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 62.
 
 ```reaction
 when Auction.bid (amount, auction, bidder: alias), asked by BeaverBazaar.Marketplace.SubmitBid#3
@@ -595,7 +595,7 @@ then
 ### BeaverBazaar.Marketplace.SyncAuctionListingStatus
 
 Authored path: `BeaverBazaar.Marketplace.SyncAuctionListingStatus`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 67.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 69.
 
 ```reaction
 when Auction.close (auction)
@@ -609,8 +609,8 @@ then
 ### BeaverBazaar.Notifications.DismissNotification
 
 Authored path: `BeaverBazaar.Notifications.DismissNotification`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 77.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 81.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 79.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 83.
 
 ```reaction
 when RequestBoundary.request (notification, path: "/notifications/dismiss", requestId, session)
@@ -621,8 +621,8 @@ then
 ### BeaverBazaar.Notifications.DismissNotification#2
 
 Authored path: `BeaverBazaar.Notifications.DismissNotification`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 77.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 81.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 79.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 83.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Notifications.DismissNotification
@@ -635,8 +635,8 @@ then
 ### BeaverBazaar.Notifications.DismissNotification#3
 
 Authored path: `BeaverBazaar.Notifications.DismissNotification`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 77.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 81.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 79.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 83.
 
 ```reaction
 when Notify.dismiss (notification), asked by BeaverBazaar.Notifications.DismissNotification#2
@@ -649,8 +649,8 @@ then
 ### BeaverBazaar.Notifications.ListNotifications
 
 Authored path: `BeaverBazaar.Notifications.ListNotifications`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 76.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 80.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 78.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 82.
 
 ```reaction
 when RequestBoundary.request (path: "/notifications/list", requestId, session)
@@ -661,8 +661,8 @@ then
 ### BeaverBazaar.Notifications.ListNotifications#2
 
 Authored path: `BeaverBazaar.Notifications.ListNotifications`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 76.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 80.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 78.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 82.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Notifications.ListNotifications
@@ -675,7 +675,7 @@ then
 ### BeaverBazaar.Notifications.NotifyBuyerOnClose
 
 Authored path: `BeaverBazaar.Notifications.NotifyBuyerOnClose`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 72.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 74.
 
 ```reaction
 when Auction.close (auction)
@@ -694,7 +694,7 @@ then
 ### BeaverBazaar.Notifications.NotifySellerOnClose
 
 Authored path: `BeaverBazaar.Notifications.NotifySellerOnClose`.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 70.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 72.
 
 ```reaction
 when Auction.close (auction)
@@ -710,11 +710,37 @@ then
   Notify.notify (message: sellerMessage, user: sellerUser)
 ```
 
+### BeaverBazaar.Profile.GetProfile
+
+Authored path: `BeaverBazaar.Profile.GetProfile`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 26.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 30.
+
+```reaction
+when RequestBoundary.request (path: "/profile/get", requestId, session)
+then
+  Session.current (session)
+```
+
+### BeaverBazaar.Profile.GetProfile#2
+
+Authored path: `BeaverBazaar.Profile.GetProfile`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 26.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 30.
+
+```reaction
+when Session.current (session, subject: user), asked by BeaverBazaar.Profile.GetProfile
+where
+  earlier, RequestBoundary.request (path: "/profile/get", requestId, session)
+then
+  RequestBoundary.respond (profile: former "user profile" with (user), requestId)
+```
+
 ### BeaverBazaar.Profile.UpdateProfile
 
 Authored path: `BeaverBazaar.Profile.UpdateProfile`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 24.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 28.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 29.
 
 ```reaction
 when RequestBoundary.request (contact, name, path: "/profile/update", requestId, session)
@@ -726,7 +752,7 @@ then
 
 Authored path: `BeaverBazaar.Profile.UpdateProfile`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 24.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 28.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 29.
 
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Profile.UpdateProfile
@@ -740,7 +766,7 @@ then
 
 Authored path: `BeaverBazaar.Profile.UpdateProfile`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 24.
-- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 28.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 29.
 
 ```reaction
 when Profile.update (contact, name, user, profile), asked by BeaverBazaar.Profile.UpdateProfile#2
@@ -787,4 +813,5 @@ not listed here have no explicit input contract.
 - `/listings/get` — requires `listing`
 - `/notifications/dismiss` — requires `notification`, `session`
 - `/notifications/list` — requires `session`
+- `/profile/get` — requires `session`
 - `/profile/update` — requires `contact`, `name`, `session`

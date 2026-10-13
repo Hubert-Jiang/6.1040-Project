@@ -44,10 +44,53 @@ const PRESETS = [
   { label: "Bob", username: "bob@mit.edu", defaultName: "Bob Smith", defaultContact: "bob@mit.edu" },
 ];
 
+function escapeHtml(str: string | null | undefined): string {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function setStatus(message: string | null, type: "success" | "error" | "info" = "info") {
   state.statusMessage = message;
   state.statusType = type;
   render();
+}
+
+/**
+ * Component 2: Profile Query & Synchronization Action
+ * Fetches the registered contact profile for the currently active session.
+ */
+async function loadProfile() {
+  if (!state.session) {
+    state.name = "";
+    state.contact = "";
+    return;
+  }
+
+  try {
+    const res = await client["/profile/get"]({ session: state.session });
+    if (!("error" in res) && res.profile) {
+      state.name = res.profile.name;
+      state.contact = res.profile.contact;
+      return;
+    }
+  } catch (err) {
+    console.warn("Could not query active profile:", err);
+  }
+
+  // Fallback to preset defaults if profile has not been persisted on the server yet
+  const preset = PRESETS.find((p) => p.username === state.user);
+  if (preset) {
+    state.name = preset.defaultName;
+    state.contact = preset.defaultContact;
+  } else {
+    state.name = "";
+    state.contact = "";
+  }
 }
 
 /**
@@ -68,12 +111,8 @@ async function login(username: string) {
     state.user = username.trim();
     state.session = res.session;
 
-    // Autofill default profile fields if known preset
-    const preset = PRESETS.find((p) => p.username === state.user);
-    if (preset && !state.name) {
-      state.name = preset.defaultName;
-      state.contact = preset.defaultContact;
-    }
+    // Dynamically update profile fields according to the active session
+    await loadProfile();
 
     setStatus(`Signed in as ${state.user}`, "success");
     await loadFeed();
@@ -129,7 +168,7 @@ async function updateProfile(name: string, contact: string) {
 
     state.name = name.trim();
     state.contact = contact.trim();
-    setStatus("Contact profile updated successfully! (Kept private until auction closes)", "success");
+    setStatus(`Contact profile updated for ${state.user}!`, "success");
   } catch (err) {
     setStatus(`Error updating profile: ${String(err)}`, "error");
   } finally {
@@ -174,7 +213,7 @@ function render() {
       <!-- Status Alert Banner -->
       ${
         state.statusMessage
-          ? `<div class="alert alert-${state.statusType}">${state.statusMessage}</div>`
+          ? `<div class="alert alert-${state.statusType}">${escapeHtml(state.statusMessage)}</div>`
           : ""
       }
 
@@ -188,7 +227,7 @@ function render() {
           <div class="auth-status">
             <div>
               <span>Current User: </span>
-              <span class="user-badge">${state.user ?? "Not Signed In"}</span>
+              <span class="user-badge">${escapeHtml(state.user ?? "Not Signed In")}</span>
             </div>
             ${
               state.session
@@ -203,8 +242,8 @@ function render() {
               (p) => `
               <button
                 class="btn btn-sm ${state.user === p.username ? "btn-active" : ""}"
-                data-login-preset="${p.username}">
-                ${p.label} (${p.username})
+                data-login-preset="${escapeHtml(p.username)}">
+                ${escapeHtml(p.label)} (${escapeHtml(p.username)})
               </button>
             `,
             ).join("")}
@@ -215,7 +254,7 @@ function render() {
               type="text"
               id="custom-username"
               placeholder="Or enter custom Kerberos email (e.g. charlie@mit.edu)"
-              value="${state.user ? "" : ""}" />
+              value="${escapeHtml(state.user ? "" : "")}" />
             <button type="submit" class="btn btn-primary btn-sm">Sign In</button>
           </form>
         </div>
@@ -225,18 +264,22 @@ function render() {
       <section class="card">
         <div class="card-title">
           <span>2. My Contact Profile</span>
+          ${state.user ? `<span class="session-badge">Active: ${escapeHtml(state.user)}</span>` : ""}
         </div>
         ${
           state.session
             ? `
           <form id="profile-form">
+            <div class="form-help" style="margin-bottom: 0.75rem;">
+              Currently editing contact details for <strong>${escapeHtml(state.user)}</strong>.
+            </div>
             <div class="input-group">
               <label class="input-label" for="profile-name">Display Name</label>
               <input
                 type="text"
                 id="profile-name"
                 placeholder="e.g. Alice Doe"
-                value="${state.name}"
+                value="${escapeHtml(state.name)}"
                 required />
             </div>
             <div class="input-group">
@@ -245,10 +288,10 @@ function render() {
                 type="text"
                 id="profile-contact"
                 placeholder="e.g. 617-555-0101 or alice@mit.edu"
-                value="${state.contact}"
+                value="${escapeHtml(state.contact)}"
                 required />
               <div class="form-help">
-                🔒 Privacy Protected: Your contact info is strictly hidden while auctions are active, and only disclosed privately to the winning counterparty upon settlement.
+                🔒 Your contact info is strictly hidden while auctions are active, and only disclosed privately to the winning counterparty.
               </div>
             </div>
             <button type="submit" class="btn btn-primary" ${state.loading ? "disabled" : ""}>
@@ -288,7 +331,7 @@ function render() {
               .map(
                 (item) => `
               <div class="listing-card">
-                <div class="listing-title">${item.item}</div>
+                <div class="listing-title">${escapeHtml(item.item)}</div>
 
                 <div class="listing-price-row">
                   <span class="listing-current-price">$${item.price}</span>
@@ -303,14 +346,14 @@ function render() {
                 <div class="listing-meta">
                   <div class="meta-pill">
                     <span>Seller:</span>
-                    <span class="pseudonym-tag">${item.sellerAlias}</span>
+                    <span class="pseudonym-tag">${escapeHtml(item.sellerAlias)}</span>
                     <span class="session-badge">(Masked Alias)</span>
                   </div>
                   <div class="meta-pill">
                     <span>Highest Bidder:</span>
                     <span>${
                       item.highestBidder
-                        ? `<strong class="pseudonym-tag">${item.highestBidder}</strong>`
+                        ? `<strong class="pseudonym-tag">${escapeHtml(item.highestBidder)}</strong>`
                         : "<em>No bids placed yet</em>"
                     }</span>
                   </div>

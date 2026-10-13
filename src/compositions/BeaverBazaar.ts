@@ -141,6 +141,12 @@ export const UpdateProfile = endpoint(
       .then(respond({ profile })),
 );
 
+export const GetProfile = endpoint("/profile/get", ({ session, user }) =>
+  receive({ session })
+    .then(Session.current({ session }).responds({ subject: user }))
+    .then(respond({ profile: UserProfile({ user }) })),
+);
+
 // Marketplace & Listings
 export const CreateAuctionListing = endpoint(
   "/listings/create",
@@ -316,6 +322,7 @@ export const composition = {
   },
   Profile: {
     UpdateProfile,
+    GetProfile,
     UserProfile,
   },
   Marketplace: {
