@@ -51,10 +51,10 @@ A buyer [submits a bid on an active auction](reaction:BeaverBazaar.Marketplace.S
 assigns the buyer a unique pseudonym within the listing's context and submits the bid under that alias, concealing
 the buyer's identity from public feeds.
 
-If a submitted bid meets or exceeds the buyout price, the system [automatically closes the auction on buyout](reaction:BeaverBazaar.Marketplace.CloseOnBuyout).
+If a submitted bid meets or exceeds the buyout price, the system automatically closes the auction on buyout.
 A seller may also manually [close an active auction](reaction:BeaverBazaar.Marketplace.CloseAuction) once satisfied, or
 [delete an auction before any bids have been placed](reaction:BeaverBazaar.Marketplace.DeleteAuction). Deleting an auction
-[synchronously removes the associated listing](reaction:BeaverBazaar.Marketplace.SyncAuctionListingDelete).
+removes the associated listing.
 
 ```endpoints
 BeaverBazaar.Marketplace.SubmitBid at /auctions/bid
@@ -64,11 +64,11 @@ BeaverBazaar.Marketplace.DeleteAuction at /auctions/delete
 
 ## Status Synchronization and Private Settlement
 
-Closing an auction [synchronizes the listing status to deactivate it](reaction:BeaverBazaar.Marketplace.SyncAuctionListingStatus),
+Closing an auction synchronizes the listing status to deactivate it,
 withdrawing the listing from the public active feed to prevent further bidding.
 
-When an auction closes with a winning bidder, the system [dispatches private closing notifications](reaction:BeaverBazaar.Marketplace.NotifyOnClose).
-This reaction resolves the seller's and buyer's aliases back to their real student identities, retrieves their registered
+When an auction closes with a winning bidder, the system dispatches private closing notifications.
+This resolves the seller's and buyer's aliases back to their real student identities, retrieves their registered
 contact methods from their profiles, and delivers private notification messages to both parties containing each other's contact details
 so they can coordinate physical pickup and payment offline.
 
