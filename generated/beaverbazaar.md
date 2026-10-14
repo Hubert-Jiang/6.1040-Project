@@ -166,8 +166,8 @@ Concrete types:
 
 ## Computations
 
-- `formatBuyerNotification(item: String, sellerName?: String, sellerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 93.
-- `formatSellerNotification(item: String, buyerName?: String, buyerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 96.
+- `formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 93.
+- `formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 96.
 - `isBuyerPresent(highestBidder?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 90.
 - `isBuyoutMet(amount: Number, buyout?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 87.
 
@@ -688,7 +688,7 @@ where
   Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
   Listing._get (listing) has (item)
   whether Profile._get (user: sellerUser) has (contact: sellerContact, name: sellerName)
-  (message: buyerMessage) is formatBuyerNotification (item, sellerContact, sellerName)
+  (message: buyerMessage) is formatBuyerNotification (item, sellerAlias, sellerContact, sellerName, sellerUser)
 then
   Notify.notify (message: buyerMessage, user: buyerUser)
 ```
@@ -707,7 +707,7 @@ where
   Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
   Listing._get (listing) has (item)
   whether Profile._get (user: buyerUser) has (contact: buyerContact, name: buyerName)
-  (message: sellerMessage) is formatSellerNotification (buyerContact, buyerName, item)
+  (message: sellerMessage) is formatSellerNotification (buyerAlias, buyerContact, buyerName, buyerUser, item)
 then
   Notify.notify (message: sellerMessage, user: sellerUser)
 ```

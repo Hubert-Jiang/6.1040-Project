@@ -5,9 +5,9 @@ export const ListingCreator = defineComponent({
   name: "ListingCreator",
   setup() {
     const item = ref("");
-    const startPrice = ref<number | null>(60);
-    const increment = ref<number | null>(5);
-    const buyout = ref<number | null>(75);
+    const startPrice = ref<number | null>(0);
+    const increment = ref<number | null>(1);
+    const buyout = ref<number | null>(1);
 
     async function onSubmitListing(e: Event) {
       e.preventDefault();
@@ -22,9 +22,9 @@ export const ListingCreator = defineComponent({
       );
       if (success) {
         item.value = "";
-        startPrice.value = 60;
-        increment.value = 5;
-        buyout.value = 75;
+        startPrice.value = 0;
+        increment.value = 1;
+        buyout.value = 1;
       }
     }
 
@@ -64,7 +64,7 @@ export const ListingCreator = defineComponent({
                 <input
                   id="listing-start-price"
                   type="number"
-                  placeholder="60"
+                  placeholder="0"
                   min="0"
                   step="1"
                   required
@@ -82,7 +82,7 @@ export const ListingCreator = defineComponent({
                 <input
                   id="listing-increment"
                   type="number"
-                  placeholder="5"
+                  placeholder="1"
                   min="1"
                   step="1"
                   required
@@ -100,7 +100,7 @@ export const ListingCreator = defineComponent({
                 <input
                   id="listing-buyout"
                   type="number"
-                  placeholder="75 (or 0)"
+                  placeholder="1 (or 0)"
                   min="0"
                   step="1"
                   value={buyout.value ?? ""}

@@ -276,7 +276,7 @@ export const NotifySellerOnClose = reaction(
         whether(Profile._get({ user: buyerUser }).is({ name: buyerName, contact: buyerContact })),
         compute(
           formatSellerNotification,
-          { item, buyerName, buyerContact },
+          { item, buyerAlias, buyerUser, buyerName, buyerContact },
           { message: sellerMessage },
         ),
       )
@@ -306,7 +306,7 @@ export const NotifyBuyerOnClose = reaction(
         whether(Profile._get({ user: sellerUser }).is({ name: sellerName, contact: sellerContact })),
         compute(
           formatBuyerNotification,
-          { item, sellerName, sellerContact },
+          { item, sellerAlias, sellerUser, sellerName, sellerContact },
           { message: buyerMessage },
         ),
       )

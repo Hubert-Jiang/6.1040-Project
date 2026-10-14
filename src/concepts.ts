@@ -106,33 +106,41 @@ export function isBuyerPresent({
 
 export function formatBuyerNotification({
   item,
+  sellerAlias,
+  sellerUser,
   sellerName,
   sellerContact,
 }: {
   item: string;
+  sellerAlias: string;
+  sellerUser: string;
   sellerName?: string;
   sellerContact?: string;
 }): { message: string } {
-  const contact = sellerContact ? ` (${sellerContact})` : "";
-  const name = sellerName || "the seller";
+  const name = sellerName ? `${sellerName} (${sellerUser})` : sellerUser;
+  const contact = sellerContact ? ` | Contact: ${sellerContact}` : "";
   return {
-    message: `You won the auction for "${item}"! Contact ${name}${contact} to arrange pickup and payment.`,
+    message: `You won the auction for "${item}"! Counterparty: alias "${sellerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
   };
 }
 
 export function formatSellerNotification({
   item,
+  buyerAlias,
+  buyerUser,
   buyerName,
   buyerContact,
 }: {
   item: string;
+  buyerAlias: string;
+  buyerUser: string;
   buyerName?: string;
   buyerContact?: string;
 }): { message: string } {
-  const contact = buyerContact ? ` (${buyerContact})` : "";
-  const name = buyerName || "the buyer";
+  const name = buyerName ? `${buyerName} (${buyerUser})` : buyerUser;
+  const contact = buyerContact ? ` | Contact: ${buyerContact}` : "";
   return {
-    message: `Your auction for "${item}" has ended! Contact winner ${name}${contact} to arrange pickup and payment.`,
+    message: `Your auction for "${item}" has ended! Counterparty: alias "${buyerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
   };
 }
 

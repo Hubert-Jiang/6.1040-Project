@@ -287,7 +287,7 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     // Testing NotifySellerOnClose and NotifyBuyerOnClose reactions,
     // out-of-band profile contact resolution, and notification dismissal.
 
-    // 5a. Alice's notification contains Bob's name and contact information
+    // 5a. Alice's notification contains Bob's alias, actual identity, and contact information
     const aliceNotifications = await client["/notifications/list"]({ session: aliceSession });
     if ("error" in aliceNotifications) throw new Error(String(aliceNotifications.error));
     expect(aliceNotifications.notifications.notifications).toHaveLength(1);
@@ -295,8 +295,9 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     expect(aliceNotif.message).toContain("Vintage Fuji Bicycle");
     expect(aliceNotif.message).toContain("Bob Smith");
     expect(aliceNotif.message).toContain("bob@mit.edu");
+    expect(aliceNotif.message).toContain("Counterparty: alias");
 
-    // 5b. Bob's notification contains Alice's name and contact information
+    // 5b. Bob's notification contains Alice's alias, actual identity, and contact information
     const bobNotifications = await client["/notifications/list"]({ session: bobSession });
     if ("error" in bobNotifications) throw new Error(String(bobNotifications.error));
     expect(bobNotifications.notifications.notifications).toHaveLength(1);
@@ -304,6 +305,7 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     expect(bobNotif.message).toContain("Vintage Fuji Bicycle");
     expect(bobNotif.message).toContain("Alice Doe");
     expect(bobNotif.message).toContain("617-555-0101");
+    expect(bobNotif.message).toContain("Counterparty: alias");
 
     // 5c. Notification dismissal partition
     const dismissRes = await client["/notifications/dismiss"]({
