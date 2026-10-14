@@ -26,8 +26,8 @@ export const SettlementInbox = defineComponent({
         ) : store.state.notifications.length === 0 ? (
           <div class="empty-state">
             <p>
-              No new notifications. When an auction closes or you win an item, private
-              contact exchange details appear here.
+              No new notifications. If you win or close an auction,
+              contact exchange details will appear here.
             </p>
           </div>
         ) : (

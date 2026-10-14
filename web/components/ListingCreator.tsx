@@ -64,7 +64,7 @@ export const ListingCreator = defineComponent({
                 <input
                   id="listing-start-price"
                   type="number"
-                  placeholder="0"
+                  placeholder=">= 0"
                   min="0"
                   step="1"
                   required
@@ -82,7 +82,7 @@ export const ListingCreator = defineComponent({
                 <input
                   id="listing-increment"
                   type="number"
-                  placeholder="1"
+                  placeholder=">= 1"
                   min="1"
                   step="1"
                   required
@@ -95,12 +95,12 @@ export const ListingCreator = defineComponent({
               </div>
               <div class="input-group">
                 <label class="input-label" for="listing-buyout">
-                  Buyout Price ($ optional, 0 for giveaway)
+                  Buyout Price ($)
                 </label>
                 <input
                   id="listing-buyout"
                   type="number"
-                  placeholder="1 (or 0)"
+                  placeholder=">= 0"
                   min="0"
                   step="1"
                   value={buyout.value ?? ""}
@@ -113,8 +113,7 @@ export const ListingCreator = defineComponent({
             </div>
 
             <div class="form-help" style={{ marginBottom: "0.75rem" }}>
-              🎭 Anonymity Notice: Your listing is posted under a unique contextual pseudonym
-              to shield your identity from public campus dormspam feeds.
+              🎭 Listings are posted under a unique pseudonym while active, and are only resolved privately to the winning counterparty.
             </div>
 
             <button

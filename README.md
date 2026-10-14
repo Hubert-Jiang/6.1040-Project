@@ -292,48 +292,42 @@ Listings overall represent the visual listing of an item; e.g. the title, descri
 
 # User Journey
 
-## The Problem
-Bob is a freshman living at Next House. Although at first Bob finds the walk to class enjoyable, he quickly grows tired of trekking 10 minutes first thing in the morning. Bob begins researching for Cambridge bike options, but he doesn't have that much dispoasable money. He turns towards second-hand options and begins going through dormspam at the recommendation of a friend. However, Bob quickly realizes that he can't just search through his emails and find bikes; although some sellers put "bike" in their subject line or body, it's unclear whether these bikes are still for sale, or what the current bid is. Specficially, people interested in the listing don't repy-all to the email, so Bob has no idea about the status of the listing. Bob realizes that the majority of people use slideshows to list what they are selling, but he has no clue whats in these slideshows without going through dozens of slides.
+## Motivation & Problem Context
 
-## Discovery and Authentication
-Thankfully however, Bob sees a slideshow listing with a BeaverBazaar link and opens it. Bob expects to maybe have to create a new account, but is instead met with a Touchstone login redirect that automatically signs him in without doing anything. Though Bob has already been authenticated, since he is a new user, he is prompted to enter his preferred contact method, for which he simply enters his phone number. Immediately, Bob sees a sortable and searchable catalog of listings and begins playing around with the website. He tries searching up "bicycle" and is delighted to see a few options for sale. Each listing shows clear photos, description, and has an intuitive interface to place a bid.
-
-For one specific listing, Bob sees that the current bid is $60, he must increment by at least $5, and if he bids $75 or more, the auction would immediately end. Additionally, Bob sees that if he were to bid, his identity would be replaced by a randomly generated pseudonym within that listing. Bob, however, has already had his patience drawn thin so he decides to bid $75 and claim the bicycle. Immediately, the listing closes and disappears from the public set of listings, preventing other people from getting confused about whether the listing is open/closed. At the same time, Bob gets a notification that he won an auction for a bike, which includes the seller's designated contact informration.
-
-Without having to publicly disclose his name or any other contact information, the platform has privately notified both buyer and seller of their counterparts contact details. Bob sends the seller a text, from which they coordinate a preferred payment method and handoff privately off the platform; no one sees this besides the party involved.
-
-
-# User Journey (new)
+Bob is a freshman living at Next House who needs a reliable way to get to morning classes across campus. Seeking second-hand options on dormspam, he finds the status of items opaque—unclear current bids, confusing email threads, and cumbersome slideshows that bury item details. Sellers like Alice, an MIT senior preparing to graduate, want a fair, convenient way to sell items without uncoordinated bidding wars or publicly exposing their contact info and personal schedules to public email lists.
 
 ## Outline
-Alice wants to sell her bicycle before moving off-campus and posts an auction listing on BeaverBazaar with a starting bid of $60, a minimum increment of $5, and an instant buyout price of $75. Bob, a student tired of walking across campus, logs in, browses the newly created listing, and decides to secure the bicycle immediately by submitting a $75 instant buyout bid under an automatically generated pseudonym. The bid triggers an automatic auction close and listing deactivation, preventing further bidding. BeaverBazaar then resolves both parties' pseudonyms and privately notifies Alice and Bob with each other's contact details, allowing them to coordinate physical pickup and payment offline without having broadcast their personal identities, financial bids, or contact info across public dormspam threads.
+
+Alice wants to sell her bicycle before moving off-campus and posts an auction listing on BeaverBazaar with a starting bid of $60, a minimum increment of $5, and an instant buyout price of $75. Bob logs in via Touchstone, browses the newly created listing, and decides to secure the bicycle immediately by submitting a $75 instant buyout bid under an automatically generated pseudonym. The bid triggers an automatic auction close and listing deactivation, preventing further bidding. BeaverBazaar then resolves both parties' pseudonyms and privately notifies Alice and Bob with each other's masked alias, actual verified student identity, and registered contact details, allowing them to coordinate physical pickup and payment offline without having broadcast their personal identities, financial bids, or contact info across public dormspam threads.
 
 ## Complete Scenario (from an empty database)
 
 ### Step 1: Seller Setup & Listing Creation
-The database starts empty. Alice, an MIT senior preparing to graduate, navigates to BeaverBazaar. She signs in via Touchstone authentication (logging in as `alice@mit.edu`) and is prompted to register her preferred contact method, entering her phone number `(617) 555-0142`. Alice clicks "Create Listing" and enters details for her commuter bicycle: title, description, photos, a starting price of $60, a minimum bid increment of $5, and an instant buyout price of $75. Upon submission:
-- BeaverBazaar creates an active `Listing` owned by Alice with the bicycle metadata.
-- BeaverBazaar requests a unique pseudonym for Alice scoped to this listing context (e.g., `SwiftSparrow`).
-- An `Auction` is initialized with `SwiftSparrow` as the owner, item pointing to the listing, starting price of $60, minimum increment of $5, buyout price of $75, and active status `true`.
+The database starts empty. Alice navigates to BeaverBazaar and signs in via Touchstone (`alice@mit.edu`). In her profile settings, she registers her display name `Alice Doe` and preferred contact method `(617) 555-0142`. Alice then posts an auction listing for her commuter bicycle: title "Vintage Fuji Bicycle", a starting price of $60, a minimum bid increment of $5, and an instant buyout price of $75. Upon submission:
+- BeaverBazaar creates an active `Listing` owned by Alice (`alice@mit.edu`) with the bicycle title.
+- BeaverBazaar generates a unique contextual pseudonym for Alice scoped to this listing (e.g., `SwiftSparrow`).
+- An `Auction` is initialized with `SwiftSparrow` as the owner, item pointing to the listing ID, starting price of $60, minimum increment of $5, buyout price of $75, active status `true`, and no bids placed yet.
 
 ### Step 2: Buyer Discovery & Pseudonymous Bidding
-Bob, a freshman living at Next House who needs a reliable way to get to morning classes, accesses BeaverBazaar. He signs in via Touchstone (`bob@mit.edu`) and registers his contact number `(617) 555-0188`. Bob browses the marketplace feed and spots Alice's newly posted bicycle listing. 
+Bob accesses BeaverBazaar and signs in via Touchstone (`bob@mit.edu`). In his profile settings, he registers his display name `Bob Smith` and preferred contact method `(617) 555-0188`. Bob browses the live marketplace feed and spots Alice's newly posted bicycle listing, showing the seller as masked alias `SwiftSparrow`.
 
-Inspecting the listing detail view, Bob observes that the opening bid is $60, any increment must be at least $5, and the instant buyout price is $75. Unwilling to risk a prolonged bidding war or missing out on the bike, Bob submits an instant buyout bid of $75. Upon submission:
-- BeaverBazaar generates an anonymous pseudonym for Bob within the listing context (e.g., `EagerBeaver`).
+Bob observes that the opening bid is $60, minimum increment is $5, and instant buyout price is $75. Wanting to guarantee the purchase immediately and avoid waiting, Bob submits an instant buyout bid of $75. Upon submission:
+- BeaverBazaar generates a unique anonymous pseudonym for Bob within the listing context (e.g., `EagerBeaver`).
 - The bid is recorded on the auction with bidder `EagerBeaver` and amount $75.
 
-### Step 3: Auction Close & Listing Synchronization
+### Step 3: Automated Auction Close & Listing Deactivation
 Because Bob's bid meets the $75 buyout threshold:
-- The reaction triggers an immediate `Auction.close`.
-- The auction closing reaction cascades to synchronize the listing status, invoking `Listing.deactivate`. The bicycle listing is marked inactive and removed from the active marketplace feed, preventing any further bids or confusion.
+- The `CloseOnBuyout` reaction automatically invokes `Auction.close`.
+- The `SyncAuctionListingStatus` reaction cascades upon auction closure to invoke `Listing.deactivate`. The bicycle listing is marked inactive and instantly withdrawn from the active marketplace feed, preventing any further bidding or confusion.
 
-### Step 4: Private Settlement & Notification
-Upon auction closure, the system triggers the closing notification reaction:
-- The system resolves the seller pseudonym `SwiftSparrow` back to Alice (`alice@mit.edu`, phone `(617) 555-0142`).
-- The system resolves the highest bidder pseudonym `EagerBeaver` back to Bob (`bob@mit.edu`, phone `(617) 555-0188`).
-- BeaverBazaar delivers a private notification to Alice: *"Your auction for 'Bicycle' has ended. Buyer: Bob ((617) 555-0188)."*
-- BeaverBazaar delivers a private notification to Bob: *"You won the auction for 'Bicycle'! Seller: Alice ((617) 555-0142)."*
+### Step 4: Private Bilateral Settlement & Contact Exchange
+Upon auction closure, the system triggers the private settlement notification reactions (`NotifySellerOnClose` and `NotifyBuyerOnClose`):
+- The system resolves the seller pseudonym `SwiftSparrow` back to Alice (`alice@mit.edu`, display name `Alice Doe`, phone `(617) 555-0142`).
+- The system resolves the highest bidder pseudonym `EagerBeaver` back to Bob (`bob@mit.edu`, display name `Bob Smith`, phone `(617) 555-0188`).
+- BeaverBazaar dispatches a private settlement notification to Alice:
+  > *"Your auction for 'Vintage Fuji Bicycle' has ended! Counterparty: alias 'EagerBeaver', actual identity: Bob Smith (bob@mit.edu) | Contact: (617) 555-0188. Reach out to arrange pickup and payment."*
+- BeaverBazaar dispatches a private settlement notification to Bob:
+  > *"You won the auction for 'Vintage Fuji Bicycle'! Counterparty: alias 'SwiftSparrow', actual identity: Alice Doe (alice@mit.edu) | Contact: (617) 555-0142. Reach out to arrange pickup and payment."*
 
-Alice and Bob communicate directly via text message to agree on a physical handoff at the Student Center and exchange payment via cash or Venmo. Throughout the entire public lifecycle of the listing and auction, their identities were concealed behind pseudonyms, and their contact information remained entirely private.
+Alice and Bob review their settlement notifications in the top-right notifications drawer and contact each other directly via text message to arrange physical pickup at the Student Center and settle payment peer-to-peer. Throughout the entire public lifecycle of the listing and bidding, their identities were concealed behind pseudonyms, and their private contact information remained strictly confidential until the deal was completed.
 
