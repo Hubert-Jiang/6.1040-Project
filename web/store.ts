@@ -314,7 +314,10 @@ export const store = reactive<{
         return;
       }
 
-      this.setStatus("Auction closed successfully! Settlement notifications dispatched to both seller and winning buyer.", "success");
+      this.setStatus(
+        "Auction ended successfully! If winning bids were placed, settlement notifications have been dispatched.",
+        "success",
+      );
       await this.loadFeed();
       await this.loadNotifications();
     } catch (err) {

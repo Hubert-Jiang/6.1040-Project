@@ -12,7 +12,8 @@ export const ListingCard = defineComponent({
   },
   setup(props) {
     const isSeller = computed(() => {
-      return store.state.user !== null && store.state.user === props.item.seller;
+      if (!store.state.user || !props.item.seller) return false;
+      return store.state.user.trim().toLowerCase() === props.item.seller.trim().toLowerCase();
     });
 
     const minBid = computed(() => {
@@ -85,24 +86,25 @@ export const ListingCard = defineComponent({
         ) : (
           <div class="listing-actions">
             <div class="bid-controls">
-              {/* Seller Actions */}
+              {/* Seller Actions: Sellers always see the end button on their own auctions */}
               {isSeller.value ? (
                 <>
                   <span class="session-badge">Your Listing</span>
-                  {props.item.highestBidder !== null ? (
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-close-auction"
-                      title="Finalize auction early with current highest bidder (Seller action)"
-                      onClick={onCloseAuction}
-                    >
-                      🏁 Close & Finalize (${props.item.price})
-                    </button>
-                  ) : (
-                    <span class="form-help" style={{ marginLeft: "0.5rem" }}>
-                      Waiting for bids
-                    </span>
-                  )}
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-close-auction"
+                    id={`btn-end-auction-${props.item.auction}`}
+                    title={
+                      props.item.highestBidder !== null
+                        ? "End and finalize auction early with current highest bidder (Seller action)"
+                        : "End and withdraw this auction (Seller action)"
+                    }
+                    onClick={onCloseAuction}
+                  >
+                    {props.item.highestBidder !== null
+                      ? `🏁 End & Finalize ($${props.item.price})`
+                      : "🏁 End Auction"}
+                  </button>
                 </>
               ) : (
                 /* Buyer Actions: Min bid button removed, input defaults to minBid */
