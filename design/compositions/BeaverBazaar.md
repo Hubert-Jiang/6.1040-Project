@@ -37,8 +37,10 @@ a public listing with item details, assigns a unique pseudonym for the seller sc
 initializes the auction under that anonymous alias with the starting price, increment, and optional buyout price.
 
 The [marketplace feed](former:BeaverBazaar.Marketplace.MarketplaceFeed) gathers all active listings alongside
-their current pricing and buyout terms. Buyers inspect active goods via the [feed endpoint](reaction:BeaverBazaar.Marketplace.GetFeed).
-Callers inspect an item's auction status and their own contextual alias via [listing details](former:BeaverBazaar.Marketplace.ListingDetail)
+their current pricing, buyout terms, and anonymous pseudonyms, decorated with viewer-context flags indicating
+whether the caller is the seller or current highest bidder without exposing real student identities. Buyers inspect
+active goods via the [feed endpoint](reaction:BeaverBazaar.Marketplace.GetFeed).
+Callers inspect an item's auction status via [listing details](former:BeaverBazaar.Marketplace.ListingDetail)
 served by the [listing query endpoint](reaction:BeaverBazaar.Marketplace.GetListing).
 
 ```endpoints
@@ -95,5 +97,11 @@ formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, s
 
 formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String) : Record
   Formats the private notification message sent to the seller with winning buyer alias, actual identity, and contact details.
+
+isUserSeller(seller: User, viewer?: User) : Record
+  Evaluates whether the active viewer is the seller of the listing.
+
+isUserHighestBidder(bidderUser?: User, viewer?: User) : Record
+  Evaluates whether the active viewer is the current winning or highest bidder.
 ```
 

@@ -144,6 +144,30 @@ export function formatSellerNotification({
   };
 }
 
+export function isUserSeller({
+  seller,
+  viewer,
+}: {
+  seller: string;
+  viewer?: string | null;
+}): { isSeller: boolean } {
+  return {
+    isSeller: typeof viewer === "string" && viewer.length > 0 && seller === viewer,
+  };
+}
+
+export function isUserHighestBidder({
+  bidderUser,
+  viewer,
+}: {
+  bidderUser?: string | null;
+  viewer?: string | null;
+}): { isHighestBidder: boolean } {
+  return {
+    isHighestBidder: typeof viewer === "string" && viewer.length > 0 && bidderUser === viewer,
+  };
+}
+
 export const applicationConceptSet = conceptSet(
   {
     Session,
@@ -158,6 +182,8 @@ export const applicationConceptSet = conceptSet(
     isBuyerPresent,
     formatBuyerNotification,
     formatSellerNotification,
+    isUserSeller,
+    isUserHighestBidder,
   },
 );
 

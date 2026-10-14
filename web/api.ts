@@ -6,13 +6,14 @@ export const client = createHttpClient<BeaverBazaarWireHttp>({ baseUrl: "/api" }
 export interface ListingItem {
   listing: string;
   auction: string;
-  seller: string;
   sellerAlias: string;
   item: string;
   price: number;
   increment: number;
   buyout: number | null;
   highestBidder: string | null;
+  isSeller: boolean;
+  isHighestBidder: boolean;
 }
 
 export interface NotificationItem {

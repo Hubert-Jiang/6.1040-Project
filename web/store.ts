@@ -25,6 +25,7 @@ export const store = reactive<{
   createListing(item: string, startPrice: number, increment: number, buyout: number | null): Promise<boolean>;
   submitBid(auction: string, item: string, amount: number): Promise<void>;
   closeAuction(auction: string, item: string): Promise<void>;
+  cancelAuction(auction: string, item: string): Promise<void>;
   loadNotifications(silent?: boolean): Promise<void>;
   dismissNotification(notification: string): Promise<void>;
   toggleNotificationsMenu(): void;
@@ -327,9 +328,44 @@ export const store = reactive<{
     }
   },
 
+  async cancelAuction(auction: string, item: string) {
+    if (!this.state.session) {
+      this.setStatus("Please sign in first.", "error");
+      return;
+    }
+
+    this.state.loading = true;
+    try {
+      const res = await client["/auctions/delete"]({
+        session: this.state.session,
+        auction,
+        item,
+      });
+
+      if ("error" in res) {
+        const err = String(res.error);
+        let msg = `Could not cancel auction: ${err}`;
+        if (err.includes("CANNOT_DELETE_ACTIVE_BIDS")) {
+          msg = "Cannot cancel an auction that already has bids placed.";
+        } else if (err.includes("NOT_OWNER")) {
+          msg = "Only the listing seller can cancel this auction.";
+        }
+        this.setStatus(msg, "error");
+        return;
+      }
+
+      this.setStatus("Auction cancelled and listing removed successfully.", "success");
+      await this.loadFeed();
+    } catch (err) {
+      this.setStatus(`Error cancelling auction: ${String(err)}`, "error");
+    } finally {
+      this.state.loading = false;
+    }
+  },
+
   async loadFeed(silent = false) {
     try {
-      const res = await client["/marketplace/feed"]({});
+      const res = await client["/marketplace/feed"]({ session: this.state.session ?? undefined });
       if ("error" in res) {
         if (!silent) this.setStatus(`Failed to load feed: ${String(res.error)}`, "error");
         return;

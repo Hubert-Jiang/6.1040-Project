@@ -17,6 +17,8 @@ const {
   isBuyerPresent,
   formatBuyerNotification,
   formatSellerNotification,
+  isUserSeller,
+  isUserHighestBidder,
 } = computations;
 
 // ==========================================
@@ -29,7 +31,23 @@ export const UserProfile = former("user profile", ({ user }, { name, contact }) 
 
 export const MarketplaceFeed = former(
   "marketplace feed",
-  (_input, { auction, listing, sellerAlias, seller, item, price, increment, buyout, highestBidder }) =>
+  (
+    { viewer },
+    {
+      auction,
+      listing,
+      sellerAlias,
+      seller,
+      item,
+      price,
+      increment,
+      buyout,
+      highestBidder,
+      bidderUser,
+      isSeller,
+      isHighestBidder,
+    },
+  ) =>
     form({
       listings: each(
         Auction._active({}).is({
@@ -42,17 +60,23 @@ export const MarketplaceFeed = former(
           buyout,
         }),
       )
-        .where(Listing._get({ listing }).is({ item, owner: seller }))
+        .where(
+          Listing._get({ listing }).is({ item, owner: seller }),
+          compute(isUserSeller, { seller, viewer }, { isSeller }),
+          whether(Pseudonym._getUser({ context: listing, alias: highestBidder }).is({ user: bidderUser })),
+          compute(isUserHighestBidder, { bidderUser, viewer }, { isHighestBidder }),
+        )
         .form({
           auction,
           listing,
           sellerAlias,
-          seller,
           item,
           price,
           increment,
           buyout,
           highestBidder,
+          isSeller,
+          isHighestBidder,
         }),
     }),
 );
@@ -60,7 +84,7 @@ export const MarketplaceFeed = former(
 export const ListingDetail = former(
   "listing detail",
   (
-    { listing },
+    { listing, viewer },
     {
       item,
       active,
@@ -68,10 +92,13 @@ export const ListingDetail = former(
       sellerAlias,
       seller,
       highestBidder,
+      bidderUser,
       price,
       increment,
       buyout,
       auctionActive,
+      isSeller,
+      isHighestBidder,
     },
   ) =>
     where(
@@ -85,18 +112,22 @@ export const ListingDetail = former(
         buyout,
         active: auctionActive,
       }),
+      compute(isUserSeller, { seller, viewer }, { isSeller }),
+      whether(Pseudonym._getUser({ context: listing, alias: highestBidder }).is({ user: bidderUser })),
+      compute(isUserHighestBidder, { bidderUser, viewer }, { isHighestBidder }),
     ).form({
       listing,
       item,
       active,
       auction,
       sellerAlias,
-      seller,
       highestBidder,
       price,
       increment,
       buyout,
       auctionActive,
+      isSeller,
+      isHighestBidder,
     }),
 ).optional();
 
@@ -172,12 +203,31 @@ export const CreateAuctionListing = endpoint(
   },
 );
 
-export const GetFeed = endpoint("/marketplace/feed", () =>
-  receive({}).then(respond({ feed: MarketplaceFeed({}) })),
+export const GetFeed = endpoint(
+  "/marketplace/feed",
+  ({ session, viewer }) =>
+    receive({ session })
+      .where(whether(Session._active({ session }).is({ subject: viewer })))
+      .then(respond({ feed: MarketplaceFeed({ viewer }) })),
+  {
+    input: {
+      defaults: { session: null },
+    },
+  },
 );
 
-export const GetListing = endpoint("/listings/get", ({ listing }) =>
-  receive({ listing }).then(respond({ detail: ListingDetail({ listing }) })),
+export const GetListing = endpoint(
+  "/listings/get",
+  ({ session, listing, viewer }) =>
+    receive({ session, listing })
+      .where(whether(Session._active({ session }).is({ subject: viewer })))
+      .then(respond({ detail: ListingDetail({ listing, viewer }) })),
+  {
+    input: {
+      required: ["listing"],
+      defaults: { session: null },
+    },
+  },
 );
 
 // Auctions & Bids

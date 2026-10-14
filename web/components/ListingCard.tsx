@@ -11,10 +11,8 @@ export const ListingCard = defineComponent({
     },
   },
   setup(props) {
-    const isSeller = computed(() => {
-      if (!store.state.user || !props.item.seller) return false;
-      return store.state.user.trim().toLowerCase() === props.item.seller.trim().toLowerCase();
-    });
+    const isSeller = computed(() => props.item.isSeller);
+    const isHighestBidder = computed(() => props.item.isHighestBidder);
 
     const minBid = computed(() => {
       return props.item.highestBidder !== null
@@ -46,6 +44,10 @@ export const ListingCard = defineComponent({
       store.closeAuction(props.item.auction, props.item.listing);
     }
 
+    function onCancelAuction() {
+      store.cancelAuction(props.item.auction, props.item.listing);
+    }
+
     return () => (
       <div class="listing-card">
         <div class="listing-title">{props.item.item}</div>
@@ -71,7 +73,10 @@ export const ListingCard = defineComponent({
           <div class="meta-pill">
             <span>Highest Bidder:</span>
             {props.item.highestBidder ? (
-              <strong class="pseudonym-tag">{props.item.highestBidder}</strong>
+              <strong class="pseudonym-tag">
+                {props.item.highestBidder}
+                {isHighestBidder.value && " (you)"}
+              </strong>
             ) : (
               <em>No bids placed yet</em>
             )}
@@ -86,25 +91,31 @@ export const ListingCard = defineComponent({
         ) : (
           <div class="listing-actions">
             <div class="bid-controls">
-              {/* Seller Actions: Sellers always see the end button on their own auctions */}
+              {/* Seller Actions: Sellers always see the end or cancel button on their own auctions */}
               {isSeller.value ? (
                 <>
                   <span class="session-badge">Your Listing</span>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-close-auction"
-                    id={`btn-end-auction-${props.item.auction}`}
-                    title={
-                      props.item.highestBidder !== null
-                        ? "End and finalize auction early with current highest bidder (Seller action)"
-                        : "End and withdraw this auction (Seller action)"
-                    }
-                    onClick={onCloseAuction}
-                  >
-                    {props.item.highestBidder !== null
-                      ? `🏁 End & Finalize ($${props.item.price})`
-                      : "🏁 End Auction"}
-                  </button>
+                  {props.item.highestBidder !== null ? (
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-close-auction"
+                      id={`btn-end-auction-${props.item.auction}`}
+                      title="End and finalize auction early with current highest bidder (Seller action)"
+                      onClick={onCloseAuction}
+                    >
+                      🏁 End & Finalize (${props.item.price})
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-close-auction"
+                      id={`btn-cancel-auction-${props.item.auction}`}
+                      title="Cancel and withdraw this unbid auction (Seller action)"
+                      onClick={onCancelAuction}
+                    >
+                      🏁 Cancel Auction
+                    </button>
+                  )}
                 </>
               ) : (
                 /* Buyer Actions: Min bid button removed, input defaults to minBid */

@@ -148,10 +148,26 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     // Privacy invariant: seller's identity is masked behind a pseudonym, not Alice's real User
     expect(typeof feedItem.sellerAlias).toBe("string");
     expect(feedItem.sellerAlias).not.toBe("alice@mit.edu");
+    // Ensure real user identity is NEVER leaked over the public read wire
+    expect((feedItem as any).seller).toBeUndefined();
+    expect(feedItem.isSeller).toBe(false);
+    expect(feedItem.isHighestBidder).toBe(false);
+
+    // Contextual feed decoration: Alice sees isSeller = true, Bob sees isSeller = false
+    const aliceFeed = await client["/marketplace/feed"]({ session: aliceSession });
+    if ("error" in aliceFeed) throw new Error(String(aliceFeed.error));
+    expect(aliceFeed.feed.listings[0].isSeller).toBe(true);
+    expect(aliceFeed.feed.listings[0].isHighestBidder).toBe(false);
+
+    const bobInitialFeed = await client["/marketplace/feed"]({ session: bobSession });
+    if ("error" in bobInitialFeed) throw new Error(String(bobInitialFeed.error));
+    expect(bobInitialFeed.feed.listings[0].isSeller).toBe(false);
+    expect(bobInitialFeed.feed.listings[0].isHighestBidder).toBe(false);
 
     // 2d. Listing detail verification
     const listingDetail = await client["/listings/get"]({ listing });
     if ("error" in listingDetail) throw new Error(String(listingDetail.error));
+    expect((listingDetail.detail as any)?.seller).toBeUndefined();
     expect(listingDetail.detail).toMatchObject({
       listing,
       auction,
@@ -162,6 +178,8 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
       active: true,
       auctionActive: true,
       highestBidder: null,
+      isSeller: false,
+      isHighestBidder: false,
     });
 
     // =========================================================================
@@ -227,6 +245,19 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     // Bidder pseudonym is masked and distinct from seller pseudonym
     expect(midFeed.feed.listings[0].highestBidder).not.toBe("bob@mit.edu");
     expect(midFeed.feed.listings[0].highestBidder).not.toBe(feedItem.sellerAlias);
+    expect((midFeed.feed.listings[0] as any).seller).toBeUndefined();
+
+    // Verify viewer context flags after bid: Bob sees isHighestBidder = true (" (you)" tag)
+    const bobMidFeed = await client["/marketplace/feed"]({ session: bobSession });
+    if ("error" in bobMidFeed) throw new Error(String(bobMidFeed.error));
+    expect(bobMidFeed.feed.listings[0].isHighestBidder).toBe(true);
+    expect(bobMidFeed.feed.listings[0].isSeller).toBe(false);
+
+    // Alice sees isSeller = true and isHighestBidder = false
+    const aliceMidFeed = await client["/marketplace/feed"]({ session: aliceSession });
+    if ("error" in aliceMidFeed) throw new Error(String(aliceMidFeed.error));
+    expect(aliceMidFeed.feed.listings[0].isSeller).toBe(true);
+    expect(aliceMidFeed.feed.listings[0].isHighestBidder).toBe(false);
 
     // 3e. Verify no settlement notifications triggered yet
     const alicePreNotifications = await client["/notifications/list"]({ session: aliceSession });
