@@ -1,7 +1,7 @@
 {
   "private": true,
   "type": "module",
-  "packageManager": "bun@1.4.0",
+  "packageManager": "bun@1.4.3",
   "dependencies": {
     "@mit-sdg/sync-engine": "1.1.0",
     "@mit-sdg/sync-engine-http": "1.1.0",
@@ -16,7 +16,6 @@
   "scripts": {
     "generate": "sync-engine artifacts pin",
     "check": "sync-engine check && sync-engine artifacts check && tsc --noEmit",
-    "build": "echo 'No build step required'",
     "start": "bun run --parallel start:backend start:frontend",
     "preview": "bun run db:up && NODE_ENV=production PORT=3000 PUBLIC_ORIGIN=http://127.0.0.1:3000 bun run start",
     "start:backend": "HOST=127.0.0.1 PORT=4000 bun src/main.ts",
