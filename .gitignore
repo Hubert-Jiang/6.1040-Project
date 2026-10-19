@@ -6,3 +6,5 @@ node_modules/
 .DS_Store
 !.env.example
 TODO.md
+.agents
+.sync-engine
