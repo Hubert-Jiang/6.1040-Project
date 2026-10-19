@@ -48,59 +48,93 @@ export const ListingCard = defineComponent({
       store.cancelAuction(props.item.auction, props.item.listing);
     }
 
-    return () => (
-      <div class="listing-card">
-        <div class="listing-title">{props.item.item}</div>
+    return () => {
+      const hasBids = props.item.highestBidder !== null;
+      const canBuyout = props.item.buyout !== null && props.item.buyout > props.item.price;
 
-        <div class="listing-price-row">
-          <span class="listing-current-price">${props.item.price}</span>
-          <span class="listing-increment">(+${props.item.increment} min increment)</span>
-          {props.item.buyout !== null ? (
-            <span class="listing-buyout">
-              ⚡ ${props.item.buyout} Instant Buyout
-            </span>
+      return (
+        <article class="listing-card">
+          <div class="listing-title">{props.item.item}</div>
+
+          {/* Pricing Highlight Box: Shows Current Payout & Next Required Bid Clearly */}
+          <div class="price-highlight-box">
+            <div class="price-primary">
+              <span class="price-label">
+                {hasBids ? "Current Highest Bid" : "Starting Price"}
+              </span>
+              <div class="price-amount-row">
+                <span class="price-amount">${props.item.price}</span>
+                {hasBids ? (
+                  <span class="price-payout-badge">
+                    Seller payout if ended now: ${props.item.price}
+                  </span>
+                ) : (
+                  <span class="price-unbid-badge">No bids placed yet</span>
+                )}
+              </div>
+            </div>
+
+            <div class="price-secondary-row">
+              <div class="price-pill min-bid-pill">
+                <span class="pill-label">
+                  {hasBids ? "Next Minimum Bid:" : "Minimum Opening Bid:"}
+                </span>
+                <strong class="pill-value">${minBid.value}</strong>
+                <span class="pill-detail">(+${props.item.increment} min increment)</span>
+              </div>
+
+              {props.item.buyout !== null ? (
+                <div class="price-pill buyout-pill">
+                  <span class="pill-label">⚡ Instant Buyout:</span>
+                  <strong class="pill-value">${props.item.buyout}</strong>
+                </div>
+              ) : (
+                <div class="price-pill no-buyout-pill">
+                  <span class="pill-detail">No buyout set</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Masked Participant Metadata */}
+          <div class="listing-meta">
+            <div class="meta-pill">
+              <span>Seller:</span>
+              <span class="pseudonym-tag">{props.item.sellerAlias}</span>
+              <span class="session-badge">(Masked Alias)</span>
+            </div>
+            <div class="meta-pill">
+              <span>Highest Bidder:</span>
+              {props.item.highestBidder ? (
+                <strong class="pseudonym-tag">
+                  {props.item.highestBidder}
+                  {isHighestBidder.value && " (you)"}
+                </strong>
+              ) : (
+                <em>No bids placed yet</em>
+              )}
+            </div>
+          </div>
+
+          {/* Interaction & Bidding Actions */}
+          {!store.state.session ? (
+            <div class="form-help" style={{ marginTop: "0.5rem" }}>
+              Sign in on the Account page to place bids or buy out this item.
+            </div>
           ) : (
-            <span class="listing-increment">No buyout set</span>
-          )}
-        </div>
-
-        <div class="listing-meta">
-          <div class="meta-pill">
-            <span>Seller:</span>
-            <span class="pseudonym-tag">{props.item.sellerAlias}</span>
-            <span class="session-badge">(Masked Alias)</span>
-          </div>
-          <div class="meta-pill">
-            <span>Highest Bidder:</span>
-            {props.item.highestBidder ? (
-              <strong class="pseudonym-tag">
-                {props.item.highestBidder}
-                {isHighestBidder.value && " (you)"}
-              </strong>
-            ) : (
-              <em>No bids placed yet</em>
-            )}
-          </div>
-        </div>
-
-        {/* Bidding Actions */}
-        {!store.state.session ? (
-          <div class="form-help" style={{ marginTop: "0.5rem" }}>
-            Sign in above to place bids or buy out this item.
-          </div>
-        ) : (
-          <div class="listing-actions">
-            <div class="bid-controls">
-              {/* Seller Actions: Sellers always see the end or cancel button on their own auctions */}
+            <div class="listing-actions">
+              {/* Seller Controls */}
               {isSeller.value ? (
-                <>
-                  <span class="session-badge">Your Listing</span>
-                  {props.item.highestBidder !== null ? (
+                <div class="seller-controls">
+                  <span class="session-badge" style={{ alignSelf: "center" }}>
+                    Your Listing
+                  </span>
+                  {hasBids ? (
                     <button
                       type="button"
                       class="btn btn-sm btn-close-auction"
                       id={`btn-end-auction-${props.item.auction}`}
-                      title="End and finalize auction early with current highest bidder (Seller action)"
+                      title="End and finalize auction early with current highest bidder"
                       onClick={onCloseAuction}
                     >
                       🏁 End & Finalize (${props.item.price})
@@ -110,28 +144,64 @@ export const ListingCard = defineComponent({
                       type="button"
                       class="btn btn-sm btn-close-auction"
                       id={`btn-cancel-auction-${props.item.auction}`}
-                      title="Cancel and withdraw this unbid auction (Seller action)"
+                      title="Cancel and withdraw this unbid auction"
                       onClick={onCancelAuction}
                     >
                       🏁 Cancel Auction
                     </button>
                   )}
-                </>
+                </div>
+              ) : isHighestBidder.value ? (
+                /* Highest Bidder State: Re-bidding is paused to prevent accidental self-harm, buyout preserved */
+                <div class="highest-bidder-status-card">
+                  <div class="highest-bidder-header">
+                    <span class="trophy-badge" aria-hidden="true">🏆</span>
+                    <div>
+                      <strong>You are currently the highest bidder (${props.item.price})!</strong>
+                      <p class="highest-bidder-desc">
+                        You hold the leading offer. You cannot place another incremental bid against yourself.
+                      </p>
+                    </div>
+                  </div>
+
+                  {canBuyout && (
+                    <div class="highest-bidder-buyout-row">
+                      <span class="buyout-note">
+                        Want to guarantee the win and close immediately?
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-buyout"
+                        onClick={onBuyout}
+                      >
+                        ⚡ Buyout Now for ${props.item.buyout}
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
-                /* Buyer Actions: Min bid button removed, input defaults to minBid */
-                <>
+                /* Non-Winning Buyer Actions: Standard bidding and buyout */
+                <div class="bid-controls">
                   <form
                     class="custom-bid-form"
                     style={{
                       display: "inline-flex",
-                      gap: "0.35rem",
+                      gap: "0.4rem",
                       alignItems: "center",
+                      flexWrap: "wrap",
                     }}
                     onSubmit={onSubmitBid}
                   >
+                    <label
+                      for={`input-bid-${props.item.auction}`}
+                      style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}
+                    >
+                      Bid (min ${minBid.value}):
+                    </label>
                     <input
+                      id={`input-bid-${props.item.auction}`}
                       type="number"
-                      placeholder="$"
+                      placeholder={`$${minBid.value}`}
                       min={minBid.value}
                       step="1"
                       required
@@ -141,8 +211,8 @@ export const ListingCard = defineComponent({
                         customBid.value = Number(val);
                       }}
                     />
-                    <button type="submit" class="btn btn-sm">
-                      Bid
+                    <button type="submit" class="btn btn-sm btn-primary">
+                      Place Bid (${customBid.value})
                     </button>
                   </form>
 
@@ -155,12 +225,12 @@ export const ListingCard = defineComponent({
                       ⚡ Buyout ${props.item.buyout}
                     </button>
                   )}
-                </>
+                </div>
               )}
             </div>
-          </div>
-        )}
-      </div>
-    );
+          )}
+        </article>
+      );
+    };
   },
 });

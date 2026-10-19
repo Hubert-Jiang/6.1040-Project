@@ -8,26 +8,51 @@ export const SettlementInbox = defineComponent({
       store.dismissNotification(notification);
     }
 
+    function onRefresh() {
+      store.loadNotifications();
+    }
+
     return () => (
       <section class="card">
-        <div class="card-title">
-          <span>4. Private Settlement Inbox</span>
-          {store.state.session && store.state.notifications.length > 0 && (
-            <span class="notification-count">
-              {store.state.notifications.length} New
-            </span>
+        <div class="card-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span>📥 Private Settlement Inbox</span>
+            {store.state.session && store.state.notifications.length > 0 && (
+              <span class="notification-count" style={{ marginLeft: "0.5rem" }}>
+                {store.state.notifications.length} Unread
+              </span>
+            )}
+          </div>
+          {store.state.session && (
+            <button type="button" class="btn btn-sm" onClick={onRefresh}>
+              ↻ Refresh Inbox
+            </button>
           )}
         </div>
+        <p class="card-subtitle">
+          When an auction ends (via buyout, seller closure, or bidding expiration), BeaverBazaar resolves both parties' pseudonyms and privately exchanges contact information so you can coordinate physical pickup and payment.
+        </p>
 
         {!store.state.session ? (
           <div class="empty-state">
-            <p>Please sign in above to view your settlement notifications.</p>
+            <p>Please sign in on the Account page to view your private settlement notifications.</p>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              style={{ marginTop: "0.75rem" }}
+              onClick={() => store.setPage("account")}
+            >
+              Go to Account Sign In →
+            </button>
           </div>
         ) : store.state.notifications.length === 0 ? (
           <div class="empty-state">
+            <div class="empty-state-icon">📫</div>
             <p>
-              No new notifications. If you win or close an auction,
-              contact exchange details will appear here.
+              Your settlement inbox is empty.
+            </p>
+            <p class="form-help">
+              When an auction you created closes with bids, or an auction you won concludes, private settlement details with your counterparty's contact information will be dispatched here.
             </p>
           </div>
         ) : (

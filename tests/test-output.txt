@@ -1,0 +1,42 @@
+bun test v1.4.2 (744846f84)
+
+tests/compositions/BeaverBazaar.test.ts:
+(pass) BeaverBazaar composition & end-to-end user scenario > executes the complete marketplace lifecycle with instant buyout and private settlement [45.85ms]
+(pass) BeaverBazaar composition & end-to-end user scenario > enforces deletion rules and removes unbid auctions along with their listings [12.15ms]
+
+tests/concepts/Auctioning.test.ts:
+(pass) AuctioningConcept > principle & bidding progression: opening bid, incremental bid, and close [0.19ms]
+(pass) AuctioningConcept > price parameter validation partitions: negative price, non-positive increment, buyout < start [0.10ms]
+(pass) AuctioningConcept > giveaway and zero-price partitions: startPrice = 0, opening bid = 0, buyout = 0 [0.12ms]
+(pass) AuctioningConcept > bid restriction partitions: owner bidding, below minimum, inactive auction [0.13ms]
+(pass) AuctioningConcept > ownership and deletion partitions: non-owner, auction with bids, double close [0.15ms]
+(pass) AuctioningConcept > query non-existent partitions: _get and _byItem return empty [0.05ms]
+
+tests/concepts/Notifying.test.ts:
+(pass) NotifyingConcept > principle & lifecycle: deliver, query, and dismiss notifications [0.50ms]
+(pass) NotifyingConcept > dismissal partition: refuses non-existent notification ID [0.05ms]
+
+tests/concepts/Sessioning.test.ts:
+(pass) SessioningConcept > principle & active lifecycle: start, resolve current, query active, and end [0.19ms]
+(pass) SessioningConcept > expiry partitions: expired session is omitted from queries and refused by actions [0.07ms]
+(pass) SessioningConcept > non-existent session partition: invented token refused by current and end [0.04ms]
+
+tests/concepts/Profiling.test.ts:
+(pass) ProfilingConcept > principle & state transition: initialize, query, and update profile [0.09ms]
+(pass) ProfilingConcept > input validation partitions: refuses blank name or blank contact [0.11ms]
+
+tests/concepts/Listing.test.ts:
+(pass) ListingConcept > principle & lifecycle: create, update, deactivate, delete [0.32ms]
+(pass) ListingConcept > ownership partition: refuses operations by non-owner [0.08ms]
+(pass) ListingConcept > existence partition: refuses operations on non-existent listing [0.04ms]
+(pass) ListingConcept > active status partition: update requires active, deactivate requires active [0.06ms]
+
+tests/concepts/Pseudonyming.test.ts:
+(pass) PseudonymingConcept > principle & stability: generate and retrieve pseudonyms within a context [0.25ms]
+(pass) PseudonymingConcept > uniqueness & context isolation: distinct users and distinct contexts [0.08ms]
+(pass) PseudonymingConcept > unknown alias partitions: refuses getUser and returns empty query [0.04ms]
+
+ 22 pass
+ 0 fail
+ 156 expect() calls
+Ran 22 tests across 7 files. [189.00ms]

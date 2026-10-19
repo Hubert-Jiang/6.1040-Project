@@ -19,9 +19,13 @@ export const UserSwitcher = defineComponent({
     return () => (
       <section class="card">
         <div class="card-title">
-          <span>1. Touchstone User Switcher</span>
+          <span>🔑 Touchstone Authentication</span>
           {store.state.session && <span class="session-badge">Session Active</span>}
         </div>
+        <p class="card-subtitle">
+          Touchstone manages authenticated sessions for MIT community members. Switching accounts simulates authenticating as different students.
+        </p>
+
         <div class="auth-bar">
           <div class="auth-status">
             <div>
@@ -41,7 +45,7 @@ export const UserSwitcher = defineComponent({
           </div>
 
           <div class="user-switcher-actions">
-            <span>Quick Switch:</span>
+            <span>Quick Switch Presets:</span>
             {PRESETS.map((p) => (
               <button
                 key={p.username}

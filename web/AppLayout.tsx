@@ -1,4 +1,5 @@
 import { defineComponent } from "vue";
+import { store } from "./store.ts";
 import { HeaderBar } from "./components/HeaderBar.tsx";
 import { StatusAlert } from "./components/StatusAlert.tsx";
 import { UserSwitcher } from "./components/UserSwitcher.tsx";
@@ -14,11 +15,14 @@ export const AppLayout = defineComponent({
       <div class="container">
         <HeaderBar />
         <StatusAlert />
-        <UserSwitcher />
-        <ProfileSettings />
-        <ListingCreator />
-        <SettlementInbox />
-        <MarketplaceFeed />
+
+        <main class="page-content" role="main">
+          {store.state.currentPage === "marketplace" && <MarketplaceFeed />}
+          {store.state.currentPage === "create" && <ListingCreator />}
+          {store.state.currentPage === "inbox" && <SettlementInbox />}
+          {store.state.currentPage === "profile" && <ProfileSettings />}
+          {store.state.currentPage === "account" && <UserSwitcher />}
+        </main>
       </div>
     );
   },

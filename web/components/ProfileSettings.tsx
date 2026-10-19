@@ -24,24 +24,35 @@ export const ProfileSettings = defineComponent({
     return () => (
       <section class="card">
         <div class="card-title">
-          <span>2. My Contact Profile</span>
+          <span>👤 Private Contact Profile</span>
           {store.state.user && (
             <span class="session-badge">Active: {store.state.user}</span>
           )}
         </div>
+        <p class="card-subtitle">
+          Your contact method is safely stored out-of-band. It is never displayed on active listings and is only shared privately with your winning counterparty once an auction concludes.
+        </p>
 
         {!store.state.session ? (
           <div class="empty-state">
-            <p>Please sign in above to view and manage your contact profile.</p>
+            <p>Please sign in on the Account page to view and manage your contact profile.</p>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              style={{ marginTop: "0.75rem" }}
+              onClick={() => store.setPage("account")}
+            >
+              Go to Account Sign In →
+            </button>
           </div>
         ) : (
           <form onSubmit={onSaveProfile}>
-            <div class="form-help" style={{ marginBottom: "0.75rem" }}>
+            <div class="form-help" style={{ marginBottom: "1rem" }}>
               Currently editing contact details for <strong>{store.state.user}</strong>.
             </div>
             <div class="input-group">
               <label class="input-label" for="profile-name">
-                Display Name
+                Full / Display Name
               </label>
               <input
                 id="profile-name"
@@ -61,7 +72,7 @@ export const ProfileSettings = defineComponent({
               <input
                 id="profile-contact"
                 type="text"
-                placeholder="e.g. 617-555-0101 or alice@mit.edu"
+                placeholder="e.g. (617) 555-0101 or alice@mit.edu"
                 required
                 value={contact.value}
                 onInput={(e: Event) => {

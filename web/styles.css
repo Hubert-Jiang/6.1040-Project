@@ -16,6 +16,8 @@
   --alert-success-text: #2f5629;
   --alert-error-bg: #faebe6;
   --alert-error-text: #873420;
+  --alert-info-bg: #eaf1f7;
+  --alert-info-text: #1d4e74;
   --shadow: 0 2px 10px rgba(60, 42, 24, 0.06);
 }
 
@@ -38,18 +40,130 @@ body {
 }
 
 .container {
-  max-width: 52rem;
+  max-width: 68rem;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* Header & Top Bar */
+.header-container {
+  margin-bottom: 2rem;
+}
+
 .header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
   gap: 1rem;
   position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-account-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(60, 42, 24, 0.05);
+  transition: all 0.15s ease;
+}
+
+.btn-account-pill:hover,
+.btn-account-pill.btn-active {
+  background: var(--bg-subtle);
+  border-color: var(--border-focus);
+}
+
+.account-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3c7d34;
+  display: inline-block;
+}
+
+/* Main Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.nav-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  border-radius: 6px 6px 0 0;
+}
+
+.nav-tab:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+}
+
+.nav-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: var(--bg-card);
+  box-shadow: 0 -2px 6px rgba(60, 42, 24, 0.04);
+}
+
+.nav-tab-icon {
+  font-size: 1.05rem;
+}
+
+.nav-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 10px;
+  background: #a84226;
+  color: #ffffff;
+}
+
+.nav-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 10px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
 }
 
 .header-brand h1 {
@@ -207,10 +321,17 @@ body {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-main);
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.card-subtitle {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+  line-height: 1.45;
 }
 
 /* Component 1: Auth & User Switcher */
@@ -345,22 +466,67 @@ input:focus {
 
 /* Status alerts */
 .alert {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(60, 42, 24, 0.08);
+  animation: notifFadeIn 0.2s ease-out;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+.alert-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.alert-message {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.alert-dismiss-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 0 0.25rem;
+  color: inherit;
+  transition: opacity 0.15s ease;
+}
+
+.alert-dismiss-btn:hover {
+  opacity: 1;
 }
 
 .alert-success {
   background: var(--alert-success-bg);
   color: var(--alert-success-text);
-  border: 1px solid rgba(47, 86, 41, 0.2);
+  border: 1px solid rgba(47, 86, 41, 0.25);
 }
 
 .alert-error {
   background: var(--alert-error-bg);
   color: var(--alert-error-text);
-  border: 1px solid rgba(135, 52, 32, 0.2);
+  border: 1px solid rgba(135, 52, 32, 0.25);
+}
+
+.alert-info {
+  background: var(--alert-info-bg);
+  color: var(--alert-info-text);
+  border: 1px solid rgba(29, 78, 116, 0.25);
 }
 
 /* Component 3: Marketplace Feed */
@@ -398,32 +564,113 @@ input:focus {
   color: var(--text-main);
 }
 
-.listing-price-row {
+/* Price Presentation Box */
+.price-highlight-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.price-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.price-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.price-amount-row {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-.listing-current-price {
-  font-size: 1.4rem;
-  font-weight: 700;
+.price-amount {
+  font-size: 1.8rem;
+  font-weight: 800;
   color: var(--primary);
+  line-height: 1;
 }
 
-.listing-increment {
-  font-size: 0.85rem;
+.price-payout-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2f5629;
+  background: #edf2ea;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(47, 86, 41, 0.2);
+}
+
+.price-unbid-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+.price-secondary-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 0.45rem;
+  border-top: 1px dashed rgba(227, 212, 193, 0.8);
+}
+
+.price-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.min-bid-pill {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.min-bid-pill .pill-label {
   color: var(--text-muted);
 }
 
-.listing-buyout {
-  display: inline-block;
+.min-bid-pill .pill-value {
+  color: #3b2c20;
+  font-weight: 700;
+}
+
+.min-bid-pill .pill-detail {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.buyout-pill {
   background: var(--badge-bg);
+  border: 1px solid rgba(139, 87, 42, 0.2);
   color: var(--badge-text);
-  font-size: 0.85rem;
   font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
+}
+
+.no-buyout-pill {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  font-style: italic;
 }
 
 .listing-meta {
@@ -498,6 +745,59 @@ input:focus {
 
 .btn-buyout:hover {
   background: #7d3f18;
+}
+
+.seller-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Highest Bidder Banner: Prevents accidental self-bidding */
+.highest-bidder-status-card {
+  background: #edf5eb;
+  border: 1px solid #c2e0bc;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.highest-bidder-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: #244b20;
+}
+
+.trophy-badge {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.highest-bidder-desc {
+  font-size: 0.82rem;
+  color: #3b5f36;
+  margin-top: 0.2rem;
+  line-height: 1.35;
+}
+
+.highest-bidder-buyout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(194, 224, 188, 0.8);
+  flex-wrap: wrap;
+}
+
+.buyout-note {
+  font-size: 0.82rem;
+  color: #3b5f36;
 }
 
 /* Component 6: Notifications & Inbox */

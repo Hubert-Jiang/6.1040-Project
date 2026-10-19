@@ -31,12 +31,23 @@ export const ListingCreator = defineComponent({
     return () => (
       <section class="card">
         <div class="card-title">
-          <span>3. Post a New Auction Listing</span>
+          <span>➕ Post a New Auction Listing</span>
         </div>
+        <p class="card-subtitle">
+          Publish an item to the campus marketplace. Set an opening price, minimum bid increment, and optional instant buyout. Your identity will be masked behind an anonymous pseudonym.
+        </p>
 
         {!store.state.session ? (
           <div class="empty-state">
-            <p>Please sign in above to post an auction listing.</p>
+            <p>Please sign in on the Account page to post an auction listing.</p>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              style={{ marginTop: "0.75rem" }}
+              onClick={() => store.setPage("account")}
+            >
+              Go to Account Sign In →
+            </button>
           </div>
         ) : (
           <form onSubmit={onSubmitListing}>
@@ -112,8 +123,8 @@ export const ListingCreator = defineComponent({
               </div>
             </div>
 
-            <div class="form-help" style={{ marginBottom: "0.75rem" }}>
-              🎭 Listings are posted under a unique pseudonym while active, and are only resolved privately to the winning counterparty.
+            <div class="form-help" style={{ marginBottom: "1rem" }}>
+              🎭 Your listing is initialized with a contextual pseudonym. Your real Kerberos identity and contact info remain hidden until the auction concludes.
             </div>
 
             <button

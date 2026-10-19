@@ -1,11 +1,14 @@
 import { reactive } from "vue";
 import { client, PRESETS, type ListingItem, type NotificationItem } from "./api.ts";
 
+export type Page = "marketplace" | "create" | "inbox" | "profile" | "account";
+
 export interface AppState {
   user: string | null;
   session: string | null;
   name: string;
   contact: string;
+  currentPage: Page;
   listings: ListingItem[];
   notifications: NotificationItem[];
   notificationsMenuOpen: boolean;
@@ -16,6 +19,7 @@ export interface AppState {
 
 export const store = reactive<{
   state: AppState;
+  setPage(page: Page): void;
   setStatus(message: string | null, type?: "success" | "error" | "info"): void;
   login(username: string): Promise<void>;
   logout(): Promise<void>;
@@ -37,6 +41,7 @@ export const store = reactive<{
     session: null,
     name: "",
     contact: "",
+    currentPage: "marketplace",
     listings: [],
     notifications: [],
     notificationsMenuOpen: false,
@@ -45,9 +50,20 @@ export const store = reactive<{
     loading: false,
   },
 
+  setPage(page: Page) {
+    this.state.currentPage = page;
+    const targetHash = page === "marketplace" ? "#/" : `#/${page}`;
+    if (window.location.hash !== targetHash && !(page === "marketplace" && (!window.location.hash || window.location.hash === "#" || window.location.hash === "#/"))) {
+      window.location.hash = targetHash;
+    }
+  },
+
   setStatus(message: string | null, type = "info") {
     this.state.statusMessage = message;
     this.state.statusType = type;
+    if (message && typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   },
 
   toggleNotificationsMenu() {
@@ -235,6 +251,7 @@ export const store = reactive<{
 
       this.setStatus(`Listing "${item.trim()}" posted successfully!`, "success");
       await this.loadFeed();
+      this.setPage("marketplace");
       return true;
     } catch (err) {
       this.setStatus(`Error posting listing: ${String(err)}`, "error");
@@ -252,6 +269,17 @@ export const store = reactive<{
     if (isNaN(amount) || amount < 0) {
       this.setStatus("Please enter a valid non-negative bid amount ($0 or higher).", "error");
       return;
+    }
+
+    const currentItem = this.state.listings.find((l) => l.auction === auction);
+    if (currentItem?.isHighestBidder) {
+      if (currentItem.buyout === null || amount < currentItem.buyout) {
+        this.setStatus(
+          `You already hold the highest bid ($${currentItem.price})! You cannot outbid yourself.`,
+          "info",
+        );
+        return;
+      }
     }
 
     this.state.loading = true;
@@ -377,6 +405,21 @@ export const store = reactive<{
   },
 
   async init() {
+    // Resolve initial page from URL hash
+    const resolvePageFromHash = (): Page => {
+      const hash = window.location.hash.replace(/^#\/?/, "");
+      if (hash === "create" || hash === "inbox" || hash === "profile" || hash === "account") {
+        return hash;
+      }
+      return "marketplace";
+    };
+
+    this.state.currentPage = resolvePageFromHash();
+
+    window.addEventListener("hashchange", () => {
+      this.state.currentPage = resolvePageFromHash();
+    });
+
     // Dismiss notification dropdown on click outside
     window.addEventListener("click", (e) => {
       if (this.state.notificationsMenuOpen) {

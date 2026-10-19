@@ -331,3 +331,28 @@ Upon auction closure, the system triggers the private settlement notification re
 
 Alice and Bob review their settlement notifications in the top-right notifications drawer and contact each other directly via text message to arrange physical pickup at the Student Center and settle payment peer-to-peer. Throughout the entire public lifecycle of the listing and bidding, their identities were concealed behind pseudonyms, and their private contact information remained strictly confidential until the deal was completed.
 
+# Testing & Verification
+
+## Running Automated Tests
+
+All tests are implemented using Bun's native test runner (`bun:test`) across 7 test suites covering every concept action and operational principle as well as full composition integration scenarios.
+
+To execute the test suite:
+```sh
+bun test
+```
+
+### Database Setup
+- The application concepts support dual-mode persistence: a live MongoDB instance (started via `bun run db:up` or `podman compose up -d mongo`) or an automatic in-memory fallback collection for tests.
+- When MongoDB is active, each test initializes a clean state and isolates its actions to avoid cross-test contamination.
+- Full local environment setup and database reset:
+  ```sh
+  bun run db:reset    # Reset local Mongo database volume
+  bun run db:up       # Start Mongo container
+  bun test            # Run all 22 tests across 7 files
+  ```
+
+### Saved Execution Output
+Saved test output from the latest run is recorded in [tests/test-output.txt](tests/test-output.txt).
+
+
