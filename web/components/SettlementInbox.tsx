@@ -31,7 +31,7 @@ export const SettlementInbox = defineComponent({
           )}
         </div>
         <p class="card-subtitle">
-          When an auction ends (via buyout, seller closure, or bidding expiration), BeaverBazaar resolves both parties' pseudonyms and privately exchanges contact information so you can coordinate physical pickup and payment.
+          When an auction ends, BeaverBazaar resolves both parties' pseudonyms and privately exchanges contact information.
         </p>
 
         {!store.state.session ? (
