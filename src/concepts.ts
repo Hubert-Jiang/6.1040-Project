@@ -110,17 +110,20 @@ export function formatBuyerNotification({
   sellerUser,
   sellerName,
   sellerContact,
+  price,
 }: {
   item: string;
   sellerAlias: string;
   sellerUser: string;
   sellerName?: string;
   sellerContact?: string;
+  price?: number;
 }): { message: string } {
   const name = sellerName ? `${sellerName} (${sellerUser})` : sellerUser;
   const contact = sellerContact ? ` | Contact: ${sellerContact}` : "";
+  const priceStr = typeof price === "number" ? ` for $${price}` : "";
   return {
-    message: `You won the auction for "${item}"! Counterparty: alias "${sellerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
+    message: `You won the auction for "${item}"${priceStr}! Counterparty: alias "${sellerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
   };
 }
 
@@ -130,17 +133,20 @@ export function formatSellerNotification({
   buyerUser,
   buyerName,
   buyerContact,
+  price,
 }: {
   item: string;
   buyerAlias: string;
   buyerUser: string;
   buyerName?: string;
   buyerContact?: string;
+  price?: number;
 }): { message: string } {
   const name = buyerName ? `${buyerName} (${buyerUser})` : buyerUser;
   const contact = buyerContact ? ` | Contact: ${buyerContact}` : "";
+  const priceStr = typeof price === "number" ? ` for $${price}` : "";
   return {
-    message: `Your auction for "${item}" has ended! Counterparty: alias "${buyerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
+    message: `Your auction for "${item}" has ended${priceStr}! Counterparty: alias "${buyerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
   };
 }
 

@@ -312,13 +312,14 @@ export const NotifySellerOnClose = reaction(
     sellerUser,
     buyerUser,
     item,
+    price,
     buyerName,
     buyerContact,
     sellerMessage,
   }) =>
     when(Auction.close({ auction }).responds({}))
       .where(
-        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias }),
+        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias, price }),
         compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
         Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
         Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
@@ -326,7 +327,7 @@ export const NotifySellerOnClose = reaction(
         whether(Profile._get({ user: buyerUser }).is({ name: buyerName, contact: buyerContact })),
         compute(
           formatSellerNotification,
-          { item, buyerAlias, buyerUser, buyerName, buyerContact },
+          { item, buyerAlias, buyerUser, buyerName, buyerContact, price },
           { message: sellerMessage },
         ),
       )
@@ -342,13 +343,14 @@ export const NotifyBuyerOnClose = reaction(
     sellerUser,
     buyerUser,
     item,
+    price,
     sellerName,
     sellerContact,
     buyerMessage,
   }) =>
     when(Auction.close({ auction }).responds({}))
       .where(
-        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias }),
+        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias, price }),
         compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
         Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
         Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
@@ -356,7 +358,7 @@ export const NotifyBuyerOnClose = reaction(
         whether(Profile._get({ user: sellerUser }).is({ name: sellerName, contact: sellerContact })),
         compute(
           formatBuyerNotification,
-          { item, sellerAlias, sellerUser, sellerName, sellerContact },
+          { item, sellerAlias, sellerUser, sellerName, sellerContact, price },
           { message: buyerMessage },
         ),
       )

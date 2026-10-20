@@ -92,11 +92,11 @@ isBuyoutMet(amount: Number, buyout?: Number) : Record
 isBuyerPresent(highestBidder?: String) : Record
   Checks whether an auction has a recorded winning bidder upon closing.
 
-formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String) : Record
-  Formats the private notification message sent to the winning buyer with seller alias, actual identity, and contact details.
+formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record
+  Formats the private notification message sent to the winning buyer with seller alias, actual identity, contact details, and concluding price.
 
-formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String) : Record
-  Formats the private notification message sent to the seller with winning buyer alias, actual identity, and contact details.
+formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record
+  Formats the private notification message sent to the seller with winning buyer alias, actual identity, contact details, and concluding price.
 
 isUserSeller(seller: User, viewer?: User) : Record
   Evaluates whether the active viewer is the seller of the listing.

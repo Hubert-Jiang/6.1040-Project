@@ -1,5 +1,6 @@
 import { defineComponent } from "vue";
 import { store, type Page } from "../store.ts";
+import { parseSettlementNotification } from "../api.ts";
 
 export const HeaderBar = defineComponent({
   name: "HeaderBar",
@@ -71,13 +72,15 @@ export const HeaderBar = defineComponent({
               {store.state.notificationsMenuOpen && (
                 <div id="notifications-dropdown" class="notifications-dropdown">
                   <div class="notifications-dropdown-header">
-                    <div>
+                    <div class="notifications-dropdown-header-title">
                       <span>🔔 Settlement Inbox</span>
-                      <span class="notification-count" style={{ marginLeft: "0.5rem" }}>
-                        {store.state.notifications.length} unread
-                      </span>
+                      {store.state.notifications.length > 0 && (
+                        <span class="notification-count">
+                          {store.state.notifications.length} Unread
+                        </span>
+                      )}
                     </div>
-                    <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: "0.35rem", alignItems: "center" }}>
                       <button
                         type="button"
                         class="btn btn-xs"
@@ -92,7 +95,7 @@ export const HeaderBar = defineComponent({
                         title="Open Full Inbox Page"
                         onClick={goToInbox}
                       >
-                        View Page →
+                        Full Page →
                       </button>
                     </div>
                   </div>
@@ -111,20 +114,49 @@ export const HeaderBar = defineComponent({
                       </div>
                     ) : (
                       <div class="notification-list">
-                        {store.state.notifications.map((n) => (
-                          <div key={n.notification} class="notif-dropdown-item">
-                            <div class="notif-dropdown-msg">🔔 {n.message}</div>
-                            <div class="notif-dropdown-footer">
-                              <button
-                                type="button"
-                                class="btn btn-xs btn-dismiss"
-                                onClick={() => dismiss(n.notification)}
-                              >
-                                Dismiss
-                              </button>
+                        {store.state.notifications.map((n) => {
+                          const parsed = parseSettlementNotification(n.message);
+                          return (
+                            <div key={n.notification} class="notif-dropdown-item">
+                              <div class="notif-dropdown-header-row">
+                                <span class={`notif-type-tag ${parsed.type === "won" ? "won" : "sold"}`}>
+                                  {parsed.type === "won" ? "🏆 Won" : parsed.type === "sold" ? "🏁 Sold" : "🔔 Update"}
+                                </span>
+                                <strong class="notif-item-name">
+                                  "{parsed.item}"
+                                  {parsed.price !== null && ` ($${parsed.price})`}
+                                </strong>
+                              </div>
+                              <div class="notif-dropdown-msg">
+                                {parsed.alias ? (
+                                  <>
+                                    <span>Counterparty: </span>
+                                    <strong class="pseudonym-tag">{parsed.alias}</strong>
+                                    {parsed.identity && <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}> ({parsed.identity})</span>}
+                                  </>
+                                ) : (
+                                  <span>{n.message}</span>
+                                )}
+                              </div>
+                              <div class="notif-dropdown-footer">
+                                <button
+                                  type="button"
+                                  class="btn-link-action"
+                                  onClick={goToInbox}
+                                >
+                                  View Details →
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn btn-xs btn-dismiss"
+                                  onClick={() => dismiss(n.notification)}
+                                >
+                                  Dismiss
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>

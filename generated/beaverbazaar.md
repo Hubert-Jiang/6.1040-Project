@@ -166,8 +166,8 @@ Concrete types:
 
 ## Computations
 
-- `formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 95.
-- `formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 98.
+- `formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 95.
+- `formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 98.
 - `isBuyerPresent(highestBidder?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 92.
 - `isBuyoutMet(amount: Number, buyout?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 89.
 - `isUserHighestBidder(bidderUser?: User, viewer?: User) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 104.
@@ -696,13 +696,13 @@ Authored path: `BeaverBazaar.Notifications.NotifyBuyerOnClose`.
 ```reaction
 when Auction.close (auction)
 where
-  Auction._get (auction) has (highestBidder: buyerAlias, item: listing, owner: sellerAlias)
+  Auction._get (auction) has (highestBidder: buyerAlias, item: listing, owner: sellerAlias, price)
   (hasWinner: true) is isBuyerPresent (highestBidder: buyerAlias)
   Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
   Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
   Listing._get (listing) has (item)
   whether Profile._get (user: sellerUser) has (contact: sellerContact, name: sellerName)
-  (message: buyerMessage) is formatBuyerNotification (item, sellerAlias, sellerContact, sellerName, sellerUser)
+  (message: buyerMessage) is formatBuyerNotification (item, price, sellerAlias, sellerContact, sellerName, sellerUser)
 then
   Notify.notify (message: buyerMessage, user: buyerUser)
 ```
@@ -715,13 +715,13 @@ Authored path: `BeaverBazaar.Notifications.NotifySellerOnClose`.
 ```reaction
 when Auction.close (auction)
 where
-  Auction._get (auction) has (highestBidder: buyerAlias, item: listing, owner: sellerAlias)
+  Auction._get (auction) has (highestBidder: buyerAlias, item: listing, owner: sellerAlias, price)
   (hasWinner: true) is isBuyerPresent (highestBidder: buyerAlias)
   Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
   Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
   Listing._get (listing) has (item)
   whether Profile._get (user: buyerUser) has (contact: buyerContact, name: buyerName)
-  (message: sellerMessage) is formatSellerNotification (buyerAlias, buyerContact, buyerName, buyerUser, item)
+  (message: sellerMessage) is formatSellerNotification (buyerAlias, buyerContact, buyerName, buyerUser, item, price)
 then
   Notify.notify (message: sellerMessage, user: sellerUser)
 ```
