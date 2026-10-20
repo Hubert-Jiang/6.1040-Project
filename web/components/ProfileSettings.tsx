@@ -24,74 +24,75 @@ export const ProfileSettings = defineComponent({
     return () => (
       <section class="card">
         <div class="card-title">
-          <span>👤 Private Contact Profile</span>
-          {store.state.user && (
-            <span class="session-badge">Active: {store.state.user}</span>
-          )}
+          <span>👤 Profile & Account</span>
         </div>
         <p class="card-subtitle">
-          Your contact method is safely stored out-of-band. It is never displayed on active listings and is only shared privately with your winning counterparty once an auction concludes.
+          🔒 Your contact info is strictly hidden while auctions are active, and only disclosed privately to the winning counterparty.
         </p>
 
         {!store.state.session ? (
           <div class="empty-state">
-            <p>Please sign in on the Account page to view and manage your contact profile.</p>
-            <button
-              type="button"
-              class="btn btn-primary btn-sm"
-              style={{ marginTop: "0.75rem" }}
-              onClick={() => store.setPage("account")}
-            >
-              Go to Account Sign In →
-            </button>
+            <p>Please sign in to view and manage your profile.</p>
           </div>
         ) : (
-          <form onSubmit={onSaveProfile}>
-            <div class="form-help" style={{ marginBottom: "1rem" }}>
-              Currently editing contact details for <strong>{store.state.user}</strong>.
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="profile-name">
-                Full / Display Name
-              </label>
-              <input
-                id="profile-name"
-                type="text"
-                placeholder="e.g. Alice Doe"
-                required
-                value={name.value}
-                onInput={(e: Event) => {
-                  name.value = (e.target as HTMLInputElement).value;
-                }}
-              />
-            </div>
-            <div class="input-group">
-              <label class="input-label" for="profile-contact">
-                Preferred Contact (Phone or Email)
-              </label>
-              <input
-                id="profile-contact"
-                type="text"
-                placeholder="e.g. (617) 555-0101 or alice@mit.edu"
-                required
-                value={contact.value}
-                onInput={(e: Event) => {
-                  contact.value = (e.target as HTMLInputElement).value;
-                }}
-              />
-              <div class="form-help">
-                🔒 Your contact info is strictly hidden while auctions are active, and only
-                disclosed privately to the winning counterparty.
+          <>
+            <div class="session-info-bar">
+              <div>
+                <span class="session-label">Current Kerberos: </span>
+                <strong class="user-badge session-user">{store.state.user}</strong>
               </div>
+              <button
+                type="button"
+                id="btn-logout"
+                class="btn btn-sm"
+                onClick={() => store.logout()}
+              >
+                Sign Out
+              </button>
             </div>
-            <button
-              type="submit"
-              class="btn btn-primary"
-              disabled={store.state.loading}
-            >
-              Save Contact Profile
-            </button>
-          </form>
+
+            <form onSubmit={onSaveProfile} class="profile-form">
+              <div class="input-group">
+                <label class="input-label" for="profile-name">
+                  Full / Display Name
+                </label>
+                <input
+                  id="profile-name"
+                  type="text"
+                  placeholder="e.g. Alice Doe"
+                  required
+                  value={name.value}
+                  onInput={(e: Event) => {
+                    name.value = (e.target as HTMLInputElement).value;
+                  }}
+                />
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="profile-contact">
+                  Preferred Contact Method (Phone or Email)
+                </label>
+                <input
+                  id="profile-contact"
+                  type="text"
+                  placeholder="e.g. (617) 555-0101 or alice@mit.edu"
+                  required
+                  value={contact.value}
+                  onInput={(e: Event) => {
+                    contact.value = (e.target as HTMLInputElement).value;
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-primary"
+                disabled={store.state.loading}
+              >
+                Save Contact Details
+              </button>
+            </form>
+          </>
         )}
       </section>
     );

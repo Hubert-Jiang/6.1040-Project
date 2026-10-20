@@ -15,16 +15,6 @@ export const LoginLanding = defineComponent({
             </p>
           </div>
 
-          <div class="login-banner">
-            <span class="login-lock-icon">🔒</span>
-            <div>
-              <strong>MIT Touchstone Authentication Required</strong>
-              <p class="login-banner-text">
-                BeaverBazaar is restricted to verified MIT community members. Sign in with MIT Touchstone via Petrock, or choose a test account below.
-              </p>
-            </div>
-          </div>
-
           <div class="login-actions">
             <button
               type="button"
@@ -32,11 +22,11 @@ export const LoginLanding = defineComponent({
               class="btn btn-primary login-btn-large"
               onClick={() => store.loginWithPetrock()}
             >
-              🔐 Log In with MIT Touchstone (Petrock OIDC)
+              🔐 Log In with MIT Touchstone
             </button>
 
             <div class="test-accounts-section">
-              <span class="test-accounts-label">Quick Testing Accounts:</span>
+              <span class="test-accounts-label">Testing Accounts:</span>
               <div class="test-accounts-buttons">
                 <button
                   type="button"
@@ -44,7 +34,7 @@ export const LoginLanding = defineComponent({
                   class="btn login-btn-test"
                   onClick={() => store.loginAsAlice()}
                 >
-                  🧪 Test Account: Alice (alice@mit.edu)
+                  🧪 Alice (alice@mit.edu)
                 </button>
                 <button
                   type="button"
@@ -52,19 +42,14 @@ export const LoginLanding = defineComponent({
                   class="btn login-btn-test"
                   onClick={() => store.loginAsBob()}
                 >
-                  🧪 Test Account: Bob (bob@mit.edu)
+                  🧪 Bob (bob@mit.edu)
                 </button>
               </div>
             </div>
           </div>
 
           <div class="login-footer-info">
-            <p>
-              <strong>Petrock OIDC Integration:</strong> Integrates directly with <a href="https://petrock.mit.edu/" target="_blank" rel="noreferrer">petrock.mit.edu</a>, MIT's student-run OpenID Connect identity provider for Touchstone authentication.
-            </p>
-            <p style={{ marginTop: "0.4rem" }}>
-              <strong>Pseudonymity Guaranteed:</strong> Your real email and contact information remain hidden behind context-scoped aliases until an auction successfully closes.
-            </p>
+            <p>BeaverBazaar is restricted to verified MIT community members.</p>
           </div>
         </div>
       </div>

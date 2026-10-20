@@ -25,8 +25,9 @@ export const AppLayout = defineComponent({
               {store.state.currentPage === "marketplace" && <MarketplaceFeed />}
               {store.state.currentPage === "create" && <ListingCreator />}
               {store.state.currentPage === "inbox" && <SettlementInbox />}
-              {store.state.currentPage === "profile" && <ProfileSettings />}
-              {store.state.currentPage === "account" && <UserSwitcher />}
+              {(store.state.currentPage === "profile" || store.state.currentPage === "account") && (
+                <ProfileSettings />
+              )}
             </main>
           </>
         )}

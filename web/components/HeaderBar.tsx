@@ -39,9 +39,9 @@ export const HeaderBar = defineComponent({
             {/* Quick Account Pill */}
             <button
               type="button"
-              class={`btn-account-pill ${store.state.currentPage === "account" ? "btn-active" : ""}`}
-              onClick={() => navTo("account")}
-              title="Touchstone Account & User Switcher"
+              class={`btn-account-pill ${store.state.currentPage === "profile" || store.state.currentPage === "account" ? "btn-active" : ""}`}
+              onClick={() => navTo("profile")}
+              title="Touchstone Account & Profile"
             >
               <span class="account-icon">👤</span>
               <span class="account-label">
@@ -169,20 +169,11 @@ export const HeaderBar = defineComponent({
 
           <button
             type="button"
-            class={`nav-tab ${store.state.currentPage === "profile" ? "active" : ""}`}
+            class={`nav-tab ${store.state.currentPage === "profile" || store.state.currentPage === "account" ? "active" : ""}`}
             onClick={() => navTo("profile")}
           >
             <span class="nav-tab-icon">👤</span>
-            <span>Profile</span>
-          </button>
-
-          <button
-            type="button"
-            class={`nav-tab ${store.state.currentPage === "account" ? "active" : ""}`}
-            onClick={() => navTo("account")}
-          >
-            <span class="nav-tab-icon">🔑</span>
-            <span>Account</span>
+            <span>Profile & Account</span>
           </button>
         </nav>
       </header>
