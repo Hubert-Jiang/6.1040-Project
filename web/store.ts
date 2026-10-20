@@ -22,6 +22,9 @@ export const store = reactive<{
   setPage(page: Page): void;
   setStatus(message: string | null, type?: "success" | "error" | "info"): void;
   login(username: string): Promise<void>;
+  loginAsAlice(): Promise<void>;
+  loginAsBob(): Promise<void>;
+  loginWithPetrock(): Promise<void>;
   logout(): Promise<void>;
   loadProfile(): Promise<void>;
   updateProfile(name: string, contact: string): Promise<void>;
@@ -151,6 +154,11 @@ export const store = reactive<{
       this.state.user = username.trim();
       this.state.session = res.session;
 
+      if (typeof window !== "undefined") {
+        localStorage.setItem("beaverbazaar_session", res.session);
+        localStorage.setItem("beaverbazaar_user", this.state.user);
+      }
+
       await this.loadProfile();
       await this.loadNotifications();
       this.setStatus(`Signed in as ${this.state.user}`, "success");
@@ -162,6 +170,104 @@ export const store = reactive<{
     }
   },
 
+  async loginAsAlice() {
+    this.state.loading = true;
+    this.setStatus("Signing in as Alice (alice@mit.edu)...", "info");
+    try {
+      const res = await client["/auth/login"]({ username: "alice@mit.edu" });
+      if ("error" in res) {
+        this.setStatus(`Sign-in failed: ${String(res.error)}`, "error");
+        return;
+      }
+      this.state.user = "alice@mit.edu";
+      this.state.session = res.session;
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("beaverbazaar_session", res.session);
+        localStorage.setItem("beaverbazaar_user", "alice@mit.edu");
+      }
+
+      // Initialize Alice profile
+      try {
+        await client["/profile/update"]({
+          session: res.session,
+          name: "Alice Doe",
+          contact: "617-555-0101",
+        });
+      } catch {
+        // ignore profile update error if already set
+      }
+
+      await this.loadProfile();
+      await this.loadNotifications();
+      this.setStatus("Signed in as Alice (alice@mit.edu)", "success");
+      await this.loadFeed();
+    } catch (err) {
+      this.setStatus(`Error signing in as Alice: ${String(err)}`, "error");
+    } finally {
+      this.state.loading = false;
+    }
+  },
+
+  async loginAsBob() {
+    this.state.loading = true;
+    this.setStatus("Signing in as Bob (bob@mit.edu)...", "info");
+    try {
+      const res = await client["/auth/login"]({ username: "bob@mit.edu" });
+      if ("error" in res) {
+        this.setStatus(`Sign-in failed: ${String(res.error)}`, "error");
+        return;
+      }
+      this.state.user = "bob@mit.edu";
+      this.state.session = res.session;
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("beaverbazaar_session", res.session);
+        localStorage.setItem("beaverbazaar_user", "bob@mit.edu");
+      }
+
+      // Initialize Bob profile
+      try {
+        await client["/profile/update"]({
+          session: res.session,
+          name: "Bob Smith",
+          contact: "bob@mit.edu",
+        });
+      } catch {
+        // ignore profile update error if already set
+      }
+
+      await this.loadProfile();
+      await this.loadNotifications();
+      this.setStatus("Signed in as Bob (bob@mit.edu)", "success");
+      await this.loadFeed();
+    } catch (err) {
+      this.setStatus(`Error signing in as Bob: ${String(err)}`, "error");
+    } finally {
+      this.state.loading = false;
+    }
+  },
+
+  async loginWithPetrock() {
+    try {
+      // Check if Petrock OIDC is configured on frontend server
+      const cfgRes = await fetch("/auth/petrock/config");
+      const cfg = await cfgRes.json();
+      if (cfg.configured) {
+        // Redirect browser to Petrock OIDC flow
+        window.location.href = "/auth/petrock/login";
+      } else {
+        // Petrock client ID not configured in environment
+        this.setStatus(
+          "Petrock OIDC credentials not configured on server (PETROCK_CLIENT_ID). Please use 'Quick Test: Log In as Bob' or enter your Kerberos email below.",
+          "info"
+        );
+      }
+    } catch (err) {
+      this.setStatus(`Error checking Petrock OIDC: ${String(err)}`, "error");
+    }
+  },
+
   async logout() {
     if (this.state.session) {
       try {
@@ -170,13 +276,18 @@ export const store = reactive<{
         // Ignore logout transport errors
       }
     }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("beaverbazaar_session");
+      localStorage.removeItem("beaverbazaar_user");
+    }
     this.state.user = null;
     this.state.session = null;
     this.state.name = "";
     this.state.contact = "";
     this.state.notifications = [];
     this.state.notificationsMenuOpen = false;
-    this.setStatus("Signed out successfully.", "info");
+    this.state.listings = [];
+    this.setStatus("Signed out successfully. Touchstone session closed.", "info");
   },
 
   async updateProfile(name: string, contact: string) {
@@ -438,7 +549,29 @@ export const store = reactive<{
       }
     }, 3000);
 
-    // Initial sign in as Alice
-    await this.login("alice@mit.edu");
+    // Check if session exists in localStorage
+    if (typeof window !== "undefined") {
+      const savedSession = localStorage.getItem("beaverbazaar_session");
+      const savedUser = localStorage.getItem("beaverbazaar_user");
+
+      if (savedSession && savedUser) {
+        // Validate session with backend
+        try {
+          const check = await client["/auth/me"]({ session: savedSession });
+          if (!("error" in check) && check.user) {
+            this.state.session = savedSession;
+            this.state.user = check.user;
+            await this.loadProfile();
+            await this.loadNotifications();
+            await this.loadFeed(true);
+            return;
+          }
+        } catch {
+          // If session expired or invalid, clear localStorage
+        }
+        localStorage.removeItem("beaverbazaar_session");
+        localStorage.removeItem("beaverbazaar_user");
+      }
+    }
   },
 });

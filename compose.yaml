@@ -28,6 +28,10 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       BACKEND_URL: http://backend:3000
+      PETROCK_AUTHORITY: ${PETROCK_AUTHORITY:-https://petrock.mit.edu}
+      PETROCK_CLIENT_ID: ${PETROCK_CLIENT_ID:-DhxUjjKelNYQ}
+      PETROCK_CLIENT_SECRET: ${PETROCK_CLIENT_SECRET:-27caf5d08ccc4b9dbfbcfe302ed8c48a}
+      PETROCK_REDIRECT_URI: ${PETROCK_REDIRECT_URI:-http://127.0.0.1:8080/auth/petrock/callback}
     depends_on:
       - backend
 

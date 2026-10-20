@@ -1,21 +1,10 @@
-import { defineComponent, ref } from "vue";
+import { defineComponent } from "vue";
 import { store } from "../store.ts";
 import { PRESETS } from "../api.ts";
 
 export const UserSwitcher = defineComponent({
   name: "UserSwitcher",
   setup() {
-    const customUsername = ref("");
-
-    function onCustomLogin(e: Event) {
-      e.preventDefault();
-      const val = customUsername.value.trim();
-      if (val) {
-        customUsername.value = "";
-        store.login(val);
-      }
-    }
-
     return () => (
       <section class="card">
         <div class="card-title">
@@ -23,7 +12,7 @@ export const UserSwitcher = defineComponent({
           {store.state.session && <span class="session-badge">Session Active</span>}
         </div>
         <p class="card-subtitle">
-          Touchstone manages authenticated sessions for MIT community members. Switching accounts simulates authenticating as different students.
+          Touchstone manages authenticated sessions for MIT community members. Switch to verified Touchstone login or toggle between test accounts.
         </p>
 
         <div class="auth-bar">
@@ -44,33 +33,31 @@ export const UserSwitcher = defineComponent({
             )}
           </div>
 
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", margin: "0.75rem 0" }}>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="btn-touchstone-oidc"
+              onClick={() => store.loginWithPetrock()}
+            >
+              🔐 Authenticate with MIT Touchstone (Petrock)
+            </button>
+          </div>
+
           <div class="user-switcher-actions">
-            <span>Quick Switch Presets:</span>
+            <span>Testing & Development Accounts:</span>
             {PRESETS.map((p) => (
               <button
                 key={p.username}
                 type="button"
+                id={`btn-switch-${p.username.split("@")[0]}`}
                 class={`btn btn-sm ${store.state.user === p.username ? "btn-active" : ""}`}
-                onClick={() => store.login(p.username)}
+                onClick={() => (p.username === "alice@mit.edu" ? store.loginAsAlice() : store.loginAsBob())}
               >
-                {p.label} ({p.username})
+                🧪 Switch to {p.label} ({p.username})
               </button>
             ))}
           </div>
-
-          <form class="custom-login-form" onSubmit={onCustomLogin}>
-            <input
-              type="text"
-              placeholder="Or enter custom Kerberos email (e.g. charlie@mit.edu)"
-              value={customUsername.value}
-              onInput={(e: Event) => {
-                customUsername.value = (e.target as HTMLInputElement).value;
-              }}
-            />
-            <button type="submit" class="btn btn-primary btn-sm">
-              Sign In
-            </button>
-          </form>
         </div>
       </section>
     );

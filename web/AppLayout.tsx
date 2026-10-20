@@ -7,23 +7,31 @@ import { ProfileSettings } from "./components/ProfileSettings.tsx";
 import { ListingCreator } from "./components/ListingCreator.tsx";
 import { SettlementInbox } from "./components/SettlementInbox.tsx";
 import { MarketplaceFeed } from "./components/MarketplaceFeed.tsx";
+import { LoginLanding } from "./components/LoginLanding.tsx";
 
 export const AppLayout = defineComponent({
   name: "AppLayout",
   setup() {
     return () => (
       <div class="container">
-        <HeaderBar />
         <StatusAlert />
 
-        <main class="page-content" role="main">
-          {store.state.currentPage === "marketplace" && <MarketplaceFeed />}
-          {store.state.currentPage === "create" && <ListingCreator />}
-          {store.state.currentPage === "inbox" && <SettlementInbox />}
-          {store.state.currentPage === "profile" && <ProfileSettings />}
-          {store.state.currentPage === "account" && <UserSwitcher />}
-        </main>
+        {!store.state.session ? (
+          <LoginLanding />
+        ) : (
+          <>
+            <HeaderBar />
+            <main class="page-content" role="main">
+              {store.state.currentPage === "marketplace" && <MarketplaceFeed />}
+              {store.state.currentPage === "create" && <ListingCreator />}
+              {store.state.currentPage === "inbox" && <SettlementInbox />}
+              {store.state.currentPage === "profile" && <ProfileSettings />}
+              {store.state.currentPage === "account" && <UserSwitcher />}
+            </main>
+          </>
+        )}
       </div>
     );
   },
 });
+

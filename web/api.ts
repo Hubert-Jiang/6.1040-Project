@@ -29,6 +29,6 @@ export interface PresetUser {
 }
 
 export const PRESETS: PresetUser[] = [
-  { label: "Alice", username: "alice@mit.edu", defaultName: "Alice Doe", defaultContact: "617-555-0101" },
-  { label: "Bob", username: "bob@mit.edu", defaultName: "Bob Smith", defaultContact: "bob@mit.edu" },
+  { label: "Alice (Test Account)", username: "alice@mit.edu", defaultName: "Alice Doe", defaultContact: "617-555-0101" },
+  { label: "Bob (Test Account)", username: "bob@mit.edu", defaultName: "Bob Smith", defaultContact: "bob@mit.edu" },
 ];

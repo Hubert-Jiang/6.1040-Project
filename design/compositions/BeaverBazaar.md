@@ -6,8 +6,8 @@ student privacy until a transaction resolves.
 
 ## Authentication and Sessions
 
-MIT community members access the application via Touchstone authentication.
-[Signing in](reaction:BeaverBazaar.Auth.SignIn) starts an opaque session for the verified
+MIT community members access the application via Touchstone authentication brokered by the Petrock OpenID Connect service (petrock.mit.edu).
+Upon Touchstone verification, [signing in](reaction:BeaverBazaar.Auth.SignIn) starts an opaque session for the verified
 Kerberos username. An [active session resolves to its current subject](reaction:BeaverBazaar.Auth.CurrentUser),
 ensuring that callers cannot act on behalf of another student.
 [Signing out](reaction:BeaverBazaar.Auth.SignOut) ends the active session.
