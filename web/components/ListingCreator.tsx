@@ -7,7 +7,7 @@ export const ListingCreator = defineComponent({
     const item = ref("");
     const startPrice = ref<number | null>(0);
     const increment = ref<number | null>(1);
-    const buyout = ref<number | null>(1);
+    const buyout = ref<number | null>(null);
 
     async function onSubmitListing(e: Event) {
       e.preventDefault();
@@ -24,7 +24,7 @@ export const ListingCreator = defineComponent({
         item.value = "";
         startPrice.value = 0;
         increment.value = 1;
-        buyout.value = 1;
+        buyout.value = null;
       }
     }
 
@@ -34,7 +34,7 @@ export const ListingCreator = defineComponent({
           <span>➕ Post a New Auction Listing</span>
         </div>
         <p class="card-subtitle">
-          Publish an item to the campus marketplace. Set an opening price, minimum bid increment, and optional instant buyout. Your identity will be masked behind an anonymous pseudonym.
+          Publish an item to the campus marketplace. Set an opening price, minimum bid increment, and optional instant buyout price.
         </p>
 
         {!store.state.session ? (
@@ -111,7 +111,7 @@ export const ListingCreator = defineComponent({
                 <input
                   id="listing-buyout"
                   type="number"
-                  placeholder=">= 0"
+                  placeholder="None (optional)"
                   min="0"
                   step="1"
                   value={buyout.value ?? ""}
@@ -123,8 +123,12 @@ export const ListingCreator = defineComponent({
               </div>
             </div>
 
+            <div class="form-help" style={{ marginTop: "0.5rem", marginBottom: "0.35rem" }}>
+              ⚡ Your auction will instantly end if someone offers at or above the buyout price. (optional)
+            </div>
+
             <div class="form-help" style={{ marginBottom: "1rem" }}>
-              🎭 Your listing is initialized with a contextual pseudonym. Your real Kerberos identity and contact info remain hidden until the auction concludes.
+              🎭 Your listing is initialized behind a pseudonym. Your identity is only disclosed privately to the winning counterparty.
             </div>
 
             <button

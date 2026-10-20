@@ -27,7 +27,7 @@ export const ProfileSettings = defineComponent({
           <span>👤 Profile & Account</span>
         </div>
         <p class="card-subtitle">
-          🔒 Your contact info is strictly hidden while auctions are active, and only disclosed privately to the winning counterparty.
+          🔒 Your information is hidden while auctions are active, and only disclosed privately to the winning counterparty.
         </p>
 
         {!store.state.session ? (

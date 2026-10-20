@@ -810,6 +810,7 @@ input:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 0.75rem;
+  align-items: start;
 }
 
 /* Component 4 & 5: Listing & Bidding Actions */
