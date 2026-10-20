@@ -59,7 +59,6 @@ export const SettlementInbox = defineComponent({
                       </span>
                       <h3 class="settlement-item-name">
                         "{parsed.item}"
-                        {parsed.price !== null && <span class="settlement-price-tag"> (${parsed.price})</span>}
                       </h3>
                     </div>
                     <button
@@ -100,7 +99,7 @@ export const SettlementInbox = defineComponent({
                   </div>
 
                   <div class="settlement-instruction">
-                    <span>💬 <strong>Next Steps:</strong> {parsed.instruction}</span>
+                    <span>💬 <strong>Next Steps:</strong> Reach out to coordinate physical pickup and payment.</span>
                   </div>
                 </div>
               );

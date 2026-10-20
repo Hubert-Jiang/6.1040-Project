@@ -28,7 +28,6 @@ export interface ParsedSettlement {
   identity: string;
   contact: string | null;
   price: number | null;
-  instruction: string;
   raw: string;
 }
 
@@ -44,7 +43,6 @@ export function parseSettlementNotification(msg: string): ParsedSettlement {
       identity: "",
       contact: null,
       price: null,
-      instruction: msg,
       raw: msg,
     };
   }
@@ -82,7 +80,6 @@ export function parseSettlementNotification(msg: string): ParsedSettlement {
     identity,
     contact: contact || null,
     price,
-    instruction: `Reach out to coordinate physical pickup and payment${priceText}.`,
     raw: msg,
   };
 }
