@@ -101,15 +101,17 @@ export const ListingCard = defineComponent({
             <div class="meta-pill">
               <span>Seller:</span>
               <span class="pseudonym-tag">{props.item.sellerAlias}</span>
-              <span class="session-badge">(Masked Alias)</span>
+              {isSeller.value && <span class="pseudonym-you-tag"> (you)</span>}
             </div>
             <div class="meta-pill">
               <span>Highest Bidder:</span>
               {props.item.highestBidder ? (
-                <strong class="pseudonym-tag">
-                  {props.item.highestBidder}
-                  {isHighestBidder.value && " (you)"}
-                </strong>
+                <>
+                  <strong class="pseudonym-tag">{props.item.highestBidder}</strong>
+                  {isHighestBidder.value && (
+                    <span class="pseudonym-you-tag"> (you)</span>
+                  )}
+                </>
               ) : (
                 <em>No bids placed yet</em>
               )}

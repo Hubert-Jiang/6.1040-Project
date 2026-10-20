@@ -694,6 +694,12 @@ input:focus {
   font-weight: 600;
 }
 
+.pseudonym-you-tag {
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
 .empty-state {
   text-align: center;
   padding: 2.5rem 1rem;
