@@ -2,7 +2,6 @@ import { defineComponent } from "vue";
 import { store } from "./store.ts";
 import { HeaderBar } from "./components/HeaderBar.tsx";
 import { StatusAlert } from "./components/StatusAlert.tsx";
-import { UserSwitcher } from "./components/UserSwitcher.tsx";
 import { ProfileSettings } from "./components/ProfileSettings.tsx";
 import { ListingCreator } from "./components/ListingCreator.tsx";
 import { SettlementInbox } from "./components/SettlementInbox.tsx";

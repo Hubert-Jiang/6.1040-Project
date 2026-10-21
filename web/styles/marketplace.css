@@ -1,0 +1,255 @@
+/* Marketplace Feed */
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  gap: 1.25rem;
+}
+
+.listing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.listing-card:hover {
+  box-shadow: 0 4px 14px rgba(60, 42, 24, 0.08);
+}
+
+.listing-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Price Presentation Box */
+.price-highlight-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.price-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.price-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.price-amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.price-amount {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.price-payout-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2f5629;
+  background: #edf2ea;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(47, 86, 41, 0.2);
+}
+
+.price-unbid-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+.price-secondary-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 0.45rem;
+  border-top: 1px dashed rgba(227, 212, 193, 0.8);
+}
+
+.price-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.min-bid-pill {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.min-bid-pill .pill-label {
+  color: var(--text-muted);
+}
+
+.min-bid-pill .pill-value {
+  color: #3b2c20;
+  font-weight: 700;
+}
+
+.min-bid-pill .pill-detail {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.buyout-pill {
+  background: var(--badge-bg);
+  border: 1px solid rgba(139, 87, 42, 0.2);
+  color: var(--badge-text);
+  font-weight: 600;
+}
+
+.no-buyout-pill {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+.listing-meta {
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pseudonym-tag {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.pseudonym-you-tag {
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* Listing Actions & Bidding Controls */
+.listing-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.bid-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bid-controls input {
+  max-width: 6.5rem;
+}
+
+.btn-buyout {
+  background: #965325;
+  color: #ffffff;
+  border-color: #80431b;
+  font-weight: 600;
+}
+
+.btn-buyout:hover {
+  background: #7d3f18;
+}
+
+.seller-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Highest Bidder Banner: Prevents accidental self-bidding */
+.highest-bidder-status-card {
+  background: #edf5eb;
+  border: 1px solid #c2e0bc;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.highest-bidder-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: #244b20;
+}
+
+.trophy-badge {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.highest-bidder-desc {
+  font-size: 0.82rem;
+  color: #3b5f36;
+  margin-top: 0.2rem;
+  line-height: 1.35;
+}
+
+.highest-bidder-buyout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(194, 224, 188, 0.8);
+  flex-wrap: wrap;
+}
+
+.buyout-note {
+  font-size: 0.82rem;
+  color: #3b5f36;
+}

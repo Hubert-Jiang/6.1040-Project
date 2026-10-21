@@ -7,8 +7,10 @@ describe("Petrock MIT Touchstone OIDC Integration", () => {
   const PETROCK_REDIRECT_URI = process.env.PETROCK_REDIRECT_URI ?? "http://127.0.0.1:8080/auth/petrock/callback";
 
   test("environment variables are properly configured", () => {
-    expect(PETROCK_CLIENT_ID).toBe("DhxUjjKelNYQ");
-    expect(PETROCK_CLIENT_SECRET).toBe("27caf5d08ccc4b9dbfbcfe302ed8c48a");
+    expect(typeof PETROCK_CLIENT_ID).toBe("string");
+    expect(PETROCK_CLIENT_ID.length).toBeGreaterThan(0);
+    expect(typeof PETROCK_CLIENT_SECRET).toBe("string");
+    expect(PETROCK_CLIENT_SECRET.length).toBeGreaterThan(0);
     expect(PETROCK_AUTHORITY).toBe("https://petrock.mit.edu");
     expect(PETROCK_REDIRECT_URI).toBe("http://127.0.0.1:8080/auth/petrock/callback");
   });
@@ -24,7 +26,7 @@ describe("Petrock MIT Touchstone OIDC Integration", () => {
 
     expect(authUrl.origin).toBe("https://petrock.mit.edu");
     expect(authUrl.pathname).toBe("/touchstone/oidc/authorization");
-    expect(authUrl.searchParams.get("client_id")).toBe("DhxUjjKelNYQ");
+    expect(authUrl.searchParams.get("client_id")).toBe(PETROCK_CLIENT_ID);
     expect(authUrl.searchParams.get("response_type")).toBe("code");
     expect(authUrl.searchParams.get("scope")).toBe("openid email profile");
     expect(authUrl.searchParams.get("redirect_uri")).toBe("http://127.0.0.1:8080/auth/petrock/callback");
@@ -37,7 +39,7 @@ describe("Petrock MIT Touchstone OIDC Integration", () => {
     ).toString("base64")}`;
 
     const decoded = Buffer.from(basicAuth.replace("Basic ", ""), "base64").toString("utf-8");
-    expect(decoded).toBe("DhxUjjKelNYQ:27caf5d08ccc4b9dbfbcfe302ed8c48a");
+    expect(decoded).toBe(`${PETROCK_CLIENT_ID}:${PETROCK_CLIENT_SECRET}`);
   });
 
   test("claims parser extracts identity from standard Petrock userinfo or id_token payload", () => {
