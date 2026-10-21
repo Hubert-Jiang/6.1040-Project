@@ -358,3 +358,5 @@ bun test
 Saved test output from the latest run is recorded in [tests/test-output.txt](tests/test-output.txt).
 
 
+[Visual Design Study](https://docs.google.com/presentation/d/1lUvhIHo5sWtdN6N_uokCQdJ0MAK1Sp8GE7qkBk96m_0/edit?usp=sharing)
+[Beta Demo](https://youtu.be/PPSDaQ8sFDY)
