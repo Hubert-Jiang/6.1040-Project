@@ -26,7 +26,7 @@ export const SettlementInbox = defineComponent({
           </div>
           {store.state.session && (
             <button type="button" class="btn btn-sm" onClick={onRefresh}>
-              ↻ Refresh Inbox
+              ↻ Refresh
             </button>
           )}
         </div>

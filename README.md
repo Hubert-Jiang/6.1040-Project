@@ -1,3 +1,5 @@
+> the concepts listed here and that are actually implemented have slightly diverged; refer to the generated design file for the technical specifications, which should be treated as the source of truth ([here](generated/beaverbazaar.md))
+
 # Problem Framing
 
 ## Domain
