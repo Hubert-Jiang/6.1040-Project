@@ -4,11 +4,18 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.feed-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .feed-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
   gap: 1.25rem;
 }
 
@@ -103,10 +110,12 @@
 .price-pill {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
   font-size: 0.82rem;
+  max-width: 100%;
 }
 
 .min-bid-pill {
@@ -155,6 +164,7 @@
 .meta-pill {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.35rem;
 }
 
@@ -182,6 +192,13 @@
 .bid-controls {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.custom-bid-form {
+  display: inline-flex;
+  gap: 0.4rem;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -252,4 +269,99 @@
 .buyout-note {
   font-size: 0.82rem;
   color: #3b5f36;
+}
+
+@media (max-width: 640px) {
+  .feed-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .feed-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .feed-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .feed-header-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .listing-card {
+    padding: 1rem 0.85rem;
+  }
+
+  .price-highlight-box {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .price-amount {
+    font-size: 1.55rem;
+  }
+
+  .bid-controls {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .custom-bid-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    width: 100%;
+  }
+
+  .custom-bid-form label {
+    width: 100%;
+  }
+
+  .custom-bid-form input {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .custom-bid-form .btn-primary {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .btn-buyout {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .seller-controls {
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .seller-controls .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .highest-bidder-status-card {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .highest-bidder-buyout-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .highest-bidder-buyout-row .btn-buyout {
+    width: 100%;
+  }
 }

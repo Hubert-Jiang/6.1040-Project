@@ -184,12 +184,6 @@ export const ListingCard = defineComponent({
                 <div class="bid-controls">
                   <form
                     class="custom-bid-form"
-                    style={{
-                      display: "inline-flex",
-                      gap: "0.4rem",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                    }}
                     onSubmit={onSubmitBid}
                   >
                     <label

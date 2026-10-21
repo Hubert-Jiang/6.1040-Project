@@ -17,6 +17,9 @@
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .header-brand p {
@@ -51,6 +54,13 @@
 .btn-account-pill.btn-active {
   background: var(--bg-subtle);
   border-color: var(--border-focus);
+}
+
+.account-label {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .account-dot {
@@ -299,4 +309,76 @@
 
 .btn-link-action:hover {
   color: var(--primary-hover);
+}
+
+@media (max-width: 640px) {
+  .header-container {
+    margin-bottom: 1.25rem;
+  }
+
+  .header-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .header-brand h1 {
+    font-size: 1.65rem;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .header-brand p {
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+
+  .header-right-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-account-pill,
+  .btn-notif-menu {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .account-label {
+    max-width: 140px;
+  }
+
+  .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.35rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .notifications-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: calc(100vw - 1.5rem);
+    max-width: 380px;
+  }
 }

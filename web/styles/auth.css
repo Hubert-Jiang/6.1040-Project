@@ -215,3 +215,34 @@
   color: var(--primary);
   text-decoration: underline;
 }
+
+@media (max-width: 640px) {
+  .session-info-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .auth-status {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .user-switcher-actions {
+    width: 100%;
+  }
+
+  .user-switcher-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .login-landing-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .login-title {
+    font-size: 1.55rem;
+  }
+}

@@ -21,7 +21,7 @@ export const MarketplaceFeed = defineComponent({
               Live campus auctions. Bidding and selling are protected behind pseudonyms.
             </p>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div class="feed-header-actions">
             <button type="button" class="btn btn-sm" onClick={onRefresh}>
               ↻ Refresh
             </button>

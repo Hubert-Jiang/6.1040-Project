@@ -45,6 +45,12 @@ body {
   width: 100%;
 }
 
+@media (max-width: 640px) {
+  body {
+    padding: 1rem 0.75rem 3rem;
+  }
+}
+
 @keyframes notifFadeIn {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }

@@ -212,3 +212,24 @@ input:focus {
   font-size: 2rem;
   margin-bottom: 0.5rem;
 }
+
+@media (max-width: 640px) {
+  .card {
+    padding: 1.15rem 0.9rem;
+    margin-bottom: 1.25rem;
+    border-radius: 10px;
+  }
+
+  .card-title {
+    font-size: 1.15rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.88rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
