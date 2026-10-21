@@ -64,11 +64,7 @@ export const ListingCard = defineComponent({
               </span>
               <div class="price-amount-row">
                 <span class="price-amount">${props.item.price}</span>
-                {hasBids ? (
-                  <span class="price-payout-badge">
-                    Seller payout if ended now: ${props.item.price}
-                  </span>
-                ) : (
+                {!hasBids && (
                   <span class="price-unbid-badge">No bids placed yet</span>
                 )}
               </div>
@@ -80,7 +76,9 @@ export const ListingCard = defineComponent({
                   {hasBids ? "Next Minimum Bid:" : "Minimum Opening Bid:"}
                 </span>
                 <strong class="pill-value">${minBid.value}</strong>
-                <span class="pill-detail">(+${props.item.increment} min increment)</span>
+                {hasBids && (
+                  <span class="pill-detail">(+${props.item.increment} min increment)</span>
+                )}
               </div>
 
               {props.item.buyout !== null ? (
@@ -161,7 +159,7 @@ export const ListingCard = defineComponent({
                     <div>
                       <strong>You are currently the highest bidder (${props.item.price})!</strong>
                       <p class="highest-bidder-desc">
-                        You hold the leading offer. You cannot place another incremental bid against yourself.
+                        You hold the leading offer. You cannot place a bid against yourself.
                       </p>
                     </div>
                   </div>
