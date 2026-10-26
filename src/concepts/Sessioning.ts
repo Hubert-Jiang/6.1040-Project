@@ -29,6 +29,9 @@ export class SessioningConcept {
   }: {
     subject: string;
   }): Promise<{ session: string; expiresAt: Date }> {
+    if (typeof subject !== "string" || !subject || subject.length > 256) {
+      throw new Error("Invalid subject identifier.");
+    }
     const now = this.clock();
     await this.#discardExpired(now);
 
@@ -73,6 +76,7 @@ export class SessioningConcept {
   }: {
     session: string;
   }): Promise<Array<{ subject: string; expiresAt: Date }>> {
+    if (typeof session !== "string" || !session) return [];
     const now = this.clock();
     if (this.collection) {
       const doc = await this.collection.findOne({ _id: session, expiresAt: { $gt: now } });
@@ -85,6 +89,9 @@ export class SessioningConcept {
   }
 
   async #getActive(session: string): Promise<SessionDoc> {
+    if (typeof session !== "string" || !session) {
+      throw new UnknownSession("This session is not active.");
+    }
     const now = this.clock();
     if (this.collection) {
       const doc = await this.collection.findOne({ _id: session });

@@ -28,8 +28,15 @@ export class NotifyingConcept {
     user: string;
     message: string;
   }): Promise<{ notification: string }> {
+    if (typeof user !== "string" || !user.trim()) {
+      throw new Error("Invalid user identifier.");
+    }
+    const cleanMessage = typeof message === "string" ? message.trim().slice(0, 1000) : "";
+    if (cleanMessage.length === 0) {
+      throw new Error("Notification message cannot be empty.");
+    }
     const notification = this.freshId();
-    const doc: NotificationDoc = { _id: notification, user, message };
+    const doc: NotificationDoc = { _id: notification, user, message: cleanMessage };
     if (this.collection) {
       await this.collection.insertOne(doc);
     } else {
@@ -43,6 +50,9 @@ export class NotifyingConcept {
   }: {
     notification: string;
   }): Promise<{ notification: string }> {
+    if (typeof notification !== "string" || !notification) {
+      throw new NoSuchNotification("There is no such notification.");
+    }
     if (this.collection) {
       const result = await this.collection.deleteOne({ _id: notification });
       if (result.deletedCount === 0) {
@@ -63,6 +73,7 @@ export class NotifyingConcept {
   }: {
     user: string;
   }): Promise<Array<{ notification: string; message: string }>> {
+    if (typeof user !== "string" || !user) return [];
     if (this.collection) {
       const docs = await this.collection.find({ user }).sort({ _id: 1 }).toArray();
       return docs.map((d) => ({ notification: d._id, message: d.message }));

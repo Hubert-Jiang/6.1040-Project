@@ -26,6 +26,32 @@ function parseCookies(request: Request): Record<string, string> {
   return cookies;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Content-Security-Policy":
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' http: https:; frame-ancestors 'none'; object-src 'none'; base-uri 'self';",
+};
+
+function htmlResponse(html: string, extraHeaders?: HeadersInit): Response {
+  const headers = new Headers({
+    "Content-Type": "text/html; charset=utf-8",
+    ...SECURITY_HEADERS,
+    ...extraHeaders,
+  });
+  return new Response(html, { headers });
+}
+
 // Petrock OIDC Login handler
 async function handlePetrockLogin(request: Request): Promise<Response> {
   const state = crypto.randomUUID();
@@ -66,7 +92,9 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
   const expectedState = cookies.petrock_state;
 
   if (error) {
-    return new Response(
+    const safeError = escapeHtml(error);
+    const safeDesc = errorDescription ? escapeHtml(errorDescription) : "";
+    return htmlResponse(
       `<!DOCTYPE html>
 <html>
 <head>
@@ -83,13 +111,12 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
 <body>
   <div class="card">
     <h2>Authentication Error</h2>
-    <p>MIT Touchstone reported an authorization issue: <strong>${error}</strong></p>
-    ${errorDescription ? `<p style="font-size:0.9rem; color:#766555;">${errorDescription}</p>` : ""}
+    <p>MIT Touchstone reported an authorization issue: <strong>${safeError}</strong></p>
+    ${safeDesc ? `<p style="font-size:0.9rem; color:#766555;">${safeDesc}</p>` : ""}
     <a href="/" class="btn">Return to BeaverBazaar</a>
   </div>
 </body>
 </html>`,
-      { headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
 
@@ -98,7 +125,7 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
   }
 
   if (!code) {
-    return new Response(
+    return htmlResponse(
       `<!DOCTYPE html>
 <html>
 <head>
@@ -119,7 +146,6 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
   </div>
 </body>
 </html>`,
-      { headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
 
@@ -166,7 +192,8 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
 
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
-      return new Response(
+      const safeErrText = escapeHtml(errText);
+      return htmlResponse(
         `<!DOCTYPE html>
 <html>
 <head>
@@ -184,12 +211,11 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
   <div class="card">
     <h2>Touchstone Token Exchange Failed</h2>
     <p>Petrock rejected the authorization code exchange (Status ${tokenRes.status}):</p>
-    <pre>${errText}</pre>
+    <pre>${safeErrText}</pre>
     <a href="/" class="btn">Return to BeaverBazaar</a>
   </div>
 </body>
 </html>`,
-        { headers: { "Content-Type": "text/html; charset=utf-8" } },
       );
     }
 
@@ -250,7 +276,7 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
     }
 
     if (!email) {
-      return new Response(
+      return htmlResponse(
         `<!DOCTYPE html>
 <html>
 <head>
@@ -271,7 +297,6 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
   </div>
 </body>
 </html>`,
-        { headers: { "Content-Type": "text/html; charset=utf-8" } },
       );
     }
 
@@ -287,7 +312,8 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
     });
 
     if (!sessionRes.ok) {
-      return new Response(
+      const safeEmail = escapeHtml(email);
+      return htmlResponse(
         `<!DOCTYPE html>
 <html>
 <head>
@@ -303,12 +329,11 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
 <body>
   <div class="card">
     <h2>Session Creation Failed</h2>
-    <p>Could not establish an active session in the BeaverBazaar backend for <strong>${email}</strong>.</p>
+    <p>Could not establish an active session in the BeaverBazaar backend for <strong>${safeEmail}</strong>.</p>
     <a href="/" class="btn">Return to BeaverBazaar</a>
   </div>
 </body>
 </html>`,
-        { headers: { "Content-Type": "text/html; charset=utf-8" } },
       );
     }
 
@@ -338,8 +363,9 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
     }
 
     // 5. Return success page that populates localStorage and redirects into app
+    const safeEmail = escapeHtml(email);
     const clearCookieHeader = "petrock_state=; Path=/; HttpOnly; Max-Age=0";
-    return new Response(
+    return htmlResponse(
       `<!DOCTYPE html>
 <html>
 <head>
@@ -381,7 +407,7 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
   <div class="card">
     <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🦫</div>
     <h2 style="margin: 0.25rem 0 0.5rem; font-size: 1.4rem;">Touchstone Verified</h2>
-    <p style="margin: 0.25rem 0; color: #5a4635;">Signed in as <strong>${email}</strong>.</p>
+    <p style="margin: 0.25rem 0; color: #5a4635;">Signed in as <strong>${safeEmail}</strong>.</p>
     <div class="spinner"></div>
     <p style="font-size: 0.85rem; color: #766555; margin-bottom: 0;">Redirecting to BeaverBazaar...</p>
   </div>
@@ -397,14 +423,12 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
 </body>
 </html>`,
       {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Set-Cookie": clearCookieHeader,
-        },
+        "Set-Cookie": clearCookieHeader,
       },
     );
   } catch (err) {
-    return new Response(
+    const safeErr = escapeHtml(String(err));
+    return htmlResponse(
       `<!DOCTYPE html>
 <html>
 <head>
@@ -420,12 +444,11 @@ async function handlePetrockCallback(request: Request): Promise<Response> {
 <body>
   <div class="card">
     <h2>Unexpected Authentication Error</h2>
-    <p>${String(err)}</p>
+    <p>${safeErr}</p>
     <a href="/" class="btn">Return to BeaverBazaar</a>
   </div>
 </body>
 </html>`,
-      { headers: { "Content-Type": "text/html; charset=utf-8" } },
     );
   }
 }

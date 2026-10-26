@@ -55,6 +55,14 @@ export async function updateProfile(name: string, contact: string): Promise<void
     setStatus("Please provide both name and contact method.", "error");
     return;
   }
+  if (name.trim().length > 60) {
+    setStatus("Name cannot exceed 60 characters.", "error");
+    return;
+  }
+  if (contact.trim().length > 80) {
+    setStatus("Contact method cannot exceed 80 characters.", "error");
+    return;
+  }
 
   setLoading(true);
   try {
@@ -81,6 +89,10 @@ export async function updateProfile(name: string, contact: string): Promise<void
 
 export async function login(username: string): Promise<void> {
   if (!username.trim()) return;
+  if (username.trim().length > 100) {
+    setStatus("Username cannot exceed 100 characters.", "error");
+    return;
+  }
   setLoading(true);
   setStatus(`Signing in as ${username}...`, "info");
 

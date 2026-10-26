@@ -47,10 +47,29 @@ export class AuctioningConcept {
     increment: number;
     buyout?: number | null;
   }): Promise<{ auction: string }> {
-    if (startPrice < 0 || increment <= 0) {
+    if (typeof owner !== "string" || !owner || typeof item !== "string" || !item) {
+      throw new Error("Invalid owner or item.");
+    }
+    if (
+      typeof startPrice !== "number" ||
+      Number.isNaN(startPrice) ||
+      !Number.isFinite(startPrice) ||
+      startPrice < 0 ||
+      typeof increment !== "number" ||
+      Number.isNaN(increment) ||
+      !Number.isFinite(increment) ||
+      increment <= 0
+    ) {
       throw new InvalidPrice("Start price must be non-negative and increment must be positive.");
     }
-    if (buyout !== undefined && buyout !== null && buyout < startPrice) {
+    if (
+      buyout !== undefined &&
+      buyout !== null &&
+      (typeof buyout !== "number" ||
+        Number.isNaN(buyout) ||
+        !Number.isFinite(buyout) ||
+        buyout < startPrice)
+    ) {
       throw new InvalidBuyout("Buyout price must be greater than or equal to start price.");
     }
 
@@ -84,6 +103,19 @@ export class AuctioningConcept {
     auction: string;
     amount: number;
   }): Promise<{ auction: string }> {
+    if (
+      typeof bidder !== "string" ||
+      !bidder ||
+      typeof auction !== "string" ||
+      !auction ||
+      typeof amount !== "number" ||
+      Number.isNaN(amount) ||
+      !Number.isFinite(amount) ||
+      amount < 0 ||
+      amount > 100_000_000
+    ) {
+      throw new BidTooLow("Invalid bid amount or parameters.");
+    }
     const doc = await this.#get(auction);
     if (!doc) {
       throw new AuctionNotFound("There is no such auction.");
@@ -123,6 +155,9 @@ export class AuctioningConcept {
     owner: string;
     auction: string;
   }): Promise<{ auction: string }> {
+    if (typeof owner !== "string" || !owner || typeof auction !== "string" || !auction) {
+      throw new AuctionNotFound("There is no such auction.");
+    }
     const doc = await this.#get(auction);
     if (!doc) {
       throw new AuctionNotFound("There is no such auction.");
@@ -150,6 +185,9 @@ export class AuctioningConcept {
     owner: string;
     auction: string;
   }): Promise<{ auction: string }> {
+    if (typeof owner !== "string" || !owner || typeof auction !== "string" || !auction) {
+      throw new AuctionNotFound("There is no such auction.");
+    }
     const doc = await this.#get(auction);
     if (!doc) {
       throw new AuctionNotFound("There is no such auction.");
@@ -182,6 +220,7 @@ export class AuctioningConcept {
       buyout: number | null;
     }>
   > {
+    if (typeof auction !== "string" || !auction) return [];
     const doc = await this.#get(auction);
     if (!doc) return [];
     return [
@@ -210,6 +249,7 @@ export class AuctioningConcept {
       buyout: number | null;
     }>
   > {
+    if (typeof item !== "string" || !item) return [];
     if (this.collection) {
       const doc = await this.collection.findOne({ item });
       if (!doc) return [];
@@ -280,6 +320,7 @@ export class AuctioningConcept {
   }
 
   async #get(id: string): Promise<AuctionDoc | null> {
+    if (typeof id !== "string" || !id) return null;
     if (this.collection) {
       return (await this.collection.findOne({ _id: id })) ?? null;
     }

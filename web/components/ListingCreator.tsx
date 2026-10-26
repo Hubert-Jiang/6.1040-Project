@@ -143,6 +143,19 @@ export const ListingCreator = defineComponent({
         return;
       }
 
+      if (startPrice.value > 1_000_000) {
+        store.setStatus("Starting price cannot exceed $1,000,000.", "error");
+        return;
+      }
+      if (increment.value > 100_000) {
+        store.setStatus("Minimum increment cannot exceed $100,000.", "error");
+        return;
+      }
+      if (buyout.value !== null && buyout.value > 10_000_000) {
+        store.setStatus("Buyout price cannot exceed $10,000,000.", "error");
+        return;
+      }
+
       const success = await store.createListing(
         title.value.trim(),
         sanitizedDesc,
@@ -196,6 +209,7 @@ export const ListingCreator = defineComponent({
                 id="listing-title"
                 type="text"
                 placeholder="e.g. Vintage Fuji Road Bike (54cm)"
+                maxlength={100}
                 required
                 value={title.value}
                 onInput={(e: Event) => {
@@ -333,6 +347,7 @@ export const ListingCreator = defineComponent({
                   type="number"
                   placeholder=">= 0"
                   min="0"
+                  max="1000000"
                   step="1"
                   required
                   value={startPrice.value ?? ""}
@@ -351,6 +366,7 @@ export const ListingCreator = defineComponent({
                   type="number"
                   placeholder=">= 1"
                   min="1"
+                  max="100000"
                   step="1"
                   required
                   value={increment.value ?? ""}
@@ -369,6 +385,7 @@ export const ListingCreator = defineComponent({
                   type="number"
                   placeholder="None (optional)"
                   min="0"
+                  max="10000000"
                   step="1"
                   value={buyout.value ?? ""}
                   onInput={(e: Event) => {
@@ -380,6 +397,10 @@ export const ListingCreator = defineComponent({
             </div>
 
             <div class="form-help" style={{ marginTop: "0.5rem", marginBottom: "0.35rem" }}>
+              📈 Bids must increase by at least the minimum increment.
+            </div>
+
+            <div class="form-help" style={{ marginBottom: ".35rem" }}>
               ⚡ Your auction will instantly end if someone offers at or above the buyout price. (optional)
             </div>
 

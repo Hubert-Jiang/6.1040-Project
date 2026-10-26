@@ -38,17 +38,30 @@ export class ListingConcept {
     description: string;
     images: string[] | string;
   }): Promise<{ listing: string }> {
-    const listing = this.freshId();
-    const normalizedImages = Array.isArray(images)
+    if (typeof owner !== "string" || !owner.trim()) {
+      throw new Error("Invalid owner identifier.");
+    }
+    const cleanTitle = typeof title === "string" ? title.trim().slice(0, 150) : "";
+    if (cleanTitle.length === 0) {
+      throw new Error("Item title cannot be empty.");
+    }
+    const cleanDescription = typeof description === "string" ? description.trim().slice(0, 2000) : "";
+
+    const rawImages = Array.isArray(images)
       ? images
       : typeof images === "string" && images.length > 0
         ? [images]
         : [];
+    const normalizedImages = rawImages
+      .filter((img): img is string => typeof img === "string" && img.length > 0 && img.length <= 6 * 1024 * 1024)
+      .slice(0, 5);
+
+    const listing = this.freshId();
     const doc: ListingDoc = {
       _id: listing,
       owner,
-      title,
-      description: description ?? "",
+      title: cleanTitle,
+      description: cleanDescription,
       images: normalizedImages,
       active: true,
     };
@@ -73,6 +86,9 @@ export class ListingConcept {
     description: string;
     images: string[] | string;
   }): Promise<{ listing: string }> {
+    if (typeof listing !== "string" || !listing) {
+      throw new ListingNotFound("There is no such listing.");
+    }
     const doc = await this.#get(listing);
     if (!doc) {
       throw new ListingNotFound("There is no such listing.");
@@ -83,19 +99,25 @@ export class ListingConcept {
     if (!doc.active) {
       throw new ListingInactive("Cannot update an inactive listing.");
     }
-    const normalizedImages = Array.isArray(images)
+    const cleanTitle = typeof title === "string" ? title.trim().slice(0, 150) : doc.title;
+    const cleanDescription = typeof description === "string" ? description.trim().slice(0, 2000) : doc.description;
+    const rawImages = Array.isArray(images)
       ? images
       : typeof images === "string" && images.length > 0
         ? [images]
         : [];
+    const normalizedImages = rawImages
+      .filter((img): img is string => typeof img === "string" && img.length > 0 && img.length <= 6 * 1024 * 1024)
+      .slice(0, 5);
+
     if (this.collection) {
       await this.collection.updateOne(
         { _id: listing },
-        { $set: { title, description: description ?? "", images: normalizedImages } },
+        { $set: { title: cleanTitle, description: cleanDescription, images: normalizedImages } },
       );
     } else {
-      doc.title = title;
-      doc.description = description ?? "";
+      doc.title = cleanTitle;
+      doc.description = cleanDescription;
       doc.images = normalizedImages;
     }
     return { listing };
@@ -108,6 +130,9 @@ export class ListingConcept {
     owner: string;
     listing: string;
   }): Promise<{ listing: string }> {
+    if (typeof listing !== "string" || !listing) {
+      throw new ListingNotFound("There is no such listing.");
+    }
     const doc = await this.#get(listing);
     if (!doc) {
       throw new ListingNotFound("There is no such listing.");
@@ -133,6 +158,9 @@ export class ListingConcept {
     owner: string;
     listing: string;
   }): Promise<{ listing: string }> {
+    if (typeof listing !== "string" || !listing) {
+      throw new ListingNotFound("There is no such listing.");
+    }
     const doc = await this.#get(listing);
     if (!doc) {
       throw new ListingNotFound("There is no such listing.");
@@ -162,6 +190,7 @@ export class ListingConcept {
       active: boolean;
     }>
   > {
+    if (typeof listing !== "string" || !listing) return [];
     const doc = await this.#get(listing);
     if (!doc) return [];
     return [
@@ -240,6 +269,7 @@ export class ListingConcept {
   }
 
   async #get(id: string): Promise<ListingDoc | null> {
+    if (typeof id !== "string" || !id) return null;
     if (this.collection) {
       return (await this.collection.findOne({ _id: id })) ?? null;
     }

@@ -31,30 +31,35 @@ export class ProfilingConcept {
     name: string;
     contact: string;
   }): Promise<{ profile: string }> {
-    if (!name || name.trim().length === 0 || !contact || contact.trim().length === 0) {
+    if (typeof user !== "string" || !user.trim()) {
+      throw new InvalidProfile("Invalid user identifier.");
+    }
+    const cleanName = typeof name === "string" ? name.trim().slice(0, 100) : "";
+    const cleanContact = typeof contact === "string" ? contact.trim().slice(0, 100) : "";
+    if (cleanName.length === 0 || cleanContact.length === 0) {
       throw new InvalidProfile("Name and contact method cannot be empty.");
     }
 
     if (this.collection) {
       const existing = await this.collection.findOne({ user });
       if (existing) {
-        await this.collection.updateOne({ user }, { $set: { name, contact } });
+        await this.collection.updateOne({ user }, { $set: { name: cleanName, contact: cleanContact } });
         return { profile: existing._id };
       }
       const profile = this.freshId();
-      await this.collection.insertOne({ _id: profile, user, name, contact });
+      await this.collection.insertOne({ _id: profile, user, name: cleanName, contact: cleanContact });
       return { profile };
     }
 
     const existing = [...this.memory.values()].find((d) => d.user === user);
     if (existing) {
-      existing.name = name;
-      existing.contact = contact;
+      existing.name = cleanName;
+      existing.contact = cleanContact;
       return { profile: existing._id };
     }
 
     const profile = this.freshId();
-    const doc: ProfileDoc = { _id: profile, user, name, contact };
+    const doc: ProfileDoc = { _id: profile, user, name: cleanName, contact: cleanContact };
     this.memory.set(profile, doc);
     return { profile };
   }
@@ -64,6 +69,7 @@ export class ProfilingConcept {
   }: {
     user: string;
   }): Promise<Array<{ name: string; contact: string }>> {
+    if (typeof user !== "string" || !user) return [];
     if (this.collection) {
       const doc = await this.collection.findOne({ user });
       if (!doc) return [];

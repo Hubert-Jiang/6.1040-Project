@@ -60,6 +60,7 @@ export const ProfileSettings = defineComponent({
                   id="profile-name"
                   type="text"
                   placeholder="e.g. Alice Doe"
+                  maxlength={60}
                   required
                   value={name.value}
                   onInput={(e: Event) => {
@@ -76,6 +77,7 @@ export const ProfileSettings = defineComponent({
                   id="profile-contact"
                   type="text"
                   placeholder="e.g. (617) 555-0101 or alice@mit.edu"
+                  maxlength={80}
                   required
                   value={contact.value}
                   onInput={(e: Event) => {

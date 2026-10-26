@@ -1,6 +1,6 @@
 import { defineComponent, computed, type PropType } from "vue";
 import { store } from "../store.ts";
-import type { ListingItem } from "../api.ts";
+import { filterSafeImages, type ListingItem } from "../api.ts";
 
 export const ListingCard = defineComponent({
   name: "ListingCard",
@@ -16,10 +16,8 @@ export const ListingCard = defineComponent({
     const hasBids = computed(() => props.item.highestBidder !== null);
 
     const coverPhoto = computed(() => {
-      if (props.item.images && props.item.images.length > 0) {
-        return props.item.images[0];
-      }
-      return null;
+      const safeImages = filterSafeImages(props.item.images);
+      return safeImages.length > 0 ? safeImages[0] : null;
     });
 
     function onClickCard() {

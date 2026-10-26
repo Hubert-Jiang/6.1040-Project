@@ -49,6 +49,9 @@ export class PseudonymingConcept {
     context: string;
     user: string;
   }): Promise<{ alias: string }> {
+    if (typeof context !== "string" || !context || typeof user !== "string" || !user) {
+      throw new Error("Invalid context or user.");
+    }
     if (this.collection) {
       const existing = await this.collection.findOne({ context, user });
       if (existing) {
@@ -97,6 +100,9 @@ export class PseudonymingConcept {
     context: string;
     alias: string;
   }): Promise<{ user: string }> {
+    if (typeof context !== "string" || !context || typeof alias !== "string" || !alias) {
+      throw new NoSuchPseudonym("No pseudonym matches the given alias in this context.");
+    }
     const doc = await this.#findByContextAndAlias(context, alias);
     if (!doc) {
       throw new NoSuchPseudonym("No pseudonym matches the given alias in this context.");
@@ -111,6 +117,9 @@ export class PseudonymingConcept {
     context: string;
     alias: string;
   }): Promise<Array<{ user: string }>> {
+    if (typeof context !== "string" || !context || typeof alias !== "string" || !alias) {
+      return [];
+    }
     const doc = await this.#findByContextAndAlias(context, alias);
     if (!doc) return [];
     return [{ user: doc.user }];
@@ -123,6 +132,9 @@ export class PseudonymingConcept {
     context: string;
     user: string;
   }): Promise<Array<{ alias: string }>> {
+    if (typeof context !== "string" || !context || typeof user !== "string" || !user) {
+      return [];
+    }
     if (this.collection) {
       const doc = await this.collection.findOne({ context, user });
       if (!doc) return [];
@@ -136,6 +148,9 @@ export class PseudonymingConcept {
   }
 
   async #findByContextAndAlias(context: string, alias: string): Promise<PseudonymDoc | null> {
+    if (typeof context !== "string" || !context || typeof alias !== "string" || !alias) {
+      return null;
+    }
     if (this.collection) {
       return (await this.collection.findOne({ context, alias })) ?? null;
     }

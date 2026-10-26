@@ -1,5 +1,6 @@
 import { defineComponent, computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { store } from "../store.ts";
+import { filterSafeImages } from "../api.ts";
 
 export const ListingDetailDrawer = defineComponent({
   name: "ListingDetailDrawer",
@@ -87,7 +88,7 @@ export const ListingDetailDrawer = defineComponent({
 
       const hasBids = listing.highestBidder !== null;
       const canBuyout = listing.buyout !== null && listing.buyout > listing.price;
-      const photos = listing.images && listing.images.length > 0 ? listing.images : [];
+      const photos = filterSafeImages(listing.images);
       const currentPhoto = photos[activeImageIndex.value] || photos[0];
 
       return (

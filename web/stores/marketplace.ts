@@ -54,6 +54,10 @@ export async function createListing(
     setStatus("Please enter an item title.", "error");
     return false;
   }
+  if (title.trim().length > 100) {
+    setStatus("Title cannot exceed 100 characters.", "error");
+    return false;
+  }
   if (description.length > 1000) {
     setStatus("Description exceeds the 1,000 character maximum limit.", "error");
     return false;
@@ -66,17 +70,17 @@ export async function createListing(
     setStatus("Maximum of 5 photos allowed per listing.", "error");
     return false;
   }
-  if (isNaN(startPrice) || startPrice < 0) {
-    setStatus("Starting price must be a non-negative number ($0 or higher).", "error");
+  if (isNaN(startPrice) || startPrice < 0 || startPrice > 1_000_000) {
+    setStatus("Starting price must be a non-negative number between $0 and $1,000,000.", "error");
     return false;
   }
-  if (isNaN(increment) || increment <= 0) {
-    setStatus("Minimum increment must be greater than 0.", "error");
+  if (isNaN(increment) || increment <= 0 || increment > 100_000) {
+    setStatus("Minimum increment must be between $1 and $100,000.", "error");
     return false;
   }
-  if (buyout !== null && (buyout < 0 || buyout < startPrice)) {
+  if (buyout !== null && (buyout < 0 || buyout < startPrice || buyout > 10_000_000)) {
     setStatus(
-      "Instant buyout price must be non-negative ($0 or higher) and at least the starting price.",
+      "Instant buyout price must be at least the starting price and at most $10,000,000.",
       "error",
     );
     return false;
@@ -122,8 +126,8 @@ export async function submitBid(
     setStatus("Please sign in to place a bid.", "error");
     return;
   }
-  if (isNaN(amount) || amount < 0) {
-    setStatus("Please enter a valid non-negative bid amount ($0 or higher).", "error");
+  if (isNaN(amount) || amount < 0 || amount > 10_000_000) {
+    setStatus("Please enter a valid bid amount between $0 and $10,000,000.", "error");
     return;
   }
 

@@ -3,6 +3,32 @@ import type { BeaverBazaarWireHttp } from "../generated/wire.ts";
 
 export const client = createHttpClient<BeaverBazaarWireHttp>({ baseUrl: "/api" });
 
+/**
+ * Validates whether an image URI is safe to render in an <img> tag.
+ * Rejects javascript:, vbscript:, data:text/html, SVG with script vectors, etc.
+ * Accepts only safe base64-encoded raster images (PNG, JPEG, WEBP) or http/https URLs.
+ */
+export function isSafeImageUri(uri: unknown): boolean {
+  if (typeof uri !== "string" || !uri.trim()) return false;
+  const trimmed = uri.trim();
+  // Safe raster image data URLs (JPEG, PNG, WEBP)
+  if (/^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(trimmed)) {
+    return true;
+  }
+  // Safe HTTP/HTTPS image URLs
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function filterSafeImages(images: unknown): string[] {
+  if (!Array.isArray(images)) return [];
+  return images.filter(isSafeImageUri);
+}
+
 export interface ListingItem {
   listing: string;
   auction: string;
