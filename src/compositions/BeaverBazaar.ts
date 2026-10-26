@@ -4,6 +4,7 @@ import {
   each,
   form,
   former,
+  no,
   reaction,
   when,
   where,
@@ -258,6 +259,7 @@ export const DeleteAuction = endpoint(
       .then(Session.current({ session }).responds({ subject: user }))
       .then(Pseudonym.getAlias({ context: item, user }).responds({ alias }))
       .then(Auction.delete({ owner: alias, auction }).responds({ auction }))
+      .then(Listing.delete({ owner: user, listing: item }))
       .then(respond({ auction })),
 );
 

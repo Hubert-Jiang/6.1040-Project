@@ -521,6 +521,22 @@ Authored path: `BeaverBazaar.Marketplace.DeleteAuction`.
 ```reaction
 when Auction.delete (auction, owner: alias), asked by BeaverBazaar.Marketplace.DeleteAuction#3
 where
+  earlier, Session.current (session, subject: user), asked by BeaverBazaar.Marketplace.DeleteAuction
+  earlier, Pseudonym.getAlias (context: item, user, alias), asked by BeaverBazaar.Marketplace.DeleteAuction#2
+then
+  Listing.delete (listing: item, owner: user)
+```
+
+### BeaverBazaar.Marketplace.DeleteAuction#5
+
+Authored path: `BeaverBazaar.Marketplace.DeleteAuction`.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 60.
+- Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 66.
+
+```reaction
+when Listing.delete (listing: item, owner: user), asked by BeaverBazaar.Marketplace.DeleteAuction#4
+where
+  earlier, Auction.delete (auction, owner: alias), asked by BeaverBazaar.Marketplace.DeleteAuction#3
   earlier, RequestBoundary.request (auction, item, path: "/auctions/delete", requestId, session)
 then
   RequestBoundary.respond (auction, requestId)

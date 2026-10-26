@@ -6,6 +6,7 @@ import type { applicationConceptSet as ApplicationConceptSet } from "../src/conc
 type AtPath<T, P extends readonly string[]> = P extends readonly [infer H extends string, ...infer R extends string[]] ? H extends keyof T ? AtPath<T[H], R> : H extends `${number}` ? T extends readonly (infer Item)[] ? AtPath<Item, R> : never : never : T;
 type QueryRow<T> = T extends readonly (infer Row)[] ? Row : T;
 type AllOf<T extends readonly unknown[]> = T extends readonly [infer Head, ...infer Rest] ? Head & AllOf<Rest> : unknown;
+type OneOf<T extends readonly unknown[]> = T[number];
 type Jsonify<T> = T extends Date ? string : T extends null | boolean | number | string ? T : T extends (...args: never[]) => unknown ? never : T extends readonly (infer Item)[] ? Jsonify<Item>[] : T extends object ? { [K in keyof T]: Jsonify<T[K]> } : never;
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
@@ -39,13 +40,13 @@ export type BeaverBazaarWire = {
   "/auctions/delete": {
     input: {
       "auction": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["delete"]>[0], ["auction"]>>;
-      "item": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["getAlias"]>[0], ["context"]>>;
+      "item": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["getAlias"]>[0], ["context"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["delete"]>[0], ["listing"]>]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
     };
     output: {
       "auction": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["delete"]>[0], ["auction"]>, AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["delete"]>>, ["auction"]>]>>;
     };
-    error: { error: AppWideError | "AUCTION_NOT_FOUND" | "CANNOT_DELETE_ACTIVE_BIDS" | "INVALID_INPUT" | "NOT_OWNER" | "UNKNOWN_SESSION" };
+    error: { error: AppWideError | "AUCTION_NOT_FOUND" | "CANNOT_DELETE_ACTIVE_BIDS" | "INVALID_INPUT" | "LISTING_NOT_FOUND" | "NOT_OWNER" | "UNKNOWN_SESSION" };
   };
   "/auth/login": {
     input: {
@@ -212,7 +213,7 @@ export type BeaverBazaarWireHttp = {
   "/auctions/delete": {
     input: {
       "auction": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["delete"]>[0], ["auction"]>>;
-      "item": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["getAlias"]>[0], ["context"]>>;
+      "item": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["getAlias"]>[0], ["context"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["delete"]>[0], ["listing"]>]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
     };
     output: {
