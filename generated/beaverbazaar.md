@@ -50,8 +50,8 @@ Defined in [Listing](../design/concepts/Listing.md), line 1.
 
 #### Actions
 
-- `create(owner: User, item: Item) : returns (listing: Listing)`
-- `update(owner: User, listing: Listing, item: Item) : returns (listing: Listing)`
+- `create(owner: User, title: String, description: String, images: Image) : returns (listing: Listing)`
+- `update(owner: User, listing: Listing, title: String, description: String, images: Image) : returns (listing: Listing)`
   - Refuses `LISTING_NOT_FOUND`: There is no such listing.
   - Refuses `NOT_OWNER`: Only the listing owner can update this listing.
   - Refuses `LISTING_INACTIVE`: Cannot update an inactive listing.
@@ -65,14 +65,14 @@ Defined in [Listing](../design/concepts/Listing.md), line 1.
 
 #### Queries
 
-- `_get(listing: Listing) : optional (listing: Listing, owner: User, item: Item, active: Flag)`
-- `_all() : many (listing: Listing, owner: User, item: Item, active: Flag)`
-- `_active() : many (listing: Listing, owner: User, item: Item)`
+- `_get(listing: Listing) : optional (listing: Listing, owner: User, title: String, description: String, images: Image, active: Flag)`
+- `_all() : many (listing: Listing, owner: User, title: String, description: String, images: Image, active: Flag)`
+- `_active() : many (listing: Listing, owner: User, title: String, description: String, images: Image)`
 
 #### Instances
 
 - `Listing` — instance of `Listing` — [Application types](../design/types.md), line 27.
-  - `Item` is `Item` — [Application types](../design/types.md), line 29.
+  - `Image` is `Image` — [Application types](../design/types.md), line 29.
   - `User` is `User` — [Application types](../design/types.md), line 28.
 
 ### Notifying
@@ -160,14 +160,14 @@ Defined in [Sessioning](../design/concepts/Sessioning.md), line 1.
 Concrete types:
 
 - `Alias` — [Application types](../design/types.md), line 10.
-- `Item` — [Application types](../design/types.md), line 13.
+- `Image` — [Application types](../design/types.md), line 13.
 - `Message` — [Application types](../design/types.md), line 16.
 - `User` — [Application types](../design/types.md), line 7.
 
 ## Computations
 
-- `formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 95.
-- `formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 98.
+- `formatBuyerNotification(title: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 95.
+- `formatSellerNotification(title: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 98.
 - `isBuyerPresent(highestBidder?: String) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 92.
 - `isBuyoutMet(amount: Number, buyout?: Number) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 89.
 - `isUserHighestBidder(bidderUser?: User, viewer?: User) : Record` — [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 104.
@@ -184,9 +184,9 @@ Authored path: `BeaverBazaar.Marketplace.ListingDetail`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 43.
 
 ```former
-Former "listing detail" — inputs (listing, viewer); bindings (item, active, auction, sellerAlias, seller, highestBidder, bidderUser, price, increment, buyout, auctionActive, isSeller, isHighestBidder); promises at most one record — forms:
+Former "listing detail" — inputs (listing, viewer); bindings (title, description, images, active, auction, sellerAlias, seller, highestBidder, bidderUser, price, increment, buyout, auctionActive, isSeller, isHighestBidder); promises at most one record — forms:
   a record of
-    where Listing._get (listing) has (active, item, owner: seller)
+    where Listing._get (listing) has (active, description, images, owner: seller, title)
     where Auction._byItem (item: listing) has (active: auctionActive, auction, buyout, highestBidder, increment, owner: sellerAlias, price)
     where (isSeller) is isUserSeller (seller, viewer)
     where whether Pseudonym._getUser (alias: highestBidder, context: listing) has (user: bidderUser)
@@ -195,14 +195,16 @@ Former "listing detail" — inputs (listing, viewer); bindings (item, active, au
     auction
     auctionActive
     buyout
+    description
     highestBidder
+    images
     increment
     isHighestBidder
     isSeller
-    item
     listing
     price
     sellerAlias
+    title
 ```
 
 ### marketplace feed
@@ -211,24 +213,26 @@ Authored path: `BeaverBazaar.Marketplace.MarketplaceFeed`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 39.
 
 ```former
-Former "marketplace feed" — inputs (viewer); bindings (auction, listing, sellerAlias, seller, item, price, increment, buyout, highestBidder, bidderUser, isSeller, isHighestBidder); promises exactly one record — forms:
+Former "marketplace feed" — inputs (viewer); bindings (auction, listing, sellerAlias, seller, title, description, images, price, increment, buyout, highestBidder, bidderUser, isSeller, isHighestBidder); promises exactly one record — forms:
   a record of
     listings: each Auction._active () has (auction, buyout, highestBidder, increment, item: listing, owner: sellerAlias, price)
-      where Listing._get (listing) has (item, owner: seller)
+      where Listing._get (listing) has (description, images, owner: seller, title)
       where (isSeller) is isUserSeller (seller, viewer)
       where whether Pseudonym._getUser (alias: highestBidder, context: listing) has (user: bidderUser)
       where (isHighestBidder) is isUserHighestBidder (bidderUser, viewer)
       form a record of
         auction
         buyout
+        description
         highestBidder
+        images
         increment
         isHighestBidder
         isSeller
-        item
         listing
         price
         sellerAlias
+        title
 ```
 
 ### user notifications
@@ -413,7 +417,7 @@ Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 47.
 
 ```reaction
-when RequestBoundary.request (buyout, increment, item, path: "/listings/create", requestId, session, startPrice)
+when RequestBoundary.request (buyout, description, images, increment, path: "/listings/create", requestId, session, startPrice, title)
 then
   Session.current (session)
 ```
@@ -427,9 +431,9 @@ Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
 ```reaction
 when Session.current (session, subject: user), asked by BeaverBazaar.Marketplace.CreateAuctionListing
 where
-  earlier, RequestBoundary.request (buyout, increment, item, path: "/listings/create", requestId, session, startPrice)
+  earlier, RequestBoundary.request (buyout, description, images, increment, path: "/listings/create", requestId, session, startPrice, title)
 then
-  Listing.create (item, owner: user)
+  Listing.create (description, images, owner: user, title)
 ```
 
 ### BeaverBazaar.Marketplace.CreateAuctionListing#3
@@ -439,7 +443,7 @@ Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
 - Covered by [BeaverBazaar](../design/compositions/BeaverBazaar.md), line 47.
 
 ```reaction
-when Listing.create (item, owner: user, listing), asked by BeaverBazaar.Marketplace.CreateAuctionListing#2
+when Listing.create (description, images, owner: user, title, listing), asked by BeaverBazaar.Marketplace.CreateAuctionListing#2
 then
   Pseudonym.getAlias (context: listing, user)
 ```
@@ -453,7 +457,7 @@ Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
 ```reaction
 when Pseudonym.getAlias (context: listing, user, alias), asked by BeaverBazaar.Marketplace.CreateAuctionListing#3
 where
-  earlier, RequestBoundary.request (buyout, increment, item, path: "/listings/create", requestId, session, startPrice)
+  earlier, RequestBoundary.request (buyout, description, images, increment, path: "/listings/create", requestId, session, startPrice, title)
 then
   Auction.create (buyout, increment, item: listing, owner: alias, startPrice)
 ```
@@ -467,7 +471,7 @@ Authored path: `BeaverBazaar.Marketplace.CreateAuctionListing`.
 ```reaction
 when Auction.create (buyout, increment, item: listing, owner: alias, startPrice, auction), asked by BeaverBazaar.Marketplace.CreateAuctionListing#4
 where
-  earlier, RequestBoundary.request (buyout, increment, item, path: "/listings/create", requestId, session, startPrice)
+  earlier, RequestBoundary.request (buyout, description, images, increment, path: "/listings/create", requestId, session, startPrice, title)
 then
   RequestBoundary.respond (auction, listing, requestId)
 ```
@@ -716,9 +720,9 @@ where
   (hasWinner: true) is isBuyerPresent (highestBidder: buyerAlias)
   Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
   Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
-  Listing._get (listing) has (item)
+  Listing._get (listing) has (title)
   whether Profile._get (user: sellerUser) has (contact: sellerContact, name: sellerName)
-  (message: buyerMessage) is formatBuyerNotification (item, price, sellerAlias, sellerContact, sellerName, sellerUser)
+  (message: buyerMessage) is formatBuyerNotification (price, sellerAlias, sellerContact, sellerName, sellerUser, title)
 then
   Notify.notify (message: buyerMessage, user: buyerUser)
 ```
@@ -735,9 +739,9 @@ where
   (hasWinner: true) is isBuyerPresent (highestBidder: buyerAlias)
   Pseudonym._getUser (alias: sellerAlias, context: listing) has (user: sellerUser)
   Pseudonym._getUser (alias: buyerAlias, context: listing) has (user: buyerUser)
-  Listing._get (listing) has (item)
+  Listing._get (listing) has (title)
   whether Profile._get (user: buyerUser) has (contact: buyerContact, name: buyerName)
-  (message: sellerMessage) is formatSellerNotification (buyerAlias, buyerContact, buyerName, buyerUser, item, price)
+  (message: sellerMessage) is formatSellerNotification (buyerAlias, buyerContact, buyerName, buyerUser, price, title)
 then
   Notify.notify (message: sellerMessage, user: sellerUser)
 ```
@@ -841,7 +845,7 @@ not listed here have no explicit input contract.
 - `/auth/login` — requires `username`
 - `/auth/logout` — requires `session`
 - `/auth/me` — requires `session`
-- `/listings/create` — requires `session`, `item`, `startPrice`, `increment`; fills `buyout` with null when absent
+- `/listings/create` — requires `session`, `title`, `startPrice`, `increment`; fills `buyout` with null when absent; fills `description` with "" when absent; fills `images` with [] when absent
 - `/listings/get` — requires `listing`; fills `session` with null when absent
 - `/marketplace/feed` — fills `session` with null when absent
 - `/notifications/dismiss` — requires `notification`, `session`

@@ -1,6 +1,7 @@
 import { defineComponent } from "vue";
 import { store } from "../store.ts";
 import { ListingCard } from "./ListingCard.tsx";
+import { ListingDetailDrawer } from "./ListingDetailDrawer.tsx";
 
 export const MarketplaceFeed = defineComponent({
   name: "MarketplaceFeed",
@@ -18,7 +19,7 @@ export const MarketplaceFeed = defineComponent({
               <span>🏷️ Active Marketplace ({store.state.listings.length})</span>
             </div>
             <p class="card-subtitle" style={{ marginBottom: "0" }}>
-              Live campus auctions. Bidding and selling are protected behind pseudonyms.
+              Live campus auctions. Bidding and selling are protected behind pseudonyms. Click to view photos, inspect details, and bid.
             </p>
           </div>
           <div class="feed-header-actions">
@@ -56,6 +57,8 @@ export const MarketplaceFeed = defineComponent({
             ))}
           </div>
         )}
+
+        <ListingDetailDrawer />
       </section>
     );
   },

@@ -4,11 +4,17 @@ import { setStatus, setLoading, setPage } from "./ui.ts";
 
 export interface MarketplaceState {
   listings: ListingItem[];
+  selectedListing: ListingItem | null;
 }
 
 export const marketplaceState = reactive<MarketplaceState>({
   listings: [],
+  selectedListing: null,
 });
+
+export function setSelectedListing(listing: ListingItem | null): void {
+  marketplaceState.selectedListing = listing;
+}
 
 export async function loadFeed(session: string | null, silent = false): Promise<void> {
   try {
@@ -18,6 +24,14 @@ export async function loadFeed(session: string | null, silent = false): Promise<
       return;
     }
     marketplaceState.listings = res.feed.listings;
+    if (marketplaceState.selectedListing) {
+      const updated = res.feed.listings.find(
+        (l) => l.listing === marketplaceState.selectedListing?.listing,
+      );
+      if (updated) {
+        marketplaceState.selectedListing = updated;
+      }
+    }
   } catch (err) {
     if (!silent) setStatus(`Error loading feed: ${String(err)}`, "error");
   }
@@ -25,7 +39,9 @@ export async function loadFeed(session: string | null, silent = false): Promise<
 
 export async function createListing(
   session: string | null,
-  item: string,
+  title: string,
+  description: string,
+  images: string[],
   startPrice: number,
   increment: number,
   buyout: number | null,
@@ -34,8 +50,20 @@ export async function createListing(
     setStatus("Please sign in to post a listing.", "error");
     return false;
   }
-  if (!item.trim()) {
-    setStatus("Please enter an item title / description.", "error");
+  if (!title.trim()) {
+    setStatus("Please enter an item title.", "error");
+    return false;
+  }
+  if (description.length > 1000) {
+    setStatus("Description exceeds the 1,000 character maximum limit.", "error");
+    return false;
+  }
+  if (description.split("\n").length > 12) {
+    setStatus("Description cannot have more than 12 lines. Please consolidate paragraph breaks.", "error");
+    return false;
+  }
+  if (images.length > 5) {
+    setStatus("Maximum of 5 photos allowed per listing.", "error");
     return false;
   }
   if (isNaN(startPrice) || startPrice < 0) {
@@ -58,7 +86,9 @@ export async function createListing(
   try {
     const res = await client["/listings/create"]({
       session,
-      item: item.trim(),
+      title: title.trim(),
+      description: description.trim(),
+      images,
       startPrice,
       increment,
       buyout,
@@ -69,7 +99,7 @@ export async function createListing(
       return false;
     }
 
-    setStatus(`Listing "${item.trim()}" posted successfully!`, "success");
+    setStatus(`Listing "${title.trim()}" posted successfully!`, "success");
     await loadFeed(session);
     setPage("marketplace");
     return true;
@@ -179,6 +209,7 @@ export async function closeAuction(
       "Auction ended successfully! If winning bids were placed, settlement notifications have been dispatched.",
       "success",
     );
+    setSelectedListing(null);
     await loadFeed(session);
     if (onRefresh) await onRefresh();
   } catch (err) {
@@ -219,6 +250,7 @@ export async function cancelAuction(
     }
 
     setStatus("Auction cancelled and listing removed successfully.", "success");
+    setSelectedListing(null);
     await loadFeed(session);
   } catch (err) {
     setStatus(`Error cancelling auction: ${String(err)}`, "error");
@@ -229,11 +261,13 @@ export async function cancelAuction(
 
 export function clearMarketplace(): void {
   marketplaceState.listings = [];
+  marketplaceState.selectedListing = null;
 }
 
 export function useMarketplaceStore() {
   return {
     state: marketplaceState,
+    setSelectedListing,
     loadFeed,
     createListing,
     submitBid,

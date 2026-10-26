@@ -105,7 +105,7 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     // 2a. Input validation partitions: invalid startPrice or buyout
     const invalidPrice = await client["/listings/create"]({
       session: aliceSession,
-      item: "Broken Bike",
+      title: "Broken Bike",
       startPrice: -10,
       increment: 5,
     });
@@ -113,7 +113,7 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
 
     const invalidBuyout = await client["/listings/create"]({
       session: aliceSession,
-      item: "Broken Bike",
+      title: "Broken Bike",
       startPrice: 60,
       increment: 5,
       buyout: 40,
@@ -123,7 +123,9 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     // 2b. Alice publishes bicycle listing with $60 start, $5 increment, $75 buyout
     const createdListing = await client["/listings/create"]({
       session: aliceSession,
-      item: "Vintage Fuji Bicycle",
+      title: "Vintage Fuji Bicycle",
+      description: "Classic 10-speed bike",
+      images: ["https://example.com/bike.jpg"],
       startPrice: 60,
       increment: 5,
       buyout: 75,
@@ -140,7 +142,9 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     const feedItem = initialFeed.feed.listings[0];
     expect(feedItem.listing).toBe(listing);
     expect(feedItem.auction).toBe(auction);
-    expect(feedItem.item).toBe("Vintage Fuji Bicycle");
+    expect(feedItem.title).toBe("Vintage Fuji Bicycle");
+    expect(feedItem.description).toBe("Classic 10-speed bike");
+    expect(feedItem.images).toEqual(["https://example.com/bike.jpg"]);
     expect(feedItem.price).toBe(60);
     expect(feedItem.increment).toBe(5);
     expect(feedItem.buyout).toBe(75);
@@ -171,7 +175,9 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     expect(listingDetail.detail).toMatchObject({
       listing,
       auction,
-      item: "Vintage Fuji Bicycle",
+      title: "Vintage Fuji Bicycle",
+      description: "Classic 10-speed bike",
+      images: ["https://example.com/bike.jpg"],
       price: 60,
       increment: 5,
       buyout: 75,
@@ -374,7 +380,7 @@ describe("BeaverBazaar composition & end-to-end user scenario", () => {
     // 6b. Alice creates an unbid listing
     const created = await client["/listings/create"]({
       session: aliceSession,
-      item: "Desk Lamp",
+      title: "Desk Lamp",
       startPrice: 20,
       increment: 2,
     });

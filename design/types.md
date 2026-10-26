@@ -10,8 +10,8 @@ concrete User
 concrete Alias
   A trackable, anonymous pseudonym string scoped to a listing context.
 
-concrete Item
-  The physical item metadata, such as title, description, and images.
+concrete Image
+  An image URL or base64 data string representing a listing photo.
 
 concrete Message
   A notification message text delivered to a user.
@@ -26,7 +26,7 @@ instantiate Profiling as Profile with
 
 instantiate Listing with
   User is User
-  Item is Item
+  Image is Image
 
 instantiate Pseudonyming as Pseudonym with
   Context is Listing.Listing

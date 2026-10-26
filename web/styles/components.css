@@ -104,20 +104,33 @@
 
 input[type="text"],
 input[type="email"],
-input[type="number"] {
+input[type="number"],
+textarea {
   width: 100%;
   padding: 0.6rem 0.8rem;
+  font-family: inherit;
   font-size: 0.95rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #ffffff;
   color: var(--text-main);
   outline: none;
-  transition: border-color 0.15s;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-input:focus {
+input:focus,
+textarea:focus {
   border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(139, 87, 42, 0.12);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
+  font-family: inherit;
+  font-size: 0.95rem;
+  opacity: 1;
 }
 
 .form-help {

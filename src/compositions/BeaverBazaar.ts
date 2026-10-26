@@ -39,7 +39,9 @@ export const MarketplaceFeed = former(
       listing,
       sellerAlias,
       seller,
-      item,
+      title,
+      description,
+      images,
       price,
       increment,
       buyout,
@@ -62,7 +64,7 @@ export const MarketplaceFeed = former(
         }),
       )
         .where(
-          Listing._get({ listing }).is({ item, owner: seller }),
+          Listing._get({ listing }).is({ title, description, images, owner: seller }),
           compute(isUserSeller, { seller, viewer }, { isSeller }),
           whether(Pseudonym._getUser({ context: listing, alias: highestBidder }).is({ user: bidderUser })),
           compute(isUserHighestBidder, { bidderUser, viewer }, { isHighestBidder }),
@@ -71,7 +73,9 @@ export const MarketplaceFeed = former(
           auction,
           listing,
           sellerAlias,
-          item,
+          title,
+          description,
+          images,
           price,
           increment,
           buyout,
@@ -87,7 +91,9 @@ export const ListingDetail = former(
   (
     { listing, viewer },
     {
-      item,
+      title,
+      description,
+      images,
       active,
       auction,
       sellerAlias,
@@ -103,7 +109,7 @@ export const ListingDetail = former(
     },
   ) =>
     where(
-      Listing._get({ listing }).is({ item, active, owner: seller }),
+      Listing._get({ listing }).is({ title, description, images, active, owner: seller }),
       Auction._byItem({ item: listing }).is({
         auction,
         owner: sellerAlias,
@@ -118,7 +124,9 @@ export const ListingDetail = former(
       compute(isUserHighestBidder, { bidderUser, viewer }, { isHighestBidder }),
     ).form({
       listing,
-      item,
+      title,
+      description,
+      images,
       active,
       auction,
       sellerAlias,
@@ -185,10 +193,10 @@ export const GetProfile = endpoint("/profile/get", ({ session, user }) =>
 // Marketplace & Listings
 export const CreateAuctionListing = endpoint(
   "/listings/create",
-  ({ session, user, item, startPrice, increment, buyout, listing, alias, auction }) =>
-    receive({ session, item, startPrice, increment, buyout })
+  ({ session, user, title, description, images, startPrice, increment, buyout, listing, alias, auction }) =>
+    receive({ session, title, description, images, startPrice, increment, buyout })
       .then(Session.current({ session }).responds({ subject: user }))
-      .then(Listing.create({ owner: user, item }).responds({ listing }))
+      .then(Listing.create({ owner: user, title, description, images }).responds({ listing }))
       .then(Pseudonym.getAlias({ context: listing, user }).responds({ alias }))
       .then(
         Auction.create({ owner: alias, item: listing, startPrice, increment, buyout }).responds({
@@ -198,8 +206,8 @@ export const CreateAuctionListing = endpoint(
       .then(respond({ listing, auction })),
   {
     input: {
-      required: ["session", "item", "startPrice", "increment"],
-      defaults: { buyout: null },
+      required: ["session", "title", "startPrice", "increment"],
+      defaults: { description: "", images: [], buyout: null },
     },
   },
 );
@@ -313,7 +321,7 @@ export const NotifySellerOnClose = reaction(
     buyerAlias,
     sellerUser,
     buyerUser,
-    item,
+    title,
     price,
     buyerName,
     buyerContact,
@@ -325,11 +333,11 @@ export const NotifySellerOnClose = reaction(
         compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
         Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
         Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
-        Listing._get({ listing }).is({ item }),
+        Listing._get({ listing }).is({ title }),
         whether(Profile._get({ user: buyerUser }).is({ name: buyerName, contact: buyerContact })),
         compute(
           formatSellerNotification,
-          { item, buyerAlias, buyerUser, buyerName, buyerContact, price },
+          { title, buyerAlias, buyerUser, buyerName, buyerContact, price },
           { message: sellerMessage },
         ),
       )
@@ -344,7 +352,7 @@ export const NotifyBuyerOnClose = reaction(
     buyerAlias,
     sellerUser,
     buyerUser,
-    item,
+    title,
     price,
     sellerName,
     sellerContact,
@@ -356,11 +364,11 @@ export const NotifyBuyerOnClose = reaction(
         compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
         Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
         Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
-        Listing._get({ listing }).is({ item }),
+        Listing._get({ listing }).is({ title }),
         whether(Profile._get({ user: sellerUser }).is({ name: sellerName, contact: sellerContact })),
         compute(
           formatBuyerNotification,
-          { item, sellerAlias, sellerUser, sellerName, sellerContact, price },
+          { title, sellerAlias, sellerUser, sellerName, sellerContact, price },
           { message: buyerMessage },
         ),
       )

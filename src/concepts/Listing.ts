@@ -8,7 +8,9 @@ export class AlreadyInactive extends Error {}
 export interface ListingDoc {
   _id: string;
   owner: string;
-  item: string;
+  title: string;
+  description: string;
+  images: string[];
   active: boolean;
 }
 
@@ -25,9 +27,31 @@ export class ListingConcept {
     }
   }
 
-  async create({ owner, item }: { owner: string; item: string }): Promise<{ listing: string }> {
+  async create({
+    owner,
+    title,
+    description,
+    images,
+  }: {
+    owner: string;
+    title: string;
+    description: string;
+    images: string[] | string;
+  }): Promise<{ listing: string }> {
     const listing = this.freshId();
-    const doc: ListingDoc = { _id: listing, owner, item, active: true };
+    const normalizedImages = Array.isArray(images)
+      ? images
+      : typeof images === "string" && images.length > 0
+        ? [images]
+        : [];
+    const doc: ListingDoc = {
+      _id: listing,
+      owner,
+      title,
+      description: description ?? "",
+      images: normalizedImages,
+      active: true,
+    };
     if (this.collection) {
       await this.collection.insertOne(doc);
     } else {
@@ -39,11 +63,15 @@ export class ListingConcept {
   async update({
     owner,
     listing,
-    item,
+    title,
+    description,
+    images,
   }: {
     owner: string;
     listing: string;
-    item: string;
+    title: string;
+    description: string;
+    images: string[] | string;
   }): Promise<{ listing: string }> {
     const doc = await this.#get(listing);
     if (!doc) {
@@ -55,10 +83,20 @@ export class ListingConcept {
     if (!doc.active) {
       throw new ListingInactive("Cannot update an inactive listing.");
     }
+    const normalizedImages = Array.isArray(images)
+      ? images
+      : typeof images === "string" && images.length > 0
+        ? [images]
+        : [];
     if (this.collection) {
-      await this.collection.updateOne({ _id: listing }, { $set: { item } });
+      await this.collection.updateOne(
+        { _id: listing },
+        { $set: { title, description: description ?? "", images: normalizedImages } },
+      );
     } else {
-      doc.item = item;
+      doc.title = title;
+      doc.description = description ?? "";
+      doc.images = normalizedImages;
     }
     return { listing };
   }
@@ -114,34 +152,91 @@ export class ListingConcept {
     listing,
   }: {
     listing: string;
-  }): Promise<Array<{ listing: string; owner: string; item: string; active: boolean }>> {
+  }): Promise<
+    Array<{
+      listing: string;
+      owner: string;
+      title: string;
+      description: string;
+      images: string[];
+      active: boolean;
+    }>
+  > {
     const doc = await this.#get(listing);
     if (!doc) return [];
-    return [{ listing: doc._id, owner: doc.owner, item: doc.item, active: doc.active }];
+    return [
+      {
+        listing: doc._id,
+        owner: doc.owner,
+        title: doc.title,
+        description: doc.description,
+        images: doc.images,
+        active: doc.active,
+      },
+    ];
   }
 
   async _all(_input: Record<string, never>): Promise<
-    Array<{ listing: string; owner: string; item: string; active: boolean }>
+    Array<{
+      listing: string;
+      owner: string;
+      title: string;
+      description: string;
+      images: string[];
+      active: boolean;
+    }>
   > {
     if (this.collection) {
       const docs = await this.collection.find().sort({ _id: 1 }).toArray();
-      return docs.map((d) => ({ listing: d._id, owner: d.owner, item: d.item, active: d.active }));
+      return docs.map((d) => ({
+        listing: d._id,
+        owner: d.owner,
+        title: d.title,
+        description: d.description,
+        images: d.images,
+        active: d.active,
+      }));
     }
     const docs = [...this.memory.values()].sort((a, b) => a._id.localeCompare(b._id));
-    return docs.map((d) => ({ listing: d._id, owner: d.owner, item: d.item, active: d.active }));
+    return docs.map((d) => ({
+      listing: d._id,
+      owner: d.owner,
+      title: d.title,
+      description: d.description,
+      images: d.images,
+      active: d.active,
+    }));
   }
 
   async _active(_input: Record<string, never>): Promise<
-    Array<{ listing: string; owner: string; item: string }>
+    Array<{
+      listing: string;
+      owner: string;
+      title: string;
+      description: string;
+      images: string[];
+    }>
   > {
     if (this.collection) {
       const docs = await this.collection.find({ active: true }).sort({ _id: 1 }).toArray();
-      return docs.map((d) => ({ listing: d._id, owner: d.owner, item: d.item }));
+      return docs.map((d) => ({
+        listing: d._id,
+        owner: d.owner,
+        title: d.title,
+        description: d.description,
+        images: d.images,
+      }));
     }
     const docs = [...this.memory.values()]
       .filter((d) => d.active)
       .sort((a, b) => a._id.localeCompare(b._id));
-    return docs.map((d) => ({ listing: d._id, owner: d.owner, item: d.item }));
+    return docs.map((d) => ({
+      listing: d._id,
+      owner: d.owner,
+      title: d.title,
+      description: d.description,
+      images: d.images,
+    }));
   }
 
   async #get(id: string): Promise<ListingDoc | null> {

@@ -33,11 +33,11 @@ BeaverBazaar.Profile.GetProfile at /profile/get
 ## Marketplace Feed and Listing Management
 
 A seller [creates an auction listing](reaction:BeaverBazaar.Marketplace.CreateAuctionListing), which creates
-a public listing with item details, assigns a unique pseudonym for the seller scoped to that listing, and
+a public listing with item title, description, and images, assigns a unique pseudonym for the seller scoped to that listing, and
 initializes the auction under that anonymous alias with the starting price, increment, and optional buyout price.
 
 The [marketplace feed](former:BeaverBazaar.Marketplace.MarketplaceFeed) gathers all active listings alongside
-their current pricing, buyout terms, and anonymous pseudonyms, decorated with viewer-context flags indicating
+their title, description, images, current pricing, buyout terms, and anonymous pseudonyms, decorated with viewer-context flags indicating
 whether the caller is the seller or current highest bidder without exposing real student identities. Buyers inspect
 active goods via the [feed endpoint](reaction:BeaverBazaar.Marketplace.GetFeed).
 Callers inspect an item's auction status via [listing details](former:BeaverBazaar.Marketplace.ListingDetail)
@@ -92,10 +92,10 @@ isBuyoutMet(amount: Number, buyout?: Number) : Record
 isBuyerPresent(highestBidder?: String) : Record
   Checks whether an auction has a recorded winning bidder upon closing.
 
-formatBuyerNotification(item: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record
+formatBuyerNotification(title: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record
   Formats the private notification message sent to the winning buyer with seller alias, actual identity, contact details, and concluding price.
 
-formatSellerNotification(item: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record
+formatSellerNotification(title: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record
   Formats the private notification message sent to the seller with winning buyer alias, actual identity, contact details, and concluding price.
 
 isUserSeller(seller: User, viewer?: User) : Record
@@ -104,4 +104,3 @@ isUserSeller(seller: User, viewer?: User) : Record
 isUserHighestBidder(bidderUser?: User, viewer?: User) : Record
   Evaluates whether the active viewer is the current winning or highest bidder.
 ```
-

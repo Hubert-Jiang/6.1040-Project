@@ -10,16 +10,16 @@ import {
 /**
  * Testing strategy for ListingConcept:
  *
- * create(owner, item):
+ * create(owner, title, description, images):
  *   - owner: valid string
- *   - item: structured payload (title, metadata)
+ *   - title, description, images: structured payload
  *   - postcondition: listing created with active = true, assigned unique ID
  *
- * update(owner, listing, item):
+ * update(owner, listing, title, description, images):
  *   - listing: exists vs not found (refuses LISTING_NOT_FOUND)
  *   - owner: matches owner vs non-owner (refuses NOT_OWNER)
  *   - active: active = true vs active = false (refuses LISTING_INACTIVE)
- *   - postcondition: item field updated in place
+ *   - postcondition: fields updated in place
  *
  * deactivate(owner, listing):
  *   - listing: exists vs not found (refuses LISTING_NOT_FOUND)
@@ -43,26 +43,38 @@ import {
  */
 describe("ListingConcept", () => {
   test("principle & lifecycle: create, update, deactivate, delete", async () => {
-    // Partition: create(owner, item) with valid owner and item
+    // Partition: create(owner, title, description, images) with valid attributes
     const listingConcept = new ListingConcept();
-    const item = { title: "Bicycle", price: 60 };
+    const title = "Bicycle";
+    const description = "Lightweight road bike";
+    const images = ["data:image/png;base64,bike1"];
 
-    const { listing } = await listingConcept.create({ owner: "alice", item });
+    const { listing } = await listingConcept.create({ owner: "alice", title, description, images });
     expect(listing).toBeDefined();
 
     // Partition: _get(listing) when listing exists -> returns 1 row
     const got = await listingConcept._get({ listing });
-    expect(got).toEqual([{ listing, owner: "alice", item, active: true }]);
+    expect(got).toEqual([{ listing, owner: "alice", title, description, images, active: true }]);
 
     // Partition: _active() with active = true -> includes listing
     const activeListings = await listingConcept._active({});
-    expect(activeListings).toEqual([{ listing, owner: "alice", item }]);
+    expect(activeListings).toEqual([{ listing, owner: "alice", title, description, images }]);
 
-    // Partition: update(owner, listing, item) where owner matches and active = true
-    const newItem = { title: "Bicycle (tuned)", price: 65 };
-    await listingConcept.update({ owner: "alice", listing, item: newItem });
+    // Partition: update(owner, listing, title, description, images) where owner matches and active = true
+    const newTitle = "Bicycle (tuned)";
+    const newDescription = "Recently serviced road bike";
+    const newImages = ["data:image/png;base64,bike2"];
+    await listingConcept.update({
+      owner: "alice",
+      listing,
+      title: newTitle,
+      description: newDescription,
+      images: newImages,
+    });
     const afterUpdate = await listingConcept._get({ listing });
-    expect(afterUpdate[0].item).toEqual(newItem);
+    expect(afterUpdate[0].title).toEqual(newTitle);
+    expect(afterUpdate[0].description).toEqual(newDescription);
+    expect(afterUpdate[0].images).toEqual(newImages);
 
     // Partition: deactivate(owner, listing) where owner matches and active = true
     await listingConcept.deactivate({ owner: "alice", listing });
@@ -81,11 +93,22 @@ describe("ListingConcept", () => {
 
   test("ownership partition: refuses operations by non-owner", async () => {
     const listingConcept = new ListingConcept();
-    const { listing } = await listingConcept.create({ owner: "alice", item: "bike" });
+    const { listing } = await listingConcept.create({
+      owner: "alice",
+      title: "bike",
+      description: "desc",
+      images: [],
+    });
 
     // Partition: update with owner != listing.owner -> refuses NOT_OWNER
     expect(
-      listingConcept.update({ owner: "bob", listing, item: "stolen bike" }),
+      listingConcept.update({
+        owner: "bob",
+        listing,
+        title: "stolen bike",
+        description: "desc",
+        images: [],
+      }),
     ).rejects.toThrow(NotOwner);
 
     // Partition: deactivate with owner != listing.owner -> refuses NOT_OWNER
@@ -100,7 +123,13 @@ describe("ListingConcept", () => {
 
     // Partition: update with unknown listing -> refuses LISTING_NOT_FOUND
     expect(
-      listingConcept.update({ owner: "alice", listing: "missing", item: "bike" }),
+      listingConcept.update({
+        owner: "alice",
+        listing: "missing",
+        title: "bike",
+        description: "desc",
+        images: [],
+      }),
     ).rejects.toThrow(ListingNotFound);
 
     // Partition: deactivate with unknown listing -> refuses LISTING_NOT_FOUND
@@ -116,12 +145,23 @@ describe("ListingConcept", () => {
 
   test("active status partition: update requires active, deactivate requires active", async () => {
     const listingConcept = new ListingConcept();
-    const { listing } = await listingConcept.create({ owner: "alice", item: "bike" });
+    const { listing } = await listingConcept.create({
+      owner: "alice",
+      title: "bike",
+      description: "desc",
+      images: [],
+    });
     await listingConcept.deactivate({ owner: "alice", listing });
 
     // Partition: update on listing where active == false -> refuses LISTING_INACTIVE
     expect(
-      listingConcept.update({ owner: "alice", listing, item: "new item" }),
+      listingConcept.update({
+        owner: "alice",
+        listing,
+        title: "new item",
+        description: "desc",
+        images: [],
+      }),
     ).rejects.toThrow(ListingInactive);
 
     // Partition: deactivate on listing where active == false -> refuses ALREADY_INACTIVE

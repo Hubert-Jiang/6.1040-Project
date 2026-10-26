@@ -105,14 +105,14 @@ export function isBuyerPresent({
 }
 
 export function formatBuyerNotification({
-  item,
+  title,
   sellerAlias,
   sellerUser,
   sellerName,
   sellerContact,
   price,
 }: {
-  item: string;
+  title: string;
   sellerAlias: string;
   sellerUser: string;
   sellerName?: string;
@@ -123,19 +123,19 @@ export function formatBuyerNotification({
   const contact = sellerContact ? ` | Contact: ${sellerContact}` : "";
   const priceStr = typeof price === "number" ? ` for $${price}` : "";
   return {
-    message: `You won the auction for "${item}"${priceStr}! Counterparty: alias "${sellerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
+    message: `You won the auction for "${title}"${priceStr}! Counterparty: alias "${sellerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
   };
 }
 
 export function formatSellerNotification({
-  item,
+  title,
   buyerAlias,
   buyerUser,
   buyerName,
   buyerContact,
   price,
 }: {
-  item: string;
+  title: string;
   buyerAlias: string;
   buyerUser: string;
   buyerName?: string;
@@ -146,7 +146,7 @@ export function formatSellerNotification({
   const contact = buyerContact ? ` | Contact: ${buyerContact}` : "";
   const priceStr = typeof price === "number" ? ` for $${price}` : "";
   return {
-    message: `Your auction for "${item}" has ended${priceStr}! Counterparty: alias "${buyerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
+    message: `Your auction for "${title}" has ended${priceStr}! Counterparty: alias "${buyerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
   };
 }
 
@@ -194,4 +194,3 @@ export const applicationConceptSet = conceptSet(
 );
 
 export const { concepts, computations } = applicationConceptSet;
-

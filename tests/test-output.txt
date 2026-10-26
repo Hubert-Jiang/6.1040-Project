@@ -1,1 +1,52 @@
 bun test v1.4.2 (744846f84)
+
+tests/auth/PetrockOIDC.test.ts:
+(pass) Petrock MIT Touchstone OIDC Integration > environment variables are properly configured [0.11ms]
+(pass) Petrock MIT Touchstone OIDC Integration > authorization URL parameters match Petrock OIDC requirements [0.26ms]
+(pass) Petrock MIT Touchstone OIDC Integration > token exchange credentials header format matches RFC 6749 Basic auth [0.48ms]
+(pass) Petrock MIT Touchstone OIDC Integration > claims parser extracts identity from standard Petrock userinfo or id_token payload [0.10ms]
+
+tests/web/marketplaceStore.test.ts:
+(pass) Marketplace Store validation > enforces reasonable description restrictions: length <= 1000 and lines <= 12 [2.29ms]
+(pass) Marketplace Store validation > caps the number of images at 5 [0.38ms]
+
+tests/compositions/BeaverBazaar.test.ts:
+(pass) BeaverBazaar composition & end-to-end user scenario > executes the complete marketplace lifecycle with instant buyout and private settlement [104.49ms]
+(pass) BeaverBazaar composition & end-to-end user scenario > enforces deletion rules and removes unbid auctions along with their listings [12.37ms]
+
+tests/concepts/Auctioning.test.ts:
+(pass) AuctioningConcept > principle & bidding progression: opening bid, incremental bid, and close [0.30ms]
+(pass) AuctioningConcept > price parameter validation partitions: negative price, non-positive increment, buyout < start [0.09ms]
+(pass) AuctioningConcept > giveaway and zero-price partitions: startPrice = 0, opening bid = 0, buyout = 0 [0.14ms]
+(pass) AuctioningConcept > bid restriction partitions: owner bidding, below minimum, inactive auction [0.16ms]
+(pass) AuctioningConcept > ownership and deletion partitions: non-owner, auction with bids, double close [0.17ms]
+(pass) AuctioningConcept > query non-existent partitions: _get and _byItem return empty [0.06ms]
+
+tests/concepts/Notifying.test.ts:
+(pass) NotifyingConcept > principle & lifecycle: deliver, query, and dismiss notifications [0.88ms]
+(pass) NotifyingConcept > dismissal partition: refuses non-existent notification ID [0.09ms]
+
+tests/concepts/Sessioning.test.ts:
+(pass) SessioningConcept > principle & active lifecycle: start, resolve current, query active, and end [0.38ms]
+(pass) SessioningConcept > expiry partitions: expired session is omitted from queries and refused by actions [0.21ms]
+(pass) SessioningConcept > non-existent session partition: invented token refused by current and end [0.18ms]
+
+tests/concepts/Profiling.test.ts:
+(pass) ProfilingConcept > principle & state transition: initialize, query, and update profile [0.15ms]
+(pass) ProfilingConcept > input validation partitions: refuses blank name or blank contact [0.09ms]
+
+tests/concepts/Listing.test.ts:
+(pass) ListingConcept > principle & lifecycle: create, update, deactivate, delete [0.47ms]
+(pass) ListingConcept > ownership partition: refuses operations by non-owner [0.11ms]
+(pass) ListingConcept > existence partition: refuses operations on non-existent listing [0.06ms]
+(pass) ListingConcept > active status partition: update requires active, deactivate requires active [0.11ms]
+
+tests/concepts/Pseudonyming.test.ts:
+(pass) PseudonymingConcept > principle & stability: generate and retrieve pseudonyms within a context [0.31ms]
+(pass) PseudonymingConcept > uniqueness & context isolation: distinct users and distinct contexts [0.12ms]
+(pass) PseudonymingConcept > unknown alias partitions: refuses getUser and returns empty query [0.08ms]
+
+ 28 pass
+ 0 fail
+ 188 expect() calls
+Ran 28 tests across 9 files. [447.00ms]

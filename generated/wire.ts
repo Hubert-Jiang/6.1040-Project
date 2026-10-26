@@ -79,10 +79,12 @@ export type BeaverBazaarWire = {
   "/listings/create": {
     input: {
       "buyout"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["buyout"]>>;
+      "description"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["description"]>>;
+      "images"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["images"]>>;
       "increment": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["increment"]>>;
-      "item": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["item"]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
       "startPrice": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["startPrice"]>>;
+      "title": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["title"]>>;
     };
     output: {
       "auction": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>>, ["auction"]>>;
@@ -101,14 +103,16 @@ export type BeaverBazaarWire = {
         "auction": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["auction"]>>;
         "auctionActive": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["active"]>>;
         "buyout": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["buyout"]>>;
+        "description": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["description"]>>;
         "highestBidder": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["alias"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["highestBidder"]>]>>;
+        "images": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["images"]>>;
         "increment": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["increment"]>>;
         "isHighestBidder": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserHighestBidder"]["fn"]>>, ["isHighestBidder"]>>;
         "isSeller": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserSeller"]["fn"]>>, ["isSeller"]>>;
-        "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
         "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>[0], ["item"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["context"]>]>>;
         "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["price"]>>;
         "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["owner"]>>;
+        "title": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["title"]>>;
       } | null;
     };
     error: { error: AppWideError | "INVALID_INPUT" };
@@ -122,14 +126,16 @@ export type BeaverBazaarWire = {
         "listings": {
           "auction": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["auction"]>>;
           "buyout": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["buyout"]>>;
+          "description": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["description"]>>;
           "highestBidder": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["alias"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["highestBidder"]>]>>;
+          "images": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["images"]>>;
           "increment": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["increment"]>>;
           "isHighestBidder": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserHighestBidder"]["fn"]>>, ["isHighestBidder"]>>;
           "isSeller": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserSeller"]["fn"]>>, ["isSeller"]>>;
-          "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
           "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["context"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["item"]>]>>;
           "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["price"]>>;
           "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["owner"]>>;
+          "title": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["title"]>>;
         }[];
       };
     };
@@ -252,10 +258,12 @@ export type BeaverBazaarWireHttp = {
   "/listings/create": {
     input: {
       "buyout"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["buyout"]>>;
+      "description"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["description"]>>;
+      "images"?: Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["images"]>>;
       "increment": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["increment"]>>;
-      "item": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["item"]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
       "startPrice": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>[0], ["startPrice"]>>;
+      "title": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["title"]>>;
     };
     output: {
       "auction": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["create"]>>, ["auction"]>>;
@@ -274,14 +282,16 @@ export type BeaverBazaarWireHttp = {
         "auction": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["auction"]>>;
         "auctionActive": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["active"]>>;
         "buyout": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["buyout"]>>;
+        "description": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["description"]>>;
         "highestBidder": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["alias"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["highestBidder"]>]>>;
+        "images": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["images"]>>;
         "increment": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["increment"]>>;
         "isHighestBidder": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserHighestBidder"]["fn"]>>, ["isHighestBidder"]>>;
         "isSeller": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserSeller"]["fn"]>>, ["isSeller"]>>;
-        "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
         "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>[0], ["item"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["context"]>]>>;
         "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["price"]>>;
         "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_byItem"]>>>, ["owner"]>>;
+        "title": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["title"]>>;
       } | null;
     };
     error: { error: HttpAppWideError | "INVALID_REQUEST" };
@@ -295,14 +305,16 @@ export type BeaverBazaarWireHttp = {
         "listings": {
           "auction": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["auction"]>>;
           "buyout": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["buyout"]>>;
+          "description": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["description"]>>;
           "highestBidder": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["alias"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["highestBidder"]>]>>;
+          "images": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["images"]>>;
           "increment": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["increment"]>>;
           "isHighestBidder": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserHighestBidder"]["fn"]>>, ["isHighestBidder"]>>;
           "isSeller": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.computations)["isUserSeller"]["fn"]>>, ["isSeller"]>>;
-          "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["item"]>>;
           "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Pseudonym"]["_getUser"]>[0], ["context"]>, AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["item"]>]>>;
           "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["price"]>>;
           "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Auction"]["_active"]>>>, ["owner"]>>;
+          "title": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["title"]>>;
         }[];
       };
     };

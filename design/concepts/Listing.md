@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Display items for public viewing by publishing listings, so interested buyers can browse available goods and inspect item details.
+Display items for public viewing by publishing listings with title, description, and images, so interested buyers can browse available goods and inspect item details.
 
 ## Principle
 
-Alice publishes a listing for a bicycle. While the listing is active, Alice updates the bicycle's description. Later, when the bicycle is sold or withdrawn, Alice deactivates the listing so it is no longer open. Finally, Alice deletes the listing from the catalog.
+Alice publishes a listing for a bicycle with a title, description, and photos. While the listing is active, Alice updates the bicycle's details. Later, when the bicycle is sold or withdrawn, Alice deactivates the listing so it is no longer open. Finally, Alice deletes the listing from the catalog.
 
 ## Types
 
@@ -14,8 +14,8 @@ Alice publishes a listing for a bicycle. While the listing is active, Alice upda
 external User
   The owner who creates and manages a listing.
 
-external Item
-  The item data or payload associated with a listing.
+external Image
+  An image representation of the listed item.
 ```
 
 ## State
@@ -23,20 +23,22 @@ external Item
 ```state
 a set of Listings with
   an owner User
-  an item Item
+  a title String
+  a description String
+  an images seq of Image
   an active Flag
 ```
 
 ## Actions
 
 ```actions
-create (owner: User, item: Item) : returns (listing: Listing)
+create (owner: User, title: String, description: String, images: Image) : returns (listing: Listing)
   where true
   then
-    add a new listing with owner, item, and active true
+    add a new listing with owner, title, description, images, and active true
     returns listing
 
-update (owner: User, listing: Listing, item: Item) : returns (listing: Listing)
+update (owner: User, listing: Listing, title: String, description: String, images: Image) : returns (listing: Listing)
   where listing not in listings
   then
     refuses LISTING_NOT_FOUND "There is no such listing."
@@ -48,7 +50,9 @@ update (owner: User, listing: Listing, item: Item) : returns (listing: Listing)
     refuses LISTING_INACTIVE "Cannot update an inactive listing."
   where listing in listings and listing.owner == owner and listing.active
   then
-    set listing.item to item
+    set listing.title to title
+    set listing.description to description
+    set listing.images to images
     returns listing
 
 deactivate (owner: User, listing: Listing) : returns (listing: Listing)
@@ -82,15 +86,15 @@ delete (owner: User, listing: Listing) : returns (listing: Listing)
 ## Queries
 
 ```queries
-_get (listing: Listing) : optional (listing: Listing, owner: User, item: Item, active: Flag)
+_get (listing: Listing) : optional (listing: Listing, owner: User, title: String, description: String, images: Image, active: Flag)
   answers the listing's details
   answers no row for an unknown listing
 
-_all () : many (listing: Listing, owner: User, item: Item, active: Flag)
+_all () : many (listing: Listing, owner: User, title: String, description: String, images: Image, active: Flag)
   answers all listings
   orders rows by listing
 
-_active () : many (listing: Listing, owner: User, item: Item)
+_active () : many (listing: Listing, owner: User, title: String, description: String, images: Image)
   answers all currently active listings
   orders rows by listing
 ```

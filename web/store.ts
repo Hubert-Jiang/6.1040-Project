@@ -18,6 +18,7 @@ import {
   submitBid,
   closeAuction,
   cancelAuction,
+  setSelectedListing,
   useMarketplaceStore,
 } from "./stores/marketplace.ts";
 import {
@@ -39,6 +40,7 @@ export interface AppState {
   contact: string;
   currentPage: Page;
   listings: ListingItem[];
+  selectedListing: ListingItem | null;
   notifications: NotificationItem[];
   notificationsMenuOpen: boolean;
   statusMessage: string | null;
@@ -82,6 +84,12 @@ const aggregatedState: AppState = {
   },
   set listings(v: ListingItem[]) {
     marketplaceState.listings = v;
+  },
+  get selectedListing() {
+    return marketplaceState.selectedListing;
+  },
+  set selectedListing(v: ListingItem | null) {
+    marketplaceState.selectedListing = v;
   },
   get notifications() {
     return notificationsState.notifications;
@@ -146,8 +154,25 @@ export const store = {
     return loadFeed(authState.session, silent);
   },
 
-  createListing(item: string, startPrice: number, increment: number, buyout: number | null) {
-    return createListing(authState.session, item, startPrice, increment, buyout);
+  setSelectedListing,
+
+  createListing(
+    title: string,
+    description: string,
+    images: string[],
+    startPrice: number,
+    increment: number,
+    buyout: number | null,
+  ) {
+    return createListing(
+      authState.session,
+      title,
+      description,
+      images,
+      startPrice,
+      increment,
+      buyout,
+    );
   },
 
   submitBid(auction: string, item: string, amount: number) {

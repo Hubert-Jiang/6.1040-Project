@@ -7,7 +7,9 @@ export interface ListingItem {
   listing: string;
   auction: string;
   sellerAlias: string;
-  item: string;
+  title: string;
+  description: string;
+  images: string[];
   price: number;
   increment: number;
   buyout: number | null;
