@@ -1,0 +1,192 @@
+/* Marketplace Browse Cards */
+.listing-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-card-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.listing-card-clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(60, 42, 24, 0.12);
+  border-color: rgba(139, 87, 42, 0.35);
+}
+
+.listing-card-clickable:hover .card-cover-image {
+  transform: scale(1.04);
+}
+
+.listing-card-clickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Card Image Area */
+.card-image-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #f4eee7;
+  overflow: hidden;
+}
+
+.card-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.card-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f4ee 0%, #ebe1d4 100%);
+}
+
+.card-image-placeholder .placeholder-icon {
+  font-size: 2.75rem;
+  opacity: 0.7;
+}
+
+.card-buyout-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(139, 58, 22, 0.92);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.02em;
+}
+
+.card-role-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.card-role-seller {
+  background: rgba(43, 84, 126, 0.92);
+  color: #ffffff;
+}
+
+.card-role-winning {
+  background: rgba(38, 92, 42, 0.92);
+  color: #ffffff;
+}
+
+/* Card Content Area */
+.card-content {
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+}
+
+.listing-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.7rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.card-seller-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.card-seller-row .seller-label {
+  color: var(--text-faint);
+}
+
+.card-pricing-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--border);
+}
+
+.card-price-block {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.card-price-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.card-price-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.price-unbid-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  background: #f4eee7;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.card-footer-action {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.card-action-hint {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  transition: color 0.15s;
+}
+
+.listing-card-clickable:hover .card-action-hint {
+  text-decoration: underline;
+}

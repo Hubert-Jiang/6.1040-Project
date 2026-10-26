@@ -1,0 +1,476 @@
+/* =======================================================
+   Sidepage / Detail Drawer (ListingDetailDrawer)
+   ======================================================= */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 30, 20, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  animation: drawerFadeIn 0.2s ease-out;
+}
+
+.drawer-panel {
+  background: var(--bg-card);
+  width: min(520px, 100vw);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -6px 0 28px rgba(0, 0, 0, 0.18);
+  overflow-y: auto;
+  overflow-x: hidden;
+  animation: drawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
+}
+
+@keyframes drawerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.drawer-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.drawer-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-main);
+}
+
+.btn-drawer-close {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.35rem 0.55rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.btn-drawer-close:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+  border-color: var(--primary);
+}
+
+.drawer-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Drawer Gallery */
+.drawer-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.drawer-image-stage {
+  width: 100%;
+  height: 280px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f5ede3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+}
+
+.drawer-main-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.drawer-image-placeholder {
+  width: 100%;
+  height: 180px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+}
+
+.drawer-image-placeholder .placeholder-icon {
+  font-size: 2.5rem;
+}
+
+.drawer-image-placeholder .placeholder-text {
+  font-size: 0.85rem;
+}
+
+.drawer-thumbnails-row {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.drawer-thumb-btn {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  transition: border-color 0.15s;
+}
+
+.drawer-thumb-btn:hover {
+  border-color: rgba(139, 87, 42, 0.5);
+}
+
+.drawer-thumb-active {
+  border-color: var(--primary) !important;
+}
+
+.drawer-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Drawer Section */
+.drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.drawer-listing-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.drawer-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-main);
+  background: var(--bg-subtle);
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.drawer-description p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+
+/* Masked Metadata Section */
+.drawer-meta-section {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.drawer-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.meta-label {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.pseudonym-tag {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.pseudonym-you-tag {
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+/* Price Presentation Box */
+.price-highlight-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.price-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.price-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.price-amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.price-amount {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.price-unbid-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+}
+
+.price-secondary-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 0.45rem;
+  border-top: 1px dashed rgba(227, 212, 193, 0.8);
+}
+
+.price-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  max-width: 100%;
+}
+
+.min-bid-pill {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.min-bid-pill .pill-label {
+  color: var(--text-muted);
+}
+
+.min-bid-pill .pill-value {
+  color: #3b2c20;
+  font-weight: 700;
+}
+
+.min-bid-pill .pill-detail {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.buyout-pill {
+  background: var(--badge-bg);
+  border: 1px solid rgba(139, 87, 42, 0.2);
+  color: var(--badge-text);
+  font-weight: 600;
+}
+
+.no-buyout-pill {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* Drawer Actions Section */
+.drawer-actions-section {
+  margin-top: 0.25rem;
+}
+
+.seller-controls-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.seller-controls-box .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.buyer-controls-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.custom-bid-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bid-input-action-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.bid-input-action-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.bid-input-action-row .btn-primary {
+  white-space: nowrap;
+}
+
+.buyout-action-row .btn-buyout {
+  width: 100%;
+  justify-content: center;
+  padding: 0.65rem;
+}
+
+.btn-buyout {
+  background: #965325;
+  color: #ffffff;
+  border-color: #80431b;
+  font-weight: 600;
+}
+
+.btn-buyout:hover {
+  background: #7d3f18;
+}
+
+/* Highest Bidder Banner */
+.highest-bidder-status-card {
+  background: #edf5eb;
+  border: 1px solid #c2e0bc;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.highest-bidder-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: #244b20;
+}
+
+.trophy-badge {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.highest-bidder-desc {
+  font-size: 0.82rem;
+  color: #3b5f36;
+  margin-top: 0.2rem;
+  line-height: 1.35;
+}
+
+.highest-bidder-buyout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(194, 224, 188, 0.8);
+  flex-wrap: wrap;
+}
+
+.buyout-note {
+  font-size: 0.82rem;
+  color: #3b5f36;
+}
+
+/* Responsive Drawer adjustments */
+@media (max-width: 640px) {
+  .drawer-panel {
+    width: 100vw;
+  }
+
+  .drawer-image-stage {
+    height: 220px;
+  }
+
+  .bid-input-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bid-input-action-row .btn-primary {
+    width: 100%;
+  }
+}
