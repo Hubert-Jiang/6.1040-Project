@@ -1,71 +1,76 @@
 bun test v1.4.2 (744846f84)
 
 tests/auth/PetrockOIDC.test.ts:
-(pass) Petrock MIT Touchstone OIDC Integration > environment variables are properly configured [0.14ms]
-(pass) Petrock MIT Touchstone OIDC Integration > authorization URL parameters match Petrock OIDC requirements [0.32ms]
-(pass) Petrock MIT Touchstone OIDC Integration > token exchange credentials header format matches RFC 6749 Basic auth [0.67ms]
-(pass) Petrock MIT Touchstone OIDC Integration > claims parser extracts identity from standard Petrock userinfo or id_token payload [0.29ms]
+(pass) Petrock MIT Touchstone OIDC Integration > environment variables are properly configured [0.11ms]
+(pass) Petrock MIT Touchstone OIDC Integration > authorization URL parameters match Petrock OIDC requirements [0.23ms]
+(pass) Petrock MIT Touchstone OIDC Integration > token exchange credentials header format matches RFC 6749 Basic auth [0.58ms]
+(pass) Petrock MIT Touchstone OIDC Integration > claims parser extracts identity from standard Petrock userinfo or id_token payload [0.13ms]
 
 tests/web/marketplaceStore.test.ts:
-(pass) Marketplace Store validation > enforces reasonable description restrictions: length <= 1000 and lines <= 12 [4.01ms]
-(pass) Marketplace Store validation > caps the number of images at 5 [0.55ms]
+(pass) Marketplace Store validation > enforces reasonable description restrictions: length <= 1000 and lines <= 12 [2.26ms]
+(pass) Marketplace Store validation > caps the number of images at 5 [0.25ms]
 
 tests/security/SecurityVulnerabilities.test.ts:
-(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Sessioning against NoSQL injection payloads [1.60ms]
-(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Profiling against NoSQL injection payloads [0.72ms]
-(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Listing against NoSQL injection payloads [1.38ms]
-(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Auctioning against NoSQL injection payloads [0.91ms]
-(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Pseudonyming against NoSQL injection payloads [0.87ms]
-(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Notifying against NoSQL injection payloads [0.69ms]
-(pass) Security & Vulnerability Hardening Tests > 2. Numerical Bounds & Exploitation Prevention > rejects invalid, negative, NaN, or infinite auction prices [0.49ms]
-(pass) Security & Vulnerability Hardening Tests > 2. Numerical Bounds & Exploitation Prevention > rejects invalid, negative, or astronomical bid amounts [0.37ms]
-(pass) Security & Vulnerability Hardening Tests > 3. String Bounds & Length Sanitization > enforces title, description, and photo bounds on listings [0.51ms]
-(pass) Security & Vulnerability Hardening Tests > 3. String Bounds & Length Sanitization > enforces length bounds on user profile name and contact [0.21ms]
-(pass) Security & Vulnerability Hardening Tests > 4. Malicious Image URI & XSS Sanitization > rejects malicious script schemes in image URIs [0.26ms]
-(pass) Security & Vulnerability Hardening Tests > 4. Malicious Image URI & XSS Sanitization > accepts safe base64 raster image data URIs and safe HTTP/HTTPS URLs [0.04ms]
+(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Sessioning against NoSQL injection payloads [0.93ms]
+(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Profiling against NoSQL injection payloads [0.92ms]
+(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Listing against NoSQL injection payloads [1.49ms]
+(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Auctioning against NoSQL injection payloads [2.31ms]
+(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Pseudonyming against NoSQL injection payloads [1.42ms]
+(pass) Security & Vulnerability Hardening Tests > 1. NoSQL Operator & Object Injection Protection > protects Notifying against NoSQL injection payloads [0.73ms]
+(pass) Security & Vulnerability Hardening Tests > 2. Numerical Bounds & Exploitation Prevention > rejects invalid, negative, NaN, or infinite auction prices [0.73ms]
+(pass) Security & Vulnerability Hardening Tests > 2. Numerical Bounds & Exploitation Prevention > rejects invalid, negative, or astronomical bid amounts [0.50ms]
+(pass) Security & Vulnerability Hardening Tests > 3. String Bounds & Length Sanitization > enforces title, description, and photo bounds on listings [0.43ms]
+(pass) Security & Vulnerability Hardening Tests > 3. String Bounds & Length Sanitization > enforces length bounds on user profile name and contact [0.58ms]
+(pass) Security & Vulnerability Hardening Tests > 4. Malicious Image URI & XSS Sanitization > rejects malicious script schemes in image URIs [0.35ms]
+(pass) Security & Vulnerability Hardening Tests > 4. Malicious Image URI & XSS Sanitization > accepts safe base64 raster image data URIs and safe HTTP/HTTPS URLs [0.10ms]
 (pass) Security & Vulnerability Hardening Tests > 4. Malicious Image URI & XSS Sanitization > filters image lists to exclude malicious entries [0.07ms]
-(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > rejects unauthorized actions when session is invalid or expired [54.75ms]
-(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > prevents auction owners from placing bids on their own listings [20.40ms]
-(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > prevents non-owners from closing or deleting an auction [18.34ms]
-(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > ensures public marketplace feed strictly masks identity and contact info behind pseudonyms [21.26ms]
+(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > rejects unauthorized actions when session is invalid or expired [56.48ms]
+(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > prevents auction owners from placing bids on their own listings [20.77ms]
+(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > prevents non-owners from closing or deleting an auction [18.51ms]
+(pass) Security & Vulnerability Hardening Tests > 5. End-to-End Authorization & Pseudonymity Guarantees > ensures public marketplace feed strictly masks identity and contact info behind pseudonyms [20.07ms]
 
 tests/compositions/BeaverBazaar.test.ts:
-(pass) BeaverBazaar composition & end-to-end user scenario > executes the complete marketplace lifecycle with instant buyout and private settlement [47.01ms]
-(pass) BeaverBazaar composition & end-to-end user scenario > enforces deletion rules and removes unbid auctions along with their listings [23.20ms]
+(pass) BeaverBazaar Composition & Domain Partitions > Partition 1: Authentication & Profile Isolation > authenticates users via Touchstone and manages isolated profiles [22.68ms]
+(pass) BeaverBazaar Composition & Domain Partitions > Partition 2: Listing Publication & Pseudonym Masking > validates listing pricing terms and masks seller identity in feed reads [27.13ms]
+(pass) BeaverBazaar Composition & Domain Partitions > Partition 3: Bidding Constraints & Incremental Bids > enforces owner bidding restrictions, minimum increments, and buyer pseudonym tracking [35.43ms]
+(pass) BeaverBazaar Composition & Domain Partitions > Partition 4: Automated Buyout Reaction & Catalog Deactivation > automatically closes auction and deactivates feed item on buyout bid [24.76ms]
+(pass) BeaverBazaar Composition & Domain Partitions > Partition 5: Bilateral Settlement Notifications & Dismissal > delivers private contact information to counterparties upon auction closure and handles dismissal [18.85ms]
+(pass) BeaverBazaar Composition & Domain Partitions > Partition 6: Unbid Auction Deletion & Ownership Rules > enforces deletion rules and removes unbid auctions along with their listings [13.68ms]
+(pass) BeaverBazaar Composition & Domain Partitions > End-to-End User Scenario > executes the complete marketplace lifecycle from login to buyout settlement [14.94ms]
 
 tests/concepts/Auctioning.test.ts:
-(pass) AuctioningConcept > principle & bidding progression: opening bid, incremental bid, and close [0.35ms]
-(pass) AuctioningConcept > price parameter validation partitions: negative price, non-positive increment, buyout < start [0.12ms]
-(pass) AuctioningConcept > giveaway and zero-price partitions: startPrice = 0, opening bid = 0, buyout = 0 [0.19ms]
-(pass) AuctioningConcept > bid restriction partitions: owner bidding, below minimum, inactive auction [0.23ms]
-(pass) AuctioningConcept > ownership and deletion partitions: non-owner, auction with bids, double close [0.38ms]
-(pass) AuctioningConcept > query non-existent partitions: _get and _byItem return empty [0.10ms]
+(pass) AuctioningConcept > principle & bidding progression: opening bid, incremental bid, and close [0.51ms]
+(pass) AuctioningConcept > price parameter validation partitions: negative price, non-positive increment, buyout < start [0.11ms]
+(pass) AuctioningConcept > giveaway and zero-price partitions: startPrice = 0, opening bid = 0, buyout = 0 [0.22ms]
+(pass) AuctioningConcept > bid restriction partitions: owner bidding, below minimum, inactive auction [0.20ms]
+(pass) AuctioningConcept > ownership and deletion partitions: non-owner, auction with bids, double close [0.45ms]
+(pass) AuctioningConcept > query non-existent partitions: _get and _byItem return empty [0.27ms]
 
 tests/concepts/Notifying.test.ts:
-(pass) NotifyingConcept > principle & lifecycle: deliver, query, and dismiss notifications [0.87ms]
-(pass) NotifyingConcept > dismissal partition: refuses non-existent notification ID [0.07ms]
+(pass) NotifyingConcept > principle & lifecycle: deliver, query, and dismiss notifications [1.06ms]
+(pass) NotifyingConcept > dismissal partition: refuses non-existent notification ID [0.13ms]
 
 tests/concepts/Sessioning.test.ts:
-(pass) SessioningConcept > principle & active lifecycle: start, resolve current, query active, and end [0.30ms]
-(pass) SessioningConcept > expiry partitions: expired session is omitted from queries and refused by actions [0.15ms]
-(pass) SessioningConcept > non-existent session partition: invented token refused by current and end [0.08ms]
+(pass) SessioningConcept > principle & active lifecycle: start, resolve current, query active, and end [0.52ms]
+(pass) SessioningConcept > expiry partitions: expired session is omitted from queries and refused by actions [0.22ms]
+(pass) SessioningConcept > non-existent session partition: invented token refused by current and end [0.10ms]
 
 tests/concepts/Profiling.test.ts:
-(pass) ProfilingConcept > principle & state transition: initialize, query, and update profile [0.18ms]
-(pass) ProfilingConcept > input validation partitions: refuses blank name or blank contact [0.11ms]
+(pass) ProfilingConcept > principle & state transition: initialize, query, and update profile [0.27ms]
+(pass) ProfilingConcept > input validation partitions: refuses blank name or blank contact [0.09ms]
 
 tests/concepts/Listing.test.ts:
-(pass) ListingConcept > principle & lifecycle: create, update, deactivate, delete [0.52ms]
-(pass) ListingConcept > ownership partition: refuses operations by non-owner [0.15ms]
-(pass) ListingConcept > existence partition: refuses operations on non-existent listing [0.07ms]
-(pass) ListingConcept > active status partition: update requires active, deactivate requires active [0.13ms]
+(pass) ListingConcept > principle & lifecycle: create, update, deactivate, delete [0.63ms]
+(pass) ListingConcept > ownership partition: refuses operations by non-owner [0.22ms]
+(pass) ListingConcept > existence partition: refuses operations on non-existent listing [0.10ms]
+(pass) ListingConcept > active status partition: update requires active, deactivate requires active [0.20ms]
 
 tests/concepts/Pseudonyming.test.ts:
-(pass) PseudonymingConcept > principle & stability: generate and retrieve pseudonyms within a context [0.22ms]
-(pass) PseudonymingConcept > uniqueness & context isolation: distinct users and distinct contexts [0.15ms]
-(pass) PseudonymingConcept > unknown alias partitions: refuses getUser and returns empty query [0.10ms]
+(pass) PseudonymingConcept > principle & stability: generate and retrieve pseudonyms within a context [0.29ms]
+(pass) PseudonymingConcept > uniqueness & context isolation: distinct users and distinct contexts [0.16ms]
+(pass) PseudonymingConcept > unknown alias partitions: refuses getUser and returns empty query [0.09ms]
 
- 45 pass
+ 50 pass
  0 fail
- 259 expect() calls
-Ran 45 tests across 10 files. [661.00ms]
+ 265 expect() calls
+Ran 50 tests across 10 files. [706.00ms]
