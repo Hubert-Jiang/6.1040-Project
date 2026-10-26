@@ -19,6 +19,14 @@ import {
   closeAuction,
   cancelAuction,
   setSelectedListing,
+  setSearchQuery,
+  setSearchScope,
+  setRoleFilter,
+  resetFilters,
+  getFilteredListings,
+  filterListings,
+  type SearchScope,
+  type RoleFilter,
   useMarketplaceStore,
 } from "./stores/marketplace.ts";
 import {
@@ -30,8 +38,8 @@ import {
   useNotificationsStore,
 } from "./stores/notifications.ts";
 
-export type { Page, ListingItem, NotificationItem };
-export { useUIStore, useAuthStore, useMarketplaceStore, useNotificationsStore };
+export type { Page, ListingItem, NotificationItem, SearchScope, RoleFilter };
+export { useUIStore, useAuthStore, useMarketplaceStore, useNotificationsStore, filterListings };
 
 export interface AppState {
   user: string | null;
@@ -41,6 +49,9 @@ export interface AppState {
   currentPage: Page;
   listings: ListingItem[];
   selectedListing: ListingItem | null;
+  searchQuery: string;
+  searchScope: SearchScope;
+  roleFilter: RoleFilter;
   notifications: NotificationItem[];
   notificationsMenuOpen: boolean;
   statusMessage: string | null;
@@ -90,6 +101,24 @@ const aggregatedState: AppState = {
   },
   set selectedListing(v: ListingItem | null) {
     marketplaceState.selectedListing = v;
+  },
+  get searchQuery() {
+    return marketplaceState.searchQuery;
+  },
+  set searchQuery(v: string) {
+    marketplaceState.searchQuery = v;
+  },
+  get searchScope() {
+    return marketplaceState.searchScope;
+  },
+  set searchScope(v: SearchScope) {
+    marketplaceState.searchScope = v;
+  },
+  get roleFilter() {
+    return marketplaceState.roleFilter;
+  },
+  set roleFilter(v: RoleFilter) {
+    marketplaceState.roleFilter = v;
   },
   get notifications() {
     return notificationsState.notifications;
@@ -155,6 +184,11 @@ export const store = {
   },
 
   setSelectedListing,
+  setSearchQuery,
+  setSearchScope,
+  setRoleFilter,
+  resetFilters,
+  getFilteredListings,
 
   createListing(
     title: string,

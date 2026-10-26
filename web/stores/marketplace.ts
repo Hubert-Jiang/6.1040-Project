@@ -2,18 +2,90 @@ import { reactive } from "vue";
 import { client, type ListingItem } from "../api.ts";
 import { setStatus, setLoading, setPage } from "./ui.ts";
 
+export type SearchScope = "both" | "title" | "desc";
+export type RoleFilter = "all" | "mine" | "winning" | "has_bids" | "unbid" | "buyout";
+
+export interface FilterOptions {
+  query?: string;
+  scope?: SearchScope;
+  filter?: RoleFilter;
+}
+
 export interface MarketplaceState {
   listings: ListingItem[];
   selectedListing: ListingItem | null;
+  searchQuery: string;
+  searchScope: SearchScope;
+  roleFilter: RoleFilter;
 }
 
 export const marketplaceState = reactive<MarketplaceState>({
   listings: [],
   selectedListing: null,
+  searchQuery: "",
+  searchScope: "both",
+  roleFilter: "all",
 });
 
 export function setSelectedListing(listing: ListingItem | null): void {
   marketplaceState.selectedListing = listing;
+}
+
+export function setSearchQuery(query: string): void {
+  marketplaceState.searchQuery = query;
+}
+
+export function setSearchScope(scope: SearchScope): void {
+  marketplaceState.searchScope = scope;
+}
+
+export function setRoleFilter(filter: RoleFilter): void {
+  marketplaceState.roleFilter = filter;
+}
+
+export function resetFilters(): void {
+  marketplaceState.searchQuery = "";
+  marketplaceState.searchScope = "both";
+  marketplaceState.roleFilter = "all";
+}
+
+/**
+ * Pure filter function matching listings against text search query, scope, and status/role filter.
+ */
+export function filterListings(
+  listings: ListingItem[],
+  options: FilterOptions = {},
+): ListingItem[] {
+  const query = (options.query ?? "").trim().toLowerCase();
+  const scope = options.scope ?? "both";
+  const filter = options.filter ?? "all";
+
+  return listings.filter((item) => {
+    // 1. Role & Status filtering
+    if (filter === "mine" && !item.isSeller) return false;
+    if (filter === "winning" && !item.isHighestBidder) return false;
+    if (filter === "has_bids" && item.highestBidder === null) return false;
+    if (filter === "unbid" && item.highestBidder !== null) return false;
+    if (filter === "buyout" && item.buyout === null) return false;
+
+    // 2. Text query matching
+    if (!query) return true;
+
+    const titleMatch = (item.title || "").toLowerCase().includes(query);
+    const descMatch = (item.description || "").toLowerCase().includes(query);
+
+    if (scope === "title") return titleMatch;
+    if (scope === "desc") return descMatch;
+    return titleMatch || descMatch; // "both"
+  });
+}
+
+export function getFilteredListings(): ListingItem[] {
+  return filterListings(marketplaceState.listings, {
+    query: marketplaceState.searchQuery,
+    scope: marketplaceState.searchScope,
+    filter: marketplaceState.roleFilter,
+  });
 }
 
 export async function loadFeed(session: string | null, silent = false): Promise<void> {
@@ -266,12 +338,20 @@ export async function cancelAuction(
 export function clearMarketplace(): void {
   marketplaceState.listings = [];
   marketplaceState.selectedListing = null;
+  marketplaceState.searchQuery = "";
+  marketplaceState.searchScope = "both";
+  marketplaceState.roleFilter = "all";
 }
 
 export function useMarketplaceStore() {
   return {
     state: marketplaceState,
     setSelectedListing,
+    setSearchQuery,
+    setSearchScope,
+    setRoleFilter,
+    resetFilters,
+    getFilteredListings,
     loadFeed,
     createListing,
     submitBid,
