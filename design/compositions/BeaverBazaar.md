@@ -55,6 +55,8 @@ A buyer [submits a bid on an active auction](reaction:BeaverBazaar.Marketplace.S
 assigns the buyer a unique pseudonym within the listing's context and submits the bid under that alias, concealing
 the buyer's identity from public feeds.
 
+When another buyer submits a higher bid on an active auction, the system dispatches an [outbid notification to the previous bidder](reaction:BeaverBazaar.Notifications.NotifyOutbidOnBid), alerting them with a link to inspect the listing.
+
 If a submitted bid meets or exceeds the buyout price, the system automatically [closes the auction on buyout](reaction:BeaverBazaar.Marketplace.CloseOnBuyout).
 A seller may also manually [close an active auction](reaction:BeaverBazaar.Marketplace.CloseAuction) once satisfied, or
 [delete an auction before any bids have been placed](reaction:BeaverBazaar.Marketplace.DeleteAuction). Deleting an auction
@@ -71,16 +73,21 @@ BeaverBazaar.Marketplace.DeleteAuction at /auctions/delete
 Closing an auction synchronizes the listing status to [deactivate it](reaction:BeaverBazaar.Marketplace.SyncAuctionListingStatus),
 withdrawing the listing from the public active feed to prevent further bidding.
 
-When an auction closes with a winning bidder, the system dispatches [private closing notifications to the seller](reaction:BeaverBazaar.Notifications.NotifySellerOnClose).
-This resolves the seller's and buyer's aliases back to their real student identities, retrieves their registered
-contact methods from their profiles, and [delivers private closing notifications to the buyer](reaction:BeaverBazaar.Notifications.NotifyBuyerOnClose) containing each other's contact details
-so they can coordinate physical pickup and payment offline.
+When an auction closes with a winning bidder, the system resolves the seller's and buyer's aliases back to their real student identities,
+retrieves their registered contact methods, and preserves the immutable transaction agreement by [recording private settlement](reaction:BeaverBazaar.Settlement.RecordSettlementOnClose).
+Concurrently, the system dispatches private alerts referencing the settlement log by [notifying the seller on close](reaction:BeaverBazaar.Notifications.NotifySellerOnClose)
+and [delivers private closing notifications to the buyer](reaction:BeaverBazaar.Notifications.NotifyBuyerOnClose).
 
-A student reads their incoming messages through the [user notifications read](former:BeaverBazaar.Notifications.UserNotifications)
+A student reviews their concluded transactions through the permanent, readonly [user settlements log](former:BeaverBazaar.Settlement.UserSettlements)
+accessed via the [settlements endpoint](reaction:BeaverBazaar.Settlement.ListSettlements). Settlements are immutable and readonly;
+dismissing notifications does not alter the settlement log.
+
+A student reads incoming alerts through the [user notifications read](former:BeaverBazaar.Notifications.UserNotifications)
 accessed via the [notifications endpoint](reaction:BeaverBazaar.Notifications.ListNotifications).
 A student [dismisses a handled notification](reaction:BeaverBazaar.Notifications.DismissNotification) once addressed.
 
 ```endpoints
+BeaverBazaar.Settlement.ListSettlements at /settlements/list
 BeaverBazaar.Notifications.ListNotifications at /notifications/list
 BeaverBazaar.Notifications.DismissNotification at /notifications/dismiss
 ```
@@ -92,11 +99,17 @@ isBuyoutMet(amount: Number, buyout?: Number) : Record
 isBuyerPresent(highestBidder?: String) : Record
   Checks whether an auction has a recorded winning bidder upon closing.
 
-formatBuyerNotification(title: String, sellerAlias: String, sellerUser: String, sellerName?: String, sellerContact?: String, price?: Number) : Record
-  Formats the private notification message sent to the winning buyer with seller alias, actual identity, contact details, and concluding price.
+isDifferentBidder(newBidder: String, outbid?: String) : Record
+  Checks whether the outbid party is distinct from the new leading bidder.
 
-formatSellerNotification(title: String, buyerAlias: String, buyerUser: String, buyerName?: String, buyerContact?: String, price?: Number) : Record
-  Formats the private notification message sent to the seller with winning buyer alias, actual identity, contact details, and concluding price.
+formatOutbidNotification(title: String, amount: Number, listing: String) : Record
+  Formats the outbid notification message with listing reference and new leading bid amount.
+
+formatBuyerNotification(title: String, price?: Number) : Record
+  Formats the private notification message sent to the winning buyer with item title and concluding price.
+
+formatSellerNotification(title: String, price?: Number) : Record
+  Formats the private notification message sent to the seller with item title and concluding price.
 
 isUserSeller(seller: User, viewer?: User) : Record
   Evaluates whether the active viewer is the seller of the listing.

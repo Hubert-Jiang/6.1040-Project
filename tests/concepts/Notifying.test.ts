@@ -37,6 +37,9 @@ describe("NotifyingConcept", () => {
     // Partition: _all(user) when recipient has multiple notifications
     const notifications = await notifying._all({ user: "alice" });
     expect(notifications).toHaveLength(2);
+    // Reverse chronological order: n2 (created second) must appear before n1 (created first)
+    expect(notifications[0].notification).toBe(n2);
+    expect(notifications[1].notification).toBe(n1);
     expect(notifications).toContainEqual({
       notification: n1,
       message: "Your auction has closed.",
@@ -64,5 +67,25 @@ describe("NotifyingConcept", () => {
     expect(notifying.dismiss({ notification: "missing" })).rejects.toThrow(
       NoSuchNotification,
     );
+  });
+
+  test("reverse chronological ordering: latest notifications appear at the top", async () => {
+    const notifying = new NotifyingConcept();
+    const user = "carol";
+
+    const { notification: id1 } = await notifying.notify({ user, message: "First message" });
+    const { notification: id2 } = await notifying.notify({ user, message: "Second message" });
+    const { notification: id3 } = await notifying.notify({ user, message: "Third message" });
+    const { notification: id4 } = await notifying.notify({ user, message: "Fourth message" });
+
+    const all = await notifying._all({ user });
+    expect(all).toHaveLength(4);
+    expect(all.map((n) => n.notification)).toEqual([id4, id3, id2, id1]);
+    expect(all.map((n) => n.message)).toEqual([
+      "Fourth message",
+      "Third message",
+      "Second message",
+      "First message",
+    ]);
   });
 });

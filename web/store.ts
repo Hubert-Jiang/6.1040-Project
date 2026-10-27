@@ -1,4 +1,4 @@
-import { client, type ListingItem, type NotificationItem } from "./api.ts";
+import { client, type ListingItem, type NotificationItem, type SettlementItem } from "./api.ts";
 import { type Page, uiState, setPage, setStatus, setLoading, useUIStore } from "./stores/ui.ts";
 import {
   authState,
@@ -37,9 +37,15 @@ import {
   closeNotificationsMenu,
   useNotificationsStore,
 } from "./stores/notifications.ts";
+import {
+  settlementsState,
+  loadSettlements,
+  clearSettlements,
+  useSettlementsStore,
+} from "./stores/settlements.ts";
 
-export type { Page, ListingItem, NotificationItem, SearchScope, RoleFilter };
-export { useUIStore, useAuthStore, useMarketplaceStore, useNotificationsStore, filterListings };
+export type { Page, ListingItem, NotificationItem, SettlementItem, SearchScope, RoleFilter };
+export { useUIStore, useAuthStore, useMarketplaceStore, useNotificationsStore, useSettlementsStore, filterListings };
 
 export interface AppState {
   user: string | null;
@@ -54,6 +60,7 @@ export interface AppState {
   roleFilter: RoleFilter;
   notifications: NotificationItem[];
   notificationsMenuOpen: boolean;
+  settlements: SettlementItem[];
   statusMessage: string | null;
   statusType: "success" | "error" | "info";
   loading: boolean;
@@ -132,6 +139,12 @@ const aggregatedState: AppState = {
   set notificationsMenuOpen(v: boolean) {
     notificationsState.notificationsMenuOpen = v;
   },
+  get settlements() {
+    return settlementsState.settlements;
+  },
+  set settlements(v: SettlementItem[]) {
+    settlementsState.settlements = v;
+  },
   get statusMessage() {
     return uiState.statusMessage;
   },
@@ -179,6 +192,10 @@ export const store = {
     return dismissNotification(authState.session, notification);
   },
 
+  loadSettlements(silent = false) {
+    return loadSettlements(authState.session, silent);
+  },
+
   loadFeed(silent = false) {
     return loadFeed(authState.session, silent);
   },
@@ -212,12 +229,14 @@ export const store = {
   submitBid(auction: string, item: string, amount: number) {
     return submitBid(authState.session, auction, item, amount, async () => {
       await loadNotifications(authState.session, true);
+      await loadSettlements(authState.session, true);
     });
   },
 
   closeAuction(auction: string, item: string) {
     return closeAuction(authState.session, auction, item, async () => {
       await loadNotifications(authState.session, true);
+      await loadSettlements(authState.session, true);
     });
   },
 
@@ -252,10 +271,11 @@ export const store = {
       });
     }
 
-    // 3s background polling to keep feed and notifications fresh
+    // 3s background polling to keep feed, notifications, and settlements fresh
     setInterval(() => {
       if (authState.session && !uiState.loading) {
         loadNotifications(authState.session, true);
+        loadSettlements(authState.session, true);
         loadFeed(authState.session, true);
       }
     }, 3000);
@@ -273,6 +293,7 @@ export const store = {
             authState.user = check.user;
             await loadProfile();
             await loadNotifications(savedSession);
+            await loadSettlements(savedSession);
             await loadFeed(savedSession, true);
             return;
           }

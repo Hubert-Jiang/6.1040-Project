@@ -9,6 +9,7 @@ import { NotifyingConcept, NoSuchNotification } from "../../src/concepts/Notifyi
 import { ProfilingConcept, InvalidProfile } from "../../src/concepts/Profiling.ts";
 import { PseudonymingConcept, NoSuchPseudonym } from "../../src/concepts/Pseudonyming.ts";
 import { SessioningConcept, UnknownSession } from "../../src/concepts/Sessioning.ts";
+import { SettlingConcept } from "../../src/concepts/Settling.ts";
 import { isSafeImageUri, filterSafeImages } from "../../web/api.ts";
 
 function createTestApp() {
@@ -19,6 +20,7 @@ function createTestApp() {
     Pseudonym: new PseudonymingConcept(),
     Auction: new AuctioningConcept(),
     Notify: new NotifyingConcept(),
+    Settlement: new SettlingConcept(),
   });
   const gateway = createGateway<BeaverBazaarWire>({ application });
   const client = createLocalClient<BeaverBazaarWire>({ invoker: gateway });
@@ -127,6 +129,26 @@ describe("Security & Vulnerability Hardening Tests", () => {
         .rejects.toBeInstanceOf(NoSuchNotification);
 
       const all = await notifying._all({ user: maliciousId });
+      expect(all).toEqual([]);
+    });
+
+    it("protects Settling against NoSQL injection payloads", async () => {
+      const settling = new SettlingConcept();
+      const maliciousId = { $ne: null } as unknown as string;
+
+      expect(
+        settling.record({
+          buyer: maliciousId,
+          seller: "alice",
+          item: "item1",
+          title: "Title",
+          price: 50,
+          buyerAlias: "b",
+          sellerAlias: "a",
+        }),
+      ).rejects.toThrow("Invalid buyer identifier.");
+
+      const all = await settling._forUser({ user: maliciousId });
       expect(all).toEqual([]);
     });
   });

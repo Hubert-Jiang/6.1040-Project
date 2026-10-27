@@ -88,14 +88,16 @@ describe("AuctioningConcept", () => {
     expect(byItem).toHaveLength(1);
     expect(byItem[0].auction).toBe(auction);
 
-    // Partition: opening bid (highestBidder == null) with amount == startPrice
-    await auctioning.bid({ bidder: "EagerBeaver", auction, amount: 60 });
+    // Partition: opening bid (highestBidder == null) with amount == startPrice (outbid is undefined)
+    const bid1 = await auctioning.bid({ bidder: "EagerBeaver", auction, amount: 60 });
+    expect(bid1.outbid).toBeUndefined();
     const afterFirstBid = await auctioning._get({ auction });
     expect(afterFirstBid[0].price).toBe(60);
     expect(afterFirstBid[0].highestBidder).toBe("EagerBeaver");
 
-    // Partition: subsequent bid (highestBidder != null) with amount == price + increment
-    await auctioning.bid({ bidder: "CleverFox", auction, amount: 65 });
+    // Partition: subsequent bid (highestBidder != null) with amount == price + increment (outbid is previous bidder)
+    const bid2 = await auctioning.bid({ bidder: "CleverFox", auction, amount: 65 });
+    expect(bid2.outbid).toBe("EagerBeaver");
     const afterSecondBid = await auctioning._get({ auction });
     expect(afterSecondBid[0].price).toBe(65);
     expect(afterSecondBid[0].highestBidder).toBe("CleverFox");

@@ -102,7 +102,7 @@ export class AuctioningConcept {
     bidder: string;
     auction: string;
     amount: number;
-  }): Promise<{ auction: string }> {
+  }): Promise<{ auction: string; outbid?: string }> {
     if (
       typeof bidder !== "string" ||
       !bidder ||
@@ -135,6 +135,8 @@ export class AuctioningConcept {
       );
     }
 
+    const outbid = doc.highestBidder ?? undefined;
+
     if (this.collection) {
       await this.collection.updateOne(
         { _id: auction },
@@ -145,7 +147,7 @@ export class AuctioningConcept {
       doc.highestBidder = bidder;
     }
 
-    return { auction };
+    return { auction, ...(outbid ? { outbid } : {}) };
   }
 
   async close({

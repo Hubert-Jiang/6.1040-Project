@@ -75,6 +75,19 @@
   letter-spacing: 0.02em;
 }
 
+.settlement-badge-readonly {
+  display: inline-flex;
+  align-items: center;
+  background: #f3ede4;
+  color: #786352;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid #e3d4c1;
+  letter-spacing: 0.02em;
+}
+
 .settlement-item-name {
   font-size: 1.15rem;
   font-weight: 700;

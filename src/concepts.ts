@@ -6,6 +6,7 @@ import notifyingSpec from "@design/concepts/Notifying.md" with { type: "text" };
 import profilingSpec from "@design/concepts/Profiling.md" with { type: "text" };
 import pseudonymingSpec from "@design/concepts/Pseudonyming.md" with { type: "text" };
 import sessioningSpec from "@design/concepts/Sessioning.md" with { type: "text" };
+import settlingSpec from "@design/concepts/Settling.md" with { type: "text" };
 
 import {
   AlreadyClosed,
@@ -30,6 +31,7 @@ import { NoSuchNotification, NotifyingConcept } from "./concepts/Notifying.ts";
 import { InvalidProfile, ProfilingConcept } from "./concepts/Profiling.ts";
 import { NoSuchPseudonym, PseudonymingConcept } from "./concepts/Pseudonyming.ts";
 import { SessioningConcept, UnknownSession } from "./concepts/Sessioning.ts";
+import { SettlingConcept } from "./concepts/Settling.ts";
 
 const Session = registerConcept({
   class: SessioningConcept,
@@ -82,6 +84,12 @@ const Notify = registerConcept({
   refusals: { NO_SUCH_NOTIFICATION: NoSuchNotification },
 });
 
+const Settlement = registerConcept({
+  class: SettlingConcept,
+  spec: settlingSpec,
+  refusals: {},
+});
+
 export function isBuyoutMet({
   amount,
   buyout,
@@ -104,49 +112,55 @@ export function isBuyerPresent({
   };
 }
 
+export function isDifferentBidder({
+  newBidder,
+  outbid,
+}: {
+  newBidder: string;
+  outbid?: string;
+}): { different: boolean } {
+  return {
+    different: typeof outbid === "string" && outbid.length > 0 && outbid !== newBidder,
+  };
+}
+
+export function formatOutbidNotification({
+  title,
+  amount,
+  listing,
+}: {
+  title: string;
+  amount: number;
+  listing: string;
+}): { message: string } {
+  return {
+    message: `You were outbid on "${title}"! Current high bid is $${amount}. (listing:${listing})`,
+  };
+}
+
 export function formatBuyerNotification({
   title,
-  sellerAlias,
-  sellerUser,
-  sellerName,
-  sellerContact,
   price,
 }: {
   title: string;
-  sellerAlias: string;
-  sellerUser: string;
-  sellerName?: string;
-  sellerContact?: string;
   price?: number;
 }): { message: string } {
-  const name = sellerName ? `${sellerName} (${sellerUser})` : sellerUser;
-  const contact = sellerContact ? ` | Contact: ${sellerContact}` : "";
   const priceStr = typeof price === "number" ? ` for $${price}` : "";
   return {
-    message: `You won the auction for "${title}"${priceStr}! Counterparty: alias "${sellerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
+    message: `You won the auction for "${title}"${priceStr}! Private contact details have been recorded in your Settlement Log.`,
   };
 }
 
 export function formatSellerNotification({
   title,
-  buyerAlias,
-  buyerUser,
-  buyerName,
-  buyerContact,
   price,
 }: {
   title: string;
-  buyerAlias: string;
-  buyerUser: string;
-  buyerName?: string;
-  buyerContact?: string;
   price?: number;
 }): { message: string } {
-  const name = buyerName ? `${buyerName} (${buyerUser})` : buyerUser;
-  const contact = buyerContact ? ` | Contact: ${buyerContact}` : "";
-  const priceStr = typeof price === "number" ? ` for $${price}` : "";
+  const priceStr = typeof price === "number" ? ` at $${price}` : "";
   return {
-    message: `Your auction for "${title}" has ended${priceStr}! Counterparty: alias "${buyerAlias}", actual identity: ${name}${contact}. Reach out to arrange pickup and payment.`,
+    message: `Your auction for "${title}" has concluded${priceStr}! Private contact details have been recorded in your Settlement Log.`,
   };
 }
 
@@ -182,10 +196,13 @@ export const applicationConceptSet = conceptSet(
     Pseudonym,
     Auction,
     Notify,
+    Settlement,
   },
   {
     isBuyoutMet,
     isBuyerPresent,
+    isDifferentBidder,
+    formatOutbidNotification,
     formatBuyerNotification,
     formatSellerNotification,
     isUserSeller,

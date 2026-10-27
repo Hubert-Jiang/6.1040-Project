@@ -12,10 +12,12 @@ import {
 } from "@mit-sdg/sync-engine/language";
 import { concepts, computations } from "../concepts.ts";
 
-const { Session, Profile, Listing, Pseudonym, Auction, Notify } = concepts;
+const { Session, Profile, Listing, Pseudonym, Auction, Notify, Settlement } = concepts;
 const {
   isBuyoutMet,
   isBuyerPresent,
+  isDifferentBidder,
+  formatOutbidNotification,
   formatBuyerNotification,
   formatSellerNotification,
   isUserSeller,
@@ -151,6 +153,58 @@ export const UserNotifications = former(
     }),
 );
 
+export const UserSettlements = former(
+  "user settlements",
+  (
+    { user },
+    {
+      settlement,
+      buyer,
+      seller,
+      item,
+      title,
+      price,
+      buyerAlias,
+      sellerAlias,
+      buyerName,
+      buyerContact,
+      sellerName,
+      sellerContact,
+    },
+  ) =>
+    form({
+      settlements: each(
+        Settlement._forUser({ user }).is({
+          settlement,
+          buyer,
+          seller,
+          item,
+          title,
+          price,
+          buyerAlias,
+          sellerAlias,
+          buyerName,
+          buyerContact,
+          sellerName,
+          sellerContact,
+        }),
+      ).form({
+        settlement,
+        buyer,
+        seller,
+        item,
+        title,
+        price,
+        buyerAlias,
+        sellerAlias,
+        buyerName,
+        buyerContact,
+        sellerName,
+        sellerContact,
+      }),
+    }),
+);
+
 // ==========================================
 // Endpoints
 // ==========================================
@@ -271,6 +325,15 @@ export const DeleteAuction = endpoint(
       .then(respond({ auction })),
 );
 
+// Settlements
+export const ListSettlements = endpoint(
+  "/settlements/list",
+  ({ session, user }) =>
+    receive({ session })
+      .then(Session.current({ session }).responds({ subject: user }))
+      .then(respond({ settlements: UserSettlements({ user }) })),
+);
+
 // Notifications
 export const ListNotifications = endpoint(
   "/notifications/list",
@@ -313,7 +376,7 @@ export const SyncAuctionListingStatus = reaction(
       .then(Listing.deactivate({ owner: sellerUser, listing })),
 );
 
-export const NotifySellerOnClose = reaction(
+export const RecordSettlementOnClose = reaction(
   ({
     auction,
     listing,
@@ -325,7 +388,8 @@ export const NotifySellerOnClose = reaction(
     price,
     buyerName,
     buyerContact,
-    sellerMessage,
+    sellerName,
+    sellerContact,
   }) =>
     when(Auction.close({ auction }).responds({}))
       .where(
@@ -335,11 +399,43 @@ export const NotifySellerOnClose = reaction(
         Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
         Listing._get({ listing }).is({ title }),
         whether(Profile._get({ user: buyerUser }).is({ name: buyerName, contact: buyerContact })),
-        compute(
-          formatSellerNotification,
-          { title, buyerAlias, buyerUser, buyerName, buyerContact, price },
-          { message: sellerMessage },
-        ),
+        whether(Profile._get({ user: sellerUser }).is({ name: sellerName, contact: sellerContact })),
+      )
+      .then(
+        Settlement.record({
+          buyer: buyerUser,
+          seller: sellerUser,
+          item: listing,
+          title,
+          price,
+          buyerAlias,
+          sellerAlias,
+          buyerName,
+          buyerContact,
+          sellerName,
+          sellerContact,
+        }),
+      ),
+);
+
+export const NotifySellerOnClose = reaction(
+  ({
+    auction,
+    listing,
+    sellerAlias,
+    buyerAlias,
+    sellerUser,
+    title,
+    price,
+    sellerMessage,
+  }) =>
+    when(Auction.close({ auction }).responds({}))
+      .where(
+        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias, price }),
+        compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
+        Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
+        Listing._get({ listing }).is({ title }),
+        compute(formatSellerNotification, { title, price }, { message: sellerMessage }),
       )
       .then(Notify.notify({ user: sellerUser, message: sellerMessage })),
 );
@@ -348,31 +444,43 @@ export const NotifyBuyerOnClose = reaction(
   ({
     auction,
     listing,
-    sellerAlias,
     buyerAlias,
-    sellerUser,
     buyerUser,
     title,
     price,
-    sellerName,
-    sellerContact,
     buyerMessage,
   }) =>
     when(Auction.close({ auction }).responds({}))
       .where(
-        Auction._get({ auction }).is({ item: listing, owner: sellerAlias, highestBidder: buyerAlias, price }),
+        Auction._get({ auction }).is({ item: listing, highestBidder: buyerAlias, price }),
         compute(isBuyerPresent, { highestBidder: buyerAlias }, { hasWinner: true }),
-        Pseudonym._getUser({ context: listing, alias: sellerAlias }).is({ user: sellerUser }),
         Pseudonym._getUser({ context: listing, alias: buyerAlias }).is({ user: buyerUser }),
         Listing._get({ listing }).is({ title }),
-        whether(Profile._get({ user: sellerUser }).is({ name: sellerName, contact: sellerContact })),
-        compute(
-          formatBuyerNotification,
-          { title, sellerAlias, sellerUser, sellerName, sellerContact, price },
-          { message: buyerMessage },
-        ),
+        compute(formatBuyerNotification, { title, price }, { message: buyerMessage }),
       )
       .then(Notify.notify({ user: buyerUser, message: buyerMessage })),
+);
+
+export const NotifyOutbidOnBid = reaction(
+  ({
+    auction,
+    amount,
+    bidder,
+    outbid,
+    listing,
+    title,
+    outbidUser,
+    outbidMessage,
+  }) =>
+    when(Auction.bid({ auction, amount, bidder }).responds({ outbid }))
+      .where(
+        compute(isDifferentBidder, { newBidder: bidder, outbid }, { different: true }),
+        Auction._get({ auction }).is({ item: listing }),
+        Pseudonym._getUser({ context: listing, alias: outbid }).is({ user: outbidUser }),
+        Listing._get({ listing }).is({ title }),
+        compute(formatOutbidNotification, { title, amount, listing }, { message: outbidMessage }),
+      )
+      .then(Notify.notify({ user: outbidUser, message: outbidMessage })),
 );
 
 // ==========================================
@@ -402,11 +510,17 @@ export const composition = {
     CloseOnBuyout,
     SyncAuctionListingStatus,
   },
+  Settlement: {
+    ListSettlements,
+    UserSettlements,
+    RecordSettlementOnClose,
+  },
   Notifications: {
     ListNotifications,
     DismissNotification,
     UserNotifications,
     NotifySellerOnClose,
     NotifyBuyerOnClose,
+    NotifyOutbidOnBid,
   },
 };

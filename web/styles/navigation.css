@@ -272,6 +272,12 @@
   border: 1px solid #ebd9c3;
 }
 
+.notif-type-tag.outbid {
+  background: #fdf3e7;
+  color: #b35515;
+  border: 1px solid #f2ceaa;
+}
+
 .notif-item-name {
   font-size: 0.9rem;
   color: var(--text-main);

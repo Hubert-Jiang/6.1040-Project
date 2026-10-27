@@ -49,7 +49,7 @@ create (owner: Owner, item: Item, startPrice: Number, increment: Number, buyout?
     add a new auction with owner, item, price startPrice, increment, buyout, active true, and highestBidder None
     returns auction
 
-bid (bidder: Bidder, auction: Auction, amount: Number) : returns (auction: Auction)
+bid (bidder: Bidder, auction: Auction, amount: Number) : returns (auction: Auction, outbid?: Bidder)
   where auction not in auctions
   then
     refuses AUCTION_NOT_FOUND "There is no such auction."
@@ -64,9 +64,10 @@ bid (bidder: Bidder, auction: Auction, amount: Number) : returns (auction: Aucti
     refuses BID_TOO_LOW "Bid amount must meet the starting price or exceed the current price by at least the minimum increment."
   where true
   then
+    let outbid = auction.highestBidder
     set auction.price to amount
     set auction.highestBidder to bidder
-    returns auction
+    returns auction, outbid
 
 close (owner: Owner, auction: Auction) : returns (auction: Auction)
   where auction not in auctions

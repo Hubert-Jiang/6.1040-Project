@@ -188,6 +188,30 @@ export type BeaverBazaarWire = {
     };
     error: { error: AppWideError | "INVALID_INPUT" | "INVALID_PROFILE" | "UNKNOWN_SESSION" };
   };
+  "/settlements/list": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "settlements": {
+        "settlements": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyer"]>>;
+          "buyerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyerAlias"]>>;
+          "buyerContact": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyerContact"]>>;
+          "buyerName": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyerName"]>>;
+          "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["item"]>>;
+          "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["price"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["seller"]>>;
+          "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["sellerAlias"]>>;
+          "sellerContact": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["sellerContact"]>>;
+          "sellerName": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["sellerName"]>>;
+          "settlement": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["settlement"]>>;
+          "title": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["title"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
 };
 
 export type HttpAppWideError = never;
@@ -364,6 +388,30 @@ export type BeaverBazaarWireHttp = {
     };
     output: {
       "profile": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Profile"]["update"]>>, ["profile"]>>;
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/settlements/list": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Session"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "settlements": {
+        "settlements": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyer"]>>;
+          "buyerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyerAlias"]>>;
+          "buyerContact": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyerContact"]>>;
+          "buyerName": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["buyerName"]>>;
+          "item": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["item"]>>;
+          "price": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["price"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["seller"]>>;
+          "sellerAlias": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["sellerAlias"]>>;
+          "sellerContact": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["sellerContact"]>>;
+          "sellerName": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["sellerName"]>>;
+          "settlement": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["settlement"]>>;
+          "title": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Settlement"]["_forUser"]>>>, ["title"]>>;
+        }[];
+      };
     };
     error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };

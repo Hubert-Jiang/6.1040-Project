@@ -37,12 +37,28 @@ export const ListingDetailDrawer = defineComponent({
       { immediate: true },
     );
 
+    interface PendingAction {
+      type: "bid" | "buyout" | "close" | "cancel";
+      title: string;
+      message: string;
+      confirmLabel: string;
+      confirmButtonClass?: string;
+      execute: () => void;
+    }
+
+    const pendingConfirmation = ref<PendingAction | null>(null);
+
     function closeDrawer() {
+      pendingConfirmation.value = null;
       store.setSelectedListing(null);
     }
 
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && store.state.selectedListing) {
+        if (pendingConfirmation.value) {
+          pendingConfirmation.value = null;
+          return;
+        }
         closeDrawer();
       }
     }
@@ -62,24 +78,67 @@ export const ListingDetailDrawer = defineComponent({
     function onSubmitBid(e: Event) {
       e.preventDefault();
       if (!item.value) return;
-      if (customBid.value !== null && !isNaN(customBid.value) && customBid.value >= 0) {
-        store.submitBid(item.value.auction, item.value.listing, customBid.value);
+      const amount = customBid.value;
+      if (amount === null || isNaN(amount) || amount < minBid.value) {
+        store.setStatus(`Bid must be at least $${minBid.value}.`, "error");
+        return;
       }
+      pendingConfirmation.value = {
+        type: "bid",
+        title: "Confirm Your Bid",
+        message: `Are you sure you want to place a bid of $${amount} on "${item.value.title}"? Bids cannot be retracted once placed.`,
+        confirmLabel: `Place Bid ($${amount})`,
+        confirmButtonClass: "btn-primary",
+        execute: () => {
+          if (item.value) store.submitBid(item.value.auction, item.value.listing, amount);
+        },
+      };
     }
 
     function onBuyout() {
       if (!item.value || item.value.buyout === null) return;
-      store.submitBid(item.value.auction, item.value.listing, item.value.buyout);
+      const buyoutPrice = item.value.buyout;
+      pendingConfirmation.value = {
+        type: "buyout",
+        title: "Confirm Instant Buyout",
+        message: `Are you sure you want to buy out "${item.value.title}" immediately for $${buyoutPrice}? This will close the auction and finalize your purchase.`,
+        confirmLabel: `⚡ Buyout Now ($${buyoutPrice})`,
+        confirmButtonClass: "btn-buyout",
+        execute: () => {
+          if (item.value && item.value.buyout !== null) {
+            store.submitBid(item.value.auction, item.value.listing, item.value.buyout);
+          }
+        },
+      };
     }
 
     function onCloseAuction() {
       if (!item.value) return;
-      store.closeAuction(item.value.auction, item.value.listing);
+      const finalPrice = item.value.price;
+      pendingConfirmation.value = {
+        type: "close",
+        title: "Confirm Auction Finalization",
+        message: `Are you sure you want to end this auction now with the leading bidder for $${finalPrice}? The auction will close and settle immediately.`,
+        confirmLabel: `🏁 Finalize Auction ($${finalPrice})`,
+        confirmButtonClass: "btn-close-auction",
+        execute: () => {
+          if (item.value) store.closeAuction(item.value.auction, item.value.listing);
+        },
+      };
     }
 
     function onCancelAuction() {
       if (!item.value) return;
-      store.cancelAuction(item.value.auction, item.value.listing);
+      pendingConfirmation.value = {
+        type: "cancel",
+        title: "Confirm Listing Cancellation",
+        message: `Are you sure you want to cancel and delete "${item.value.title}"? This listing and unbid auction will be permanently deleted. This action cannot be undone.`,
+        confirmLabel: "Yes, Delete Listing",
+        confirmButtonClass: "btn-danger",
+        execute: () => {
+          if (item.value) store.cancelAuction(item.value.auction, item.value.listing);
+        },
+      };
     }
 
     return () => {
@@ -228,6 +287,45 @@ export const ListingDetailDrawer = defineComponent({
                 {!store.state.session ? (
                   <div class="form-help">
                     Sign in on the Account page to place bids or buy out this item.
+                  </div>
+                ) : pendingConfirmation.value ? (
+                  <div
+                    class="drawer-confirmation-card"
+                    role="alertdialog"
+                    aria-modal="true"
+                    aria-labelledby="confirm-dialog-title"
+                  >
+                    <div class="confirmation-header">
+                      <span class="confirmation-icon" aria-hidden="true">⚠️</span>
+                      <strong id="confirm-dialog-title" class="confirmation-title">
+                        {pendingConfirmation.value.title}
+                      </strong>
+                    </div>
+                    <p class="confirmation-message">
+                      {pendingConfirmation.value.message}
+                    </p>
+                    <div class="confirmation-actions-row">
+                      <button
+                        type="button"
+                        class="btn btn-cancel-confirm"
+                        onClick={() => {
+                          pendingConfirmation.value = null;
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        class={`btn ${pendingConfirmation.value.confirmButtonClass || "btn-primary"} btn-execute-confirm`}
+                        onClick={() => {
+                          const action = pendingConfirmation.value?.execute;
+                          pendingConfirmation.value = null;
+                          action?.();
+                        }}
+                      >
+                        {pendingConfirmation.value.confirmLabel}
+                      </button>
+                    </div>
                   </div>
                 ) : isSeller.value ? (
                   <div class="seller-controls-box">

@@ -40,4 +40,8 @@ instantiate Auctioning as Auction with
 instantiate Notifying as Notify with
   User is User
   Message is Message
+
+instantiate Settling as Settlement with
+  User is User
+  Item is Listing.Listing
 ```

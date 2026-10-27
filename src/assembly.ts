@@ -6,6 +6,7 @@ import { NotifyingConcept } from "./concepts/Notifying.ts";
 import { ProfilingConcept } from "./concepts/Profiling.ts";
 import { PseudonymingConcept } from "./concepts/Pseudonyming.ts";
 import { SessioningConcept } from "./concepts/Sessioning.ts";
+import { SettlingConcept } from "./concepts/Settling.ts";
 import { applicationConceptSet } from "./concepts.ts";
 import { db } from "./db.ts";
 
@@ -16,6 +17,7 @@ export interface ConceptOverrides {
   Pseudonym?: PseudonymingConcept;
   Auction?: AuctioningConcept;
   Notify?: NotifyingConcept;
+  Settlement?: SettlingConcept;
 }
 
 export function assembleApplication(overrides?: ConceptOverrides) {
@@ -28,6 +30,7 @@ export function assembleApplication(overrides?: ConceptOverrides) {
       Pseudonym: overrides?.Pseudonym ?? new PseudonymingConcept(db),
       Auction: overrides?.Auction ?? new AuctioningConcept(db),
       Notify: overrides?.Notify ?? new NotifyingConcept(db),
+      Settlement: overrides?.Settlement ?? new SettlingConcept(db),
     },
     composition: { BeaverBazaar: composition },
     // Print what went wrong. Otherwise a failure only shows up as INTERNAL_ERROR.

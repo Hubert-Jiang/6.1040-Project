@@ -1,6 +1,6 @@
 import { defineComponent } from "vue";
 import { store, type Page } from "../store.ts";
-import { parseSettlementNotification } from "../api.ts";
+import { parseNotification } from "../api.ts";
 
 export const HeaderBar = defineComponent({
   name: "HeaderBar",
@@ -26,6 +26,31 @@ export const HeaderBar = defineComponent({
     function goToInbox() {
       store.closeNotificationsMenu();
       store.setPage("inbox");
+    }
+
+    async function onViewListing(listingId: string | null) {
+      store.closeNotificationsMenu();
+      store.setPage("marketplace");
+
+      if (!listingId) {
+        store.setStatus("Listing reference not specified.", "info");
+        return;
+      }
+
+      // 1. Try finding in current marketplace feed
+      let target = store.state.listings.find((l) => l.listing === listingId);
+
+      // 2. If not found in memory, refresh feed to check if active
+      if (!target) {
+        await store.loadFeed(true);
+        target = store.state.listings.find((l) => l.listing === listingId);
+      }
+
+      if (target) {
+        store.setSelectedListing(target);
+      } else {
+        store.setStatus("This listing is no longer active or the auction has ended.", "info");
+      }
     }
 
     return () => (
@@ -73,7 +98,7 @@ export const HeaderBar = defineComponent({
                 <div id="notifications-dropdown" class="notifications-dropdown">
                   <div class="notifications-dropdown-header">
                     <div class="notifications-dropdown-header-title">
-                      <span>🔔 Settlement Inbox</span>
+                      <span>🔔 Notifications</span>
                       {store.state.notifications.length > 0 && (
                         <span class="notification-count">
                           {store.state.notifications.length} Unread
@@ -89,67 +114,66 @@ export const HeaderBar = defineComponent({
                       >
                         ↻
                       </button>
-                      <button
-                        type="button"
-                        class="btn btn-xs"
-                        title="Open Full Inbox Page"
-                        onClick={goToInbox}
-                      >
-                        Full Page →
-                      </button>
                     </div>
                   </div>
 
                   <div class="notifications-dropdown-body">
                     {!store.state.session ? (
                       <div class="empty-state" style={{ padding: "1.5rem 0.5rem" }}>
-                        <p>Sign in to view your settlement notifications.</p>
+                        <p>Sign in to view your notifications.</p>
                       </div>
                     ) : store.state.notifications.length === 0 ? (
                       <div class="empty-state" style={{ padding: "1.5rem 0.5rem" }}>
                         <p>No new notifications.</p>
                         <p class="form-help">
-                          When an auction closes, private contact exchange details appear here.
+                          When you are outbid or an auction closes, notifications appear here.
                         </p>
                       </div>
                     ) : (
                       <div class="notification-list">
                         {store.state.notifications.map((n) => {
-                          const parsed = parseSettlementNotification(n.message);
+                          const parsed = parseNotification(n.message);
+                          const isOutbid = parsed.type === "outbid";
+                          const isWon = parsed.type === "settlement_won";
+                          const isSold = parsed.type === "settlement_sold";
+
                           return (
                             <div key={n.notification} class="notif-dropdown-item">
                               <div class="notif-dropdown-header-row">
-                                <span class={`notif-type-tag ${parsed.type === "won" ? "won" : "sold"}`}>
-                                  {parsed.type === "won" ? "🏆 Won" : parsed.type === "sold" ? "🏁 Sold" : "🔔 Update"}
+                                <span class={`notif-type-tag ${isOutbid ? "outbid" : isWon ? "won" : isSold ? "sold" : "general"}`}>
+                                  {isOutbid ? "⚠️ Outbid" : isWon ? "🏆 Won" : isSold ? "🏁 Sold" : "🔔 Notice"}
                                 </span>
                                 <strong class="notif-item-name">
-                                  "{parsed.item}"
+                                  "{parsed.title}"
                                   {parsed.price !== null && ` ($${parsed.price})`}
                                 </strong>
                               </div>
                               <div class="notif-dropdown-msg">
-                                {parsed.alias ? (
-                                  <>
-                                    <span>Counterparty: </span>
-                                    <strong class="pseudonym-tag">{parsed.alias}</strong>
-                                    {parsed.identity && <span style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}> ({parsed.identity})</span>}
-                                  </>
-                                ) : (
-                                  <span>{n.message}</span>
-                                )}
+                                <span>{parsed.displayMessage}</span>
                               </div>
                               <div class="notif-dropdown-footer">
-                                <button
-                                  type="button"
-                                  class="btn-link-action"
-                                  onClick={goToInbox}
-                                >
-                                  View Details →
-                                </button>
+                                {isOutbid ? (
+                                  <button
+                                    type="button"
+                                    class="btn-link-action"
+                                    onClick={() => onViewListing(parsed.listingId)}
+                                  >
+                                    View Listing →
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    class="btn-link-action"
+                                    onClick={goToInbox}
+                                  >
+                                    View Settlement Log →
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   class="btn btn-xs btn-dismiss"
                                   onClick={() => dismiss(n.notification)}
+                                  title="Dismiss notification"
                                 >
                                   Dismiss
                                 </button>
@@ -194,9 +218,6 @@ export const HeaderBar = defineComponent({
           >
             <span class="nav-tab-icon">📥</span>
             <span>Settlement Inbox</span>
-            {store.state.notifications.length > 0 && (
-              <span class="nav-tab-badge">{store.state.notifications.length}</span>
-            )}
           </button>
 
           <button

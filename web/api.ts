@@ -49,6 +49,94 @@ export interface NotificationItem {
   message: string;
 }
 
+export interface SettlementItem {
+  settlement: string;
+  buyer: string;
+  seller: string;
+  item: string;
+  title: string;
+  price: number;
+  buyerAlias: string;
+  sellerAlias: string;
+  buyerName: string;
+  buyerContact: string;
+  sellerName: string;
+  sellerContact: string;
+}
+
+export interface ParsedNotification {
+  type: "outbid" | "settlement_won" | "settlement_sold" | "general";
+  title: string;
+  price: number | null;
+  listingId: string | null;
+  displayMessage: string;
+  raw: string;
+}
+
+export function parseNotification(msg: string): ParsedNotification {
+  // Strip internal listing ID tag from user-visible display message
+  const displayMessage = msg.replace(/\s*\(listing:[^)]+\)/g, "").trim();
+
+  if (msg.startsWith("You were outbid on \"")) {
+    const titleMatch = msg.match(/outbid on "([^"]+)"/);
+    const title = titleMatch ? titleMatch[1] : "Auction Item";
+    const priceMatch = msg.match(/high bid is \$([0-9]+(?:\.[0-9]+)?)/);
+    const price = priceMatch ? Number(priceMatch[1]) : null;
+    const listingMatch = msg.match(/\(listing:([^)]+)\)/);
+    const listingId = listingMatch ? listingMatch[1] : null;
+
+    return {
+      type: "outbid",
+      title,
+      price,
+      listingId,
+      displayMessage,
+      raw: msg,
+    };
+  }
+
+  if (msg.startsWith("You won the auction for \"")) {
+    const titleMatch = msg.match(/auction for "([^"]+)"/);
+    const title = titleMatch ? titleMatch[1] : "Auction Item";
+    const priceMatch = msg.match(/(?:for|\bat)\s*\$([0-9]+(?:\.[0-9]+)?)/);
+    const price = priceMatch ? Number(priceMatch[1]) : null;
+
+    return {
+      type: "settlement_won",
+      title,
+      price,
+      listingId: null,
+      displayMessage,
+      raw: msg,
+    };
+  }
+
+  if (msg.startsWith("Your auction for \"")) {
+    const titleMatch = msg.match(/auction for "([^"]+)"/);
+    const title = titleMatch ? titleMatch[1] : "Auction Item";
+    const priceMatch = msg.match(/(?:for|\bat)\s*\$([0-9]+(?:\.[0-9]+)?)/);
+    const price = priceMatch ? Number(priceMatch[1]) : null;
+
+    return {
+      type: "settlement_sold",
+      title,
+      price,
+      listingId: null,
+      displayMessage,
+      raw: msg,
+    };
+  }
+
+  return {
+    type: "general",
+    title: "Notification",
+    price: null,
+    listingId: null,
+    displayMessage,
+    raw: msg,
+  };
+}
+
 export interface ParsedSettlement {
   type: "won" | "sold" | "general";
   item: string;

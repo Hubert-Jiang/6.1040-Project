@@ -1,26 +1,21 @@
 import { defineComponent } from "vue";
 import { store } from "../store.ts";
-import { parseSettlementNotification } from "../api.ts";
 
 export const SettlementInbox = defineComponent({
   name: "SettlementInbox",
   setup() {
-    function dismiss(notification: string) {
-      store.dismissNotification(notification);
-    }
-
     function onRefresh() {
-      store.loadNotifications();
+      store.loadSettlements();
     }
 
     return () => (
       <section class="card">
         <div class="card-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span>📥 Private Settlement Inbox</span>
-            {store.state.session && store.state.notifications.length > 0 && (
+            <span>📥 Private Settlement Log</span>
+            {store.state.session && store.state.settlements.length > 0 && (
               <span class="notification-count">
-                {store.state.notifications.length} Unread
+                {store.state.settlements.length} Record{store.state.settlements.length === 1 ? "" : "s"}
               </span>
             )}
           </div>
@@ -31,69 +26,66 @@ export const SettlementInbox = defineComponent({
           )}
         </div>
         <p class="card-subtitle">
-          When an auction ends, BeaverBazaar resolves both parties' pseudonyms and privately exchanges contact information.
+          Permanent readonly log of all your concluded auction transactions. When an auction ends, BeaverBazaar resolves both parties' pseudonyms and records private contact information here.
         </p>
 
         {!store.state.session ? (
           <div class="empty-state">
-            <p>Please sign in on the Profile & Account page to view your private settlement notifications.</p>
+            <p>Please sign in on the Profile & Account page to view your settlement log.</p>
           </div>
-        ) : store.state.notifications.length === 0 ? (
+        ) : store.state.settlements.length === 0 ? (
           <div class="empty-state">
             <div class="empty-state-icon">📫</div>
-            <p>Your settlement inbox is empty.</p>
+            <p>Your settlement log is empty.</p>
             <p class="form-help">
-              When an auction you created closes with bids, or an auction you won concludes, private settlement details with your counterparty's contact information will be dispatched here.
+              When an auction you created concludes with bids, or an auction you won ends, permanent settlement records with your counterparty's contact information will be logged here.
             </p>
           </div>
         ) : (
           <div class="settlement-list">
-            {store.state.notifications.map((n) => {
-              const parsed = parseSettlementNotification(n.message);
+            {store.state.settlements.map((s) => {
+              const isBuyer = s.buyer === store.state.user;
+              const counterpartyAlias = isBuyer ? s.sellerAlias : s.buyerAlias;
+              const counterpartyName = isBuyer
+                ? (s.sellerName ? `${s.sellerName} (${s.seller})` : s.seller)
+                : (s.buyerName ? `${s.buyerName} (${s.buyer})` : s.buyer);
+              const counterpartyContact = isBuyer ? s.sellerContact : s.buyerContact;
+
               return (
-                <div key={n.notification} class="settlement-card">
+                <div key={s.settlement} class="settlement-card">
                   <div class="settlement-header">
                     <div class="settlement-title-row">
-                      <span class={parsed.type === "won" ? "settlement-badge-won" : "settlement-badge-sold"}>
-                        {parsed.type === "won" ? "🏆 Auction Won" : parsed.type === "sold" ? "🏁 Auction Concluded" : "🔔 Notice"}
+                      <span class={isBuyer ? "settlement-badge-won" : "settlement-badge-sold"}>
+                        {isBuyer ? "🏆 Auction Won" : "🏁 Auction Sold"}
                       </span>
                       <h3 class="settlement-item-name">
-                        "{parsed.item}"
+                        "{s.title}"
                       </h3>
                     </div>
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-dismiss"
-                      onClick={() => dismiss(n.notification)}
-                    >
-                      Dismiss
-                    </button>
                   </div>
 
                   <div class="settlement-details-grid">
-                    {parsed.price !== null && (
-                      <div class="settlement-field">
-                        <span class="settlement-label">Concluded Price</span>
-                        <strong class="settlement-value settlement-price-val">
-                          ${parsed.price}
-                        </strong>
-                      </div>
-                    )}
+                    <div class="settlement-field">
+                      <span class="settlement-label">Concluded Price</span>
+                      <strong class="settlement-value settlement-price-val">
+                        ${s.price}
+                      </strong>
+                    </div>
 
                     <div class="settlement-field">
                       <span class="settlement-label">Counterparty Alias</span>
-                      <strong class="pseudonym-tag settlement-value">{parsed.alias || "Anonymous"}</strong>
+                      <strong class="pseudonym-tag settlement-value">{counterpartyAlias || "Anonymous"}</strong>
                     </div>
 
                     <div class="settlement-field">
                       <span class="settlement-label">Verified MIT Identity</span>
-                      <strong class="settlement-value">{parsed.identity || "Unknown"}</strong>
+                      <strong class="settlement-value">{counterpartyName || "Unknown"}</strong>
                     </div>
 
                     <div class="settlement-field">
                       <span class="settlement-label">Preferred Contact Method</span>
                       <strong class="settlement-value contact-highlight">
-                        {parsed.contact || "Contact not specified"}
+                        {counterpartyContact || "Contact not specified"}
                       </strong>
                     </div>
                   </div>

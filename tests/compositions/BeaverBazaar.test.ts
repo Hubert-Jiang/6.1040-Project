@@ -9,6 +9,7 @@ import { NotifyingConcept } from "../../src/concepts/Notifying.ts";
 import { ProfilingConcept } from "../../src/concepts/Profiling.ts";
 import { PseudonymingConcept } from "../../src/concepts/Pseudonyming.ts";
 import { SessioningConcept } from "../../src/concepts/Sessioning.ts";
+import { SettlingConcept } from "../../src/concepts/Settling.ts";
 
 /**
  * Builds an isolated in-memory instance of BeaverBazaar with its gateway and typed local client.
@@ -21,6 +22,7 @@ function createTestApp() {
     Pseudonym: new PseudonymingConcept(),
     Auction: new AuctioningConcept(),
     Notify: new NotifyingConcept(),
+    Settlement: new SettlingConcept(),
   });
   const gateway = createGateway<BeaverBazaarWire>({ application });
   const client = createLocalClient<BeaverBazaarWire>({ invoker: gateway });
@@ -310,6 +312,29 @@ describe("BeaverBazaar Composition & Domain Partitions", () => {
       const alicePreNotifications = await client["/notifications/list"]({ session: aliceSession });
       if ("error" in alicePreNotifications) throw new Error(String(alicePreNotifications.error));
       expect(alicePreNotifications.notifications.notifications).toHaveLength(0);
+
+      // 3f. Outbid notification partition:
+      // Charlie logs in and places a higher bid of $70
+      const charlieAuth = await client["/auth/login"]({ username: "charlie" });
+      if ("error" in charlieAuth) throw new Error(String(charlieAuth.error));
+      const charlieSession = charlieAuth.session;
+
+      const charlieBid = await client["/auctions/bid"]({
+        session: charlieSession,
+        auction,
+        item: listing,
+        amount: 70,
+      });
+      if ("error" in charlieBid) throw new Error(String(charlieBid.error));
+
+      // Bob (who held the previous high bid of $65) receives an outbid notification!
+      const bobOutbidNotifs = await client["/notifications/list"]({ session: bobSession });
+      if ("error" in bobOutbidNotifs) throw new Error(String(bobOutbidNotifs.error));
+      expect(bobOutbidNotifs.notifications.notifications).toHaveLength(1);
+      const bobNotif = bobOutbidNotifs.notifications.notifications[0];
+      expect(bobNotif.message).toContain("You were outbid on \"Vintage Fuji Bicycle\"");
+      expect(bobNotif.message).toContain("Current high bid is $70");
+      expect(bobNotif.message).toContain(`(listing:${listing})`);
     });
   });
 
@@ -406,27 +431,44 @@ describe("BeaverBazaar Composition & Domain Partitions", () => {
       });
       if ("error" in buyoutBid) throw new Error(String(buyoutBid.error));
 
-      // 5a. Alice's notification contains Bob's alias, actual identity, and contact information
+      // 5a. Settlements are recorded in the permanent, readonly Settlement Log
+      const aliceSettlements = await client["/settlements/list"]({ session: aliceSession });
+      if ("error" in aliceSettlements) throw new Error(String(aliceSettlements.error));
+      expect(aliceSettlements.settlements.settlements).toHaveLength(1);
+      const aliceSet = aliceSettlements.settlements.settlements[0];
+      expect(aliceSet.title).toBe("Vintage Fuji Bicycle");
+      expect(aliceSet.price).toBe(75);
+      expect(aliceSet.buyer).toBe("bob@mit.edu");
+      expect(aliceSet.buyerName).toBe("Bob Smith");
+      expect(aliceSet.buyerContact).toBe("bob@mit.edu");
+      expect(aliceSet.seller).toBe("alice@mit.edu");
+
+      const bobSettlements = await client["/settlements/list"]({ session: bobSession });
+      if ("error" in bobSettlements) throw new Error(String(bobSettlements.error));
+      expect(bobSettlements.settlements.settlements).toHaveLength(1);
+      const bobSet = bobSettlements.settlements.settlements[0];
+      expect(bobSet.title).toBe("Vintage Fuji Bicycle");
+      expect(bobSet.price).toBe(75);
+      expect(bobSet.seller).toBe("alice@mit.edu");
+      expect(bobSet.sellerName).toBe("Alice Doe");
+      expect(bobSet.sellerContact).toBe("617-555-0101");
+
+      // 5b. Notifications reference settlement details
       const aliceNotifications = await client["/notifications/list"]({ session: aliceSession });
       if ("error" in aliceNotifications) throw new Error(String(aliceNotifications.error));
       expect(aliceNotifications.notifications.notifications).toHaveLength(1);
       const aliceNotif = aliceNotifications.notifications.notifications[0];
       expect(aliceNotif.message).toContain("Vintage Fuji Bicycle");
-      expect(aliceNotif.message).toContain("Bob Smith");
-      expect(aliceNotif.message).toContain("bob@mit.edu");
-      expect(aliceNotif.message).toContain("Counterparty: alias");
+      expect(aliceNotif.message).toContain("Settlement Log");
 
-      // 5b. Bob's notification contains Alice's alias, actual identity, and contact information
       const bobNotifications = await client["/notifications/list"]({ session: bobSession });
       if ("error" in bobNotifications) throw new Error(String(bobNotifications.error));
       expect(bobNotifications.notifications.notifications).toHaveLength(1);
       const bobNotif = bobNotifications.notifications.notifications[0];
       expect(bobNotif.message).toContain("Vintage Fuji Bicycle");
-      expect(bobNotif.message).toContain("Alice Doe");
-      expect(bobNotif.message).toContain("617-555-0101");
-      expect(bobNotif.message).toContain("Counterparty: alias");
+      expect(bobNotif.message).toContain("Settlement Log");
 
-      // 5c. Notification dismissal partition
+      // 5c. Notification dismissal does NOT delete the settlement
       const dismissRes = await client["/notifications/dismiss"]({
         session: aliceSession,
         notification: aliceNotif.notification,
@@ -434,11 +476,17 @@ describe("BeaverBazaar Composition & Domain Partitions", () => {
       if ("error" in dismissRes) throw new Error(String(dismissRes.error));
       expect(dismissRes.notification).toBe(aliceNotif.notification);
 
+      // Notification is dismissed
       const aliceCleared = await client["/notifications/list"]({ session: aliceSession });
       if ("error" in aliceCleared) throw new Error(String(aliceCleared.error));
       expect(aliceCleared.notifications.notifications).toHaveLength(0);
 
-      // Bob's inbox remains unaffected
+      // BUT Alice's settlement log remains permanently preserved!
+      const aliceSettlementsRetained = await client["/settlements/list"]({ session: aliceSession });
+      if ("error" in aliceSettlementsRetained) throw new Error(String(aliceSettlementsRetained.error));
+      expect(aliceSettlementsRetained.settlements.settlements).toHaveLength(1);
+
+      // Bob's notification remains unaffected
       const bobRetained = await client["/notifications/list"]({ session: bobSession });
       if ("error" in bobRetained) throw new Error(String(bobRetained.error));
       expect(bobRetained.notifications.notifications).toHaveLength(1);
@@ -532,16 +580,29 @@ describe("BeaverBazaar Composition & Domain Partitions", () => {
       if ("error" in feedAfter) throw new Error(String(feedAfter.error));
       expect(feedAfter.feed.listings).toHaveLength(0);
 
-      // Verify bilateral notifications received by both Alice and Bob
+      // Verify bilateral notifications received by both Alice and Bob referencing Settlement Log
       const aliceNotifs = await client["/notifications/list"]({ session: aliceSession });
       if ("error" in aliceNotifs) throw new Error(String(aliceNotifs.error));
       expect(aliceNotifs.notifications.notifications).toHaveLength(1);
-      expect(aliceNotifs.notifications.notifications[0].message).toContain("Bob Smith");
+      expect(aliceNotifs.notifications.notifications[0].message).toContain("Settlement Log");
 
       const bobNotifs = await client["/notifications/list"]({ session: bobSession });
       if ("error" in bobNotifs) throw new Error(String(bobNotifs.error));
       expect(bobNotifs.notifications.notifications).toHaveLength(1);
-      expect(bobNotifs.notifications.notifications[0].message).toContain("Alice Doe");
+      expect(bobNotifs.notifications.notifications[0].message).toContain("Settlement Log");
+
+      // Verify permanent bilateral settlements recorded in Settlement Log
+      const aliceSettlements = await client["/settlements/list"]({ session: aliceSession });
+      if ("error" in aliceSettlements) throw new Error(String(aliceSettlements.error));
+      expect(aliceSettlements.settlements.settlements).toHaveLength(1);
+      expect(aliceSettlements.settlements.settlements[0].buyerName).toBe("Bob Smith");
+      expect(aliceSettlements.settlements.settlements[0].buyerContact).toBe("bob@mit.edu");
+
+      const bobSettlements = await client["/settlements/list"]({ session: bobSession });
+      if ("error" in bobSettlements) throw new Error(String(bobSettlements.error));
+      expect(bobSettlements.settlements.settlements).toHaveLength(1);
+      expect(bobSettlements.settlements.settlements[0].sellerName).toBe("Alice Doe");
+      expect(bobSettlements.settlements.settlements[0].sellerContact).toBe("617-555-0101");
     });
   });
 });

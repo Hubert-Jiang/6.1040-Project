@@ -2,6 +2,7 @@ import { reactive } from "vue";
 import { client, PRESETS } from "../api.ts";
 import { setStatus, setLoading } from "./ui.ts";
 import { loadNotifications, clearNotifications } from "./notifications.ts";
+import { loadSettlements, clearSettlements } from "./settlements.ts";
 import { loadFeed, clearMarketplace } from "./marketplace.ts";
 
 export interface AuthState {
@@ -113,6 +114,7 @@ export async function login(username: string): Promise<void> {
 
     await loadProfile();
     await loadNotifications(res.session);
+    await loadSettlements(res.session);
     setStatus(`Signed in as ${authState.user}`, "success");
     await loadFeed(res.session);
   } catch (err) {
@@ -152,6 +154,7 @@ export async function loginAsAlice(): Promise<void> {
 
     await loadProfile();
     await loadNotifications(res.session);
+    await loadSettlements(res.session);
     setStatus("Signed in as Alice (alice@mit.edu)", "success");
     await loadFeed(res.session);
   } catch (err) {
@@ -191,6 +194,7 @@ export async function loginAsBob(): Promise<void> {
 
     await loadProfile();
     await loadNotifications(res.session);
+    await loadSettlements(res.session);
     setStatus("Signed in as Bob (bob@mit.edu)", "success");
     await loadFeed(res.session);
   } catch (err) {
@@ -234,6 +238,7 @@ export async function logout(): Promise<void> {
   authState.name = "";
   authState.contact = "";
   clearNotifications();
+  clearSettlements();
   clearMarketplace();
   setStatus("Signed out successfully. Touchstone session closed.", "info");
 }
