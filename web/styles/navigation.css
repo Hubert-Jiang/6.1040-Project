@@ -380,10 +380,16 @@
     font-size: 0.85rem;
   }
 
+  .notifications-menu-wrapper {
+    position: static;
+  }
+
   .notifications-dropdown {
     position: absolute;
     top: calc(100% + 0.5rem);
     right: 0;
+    left: 0;
+    margin: 0 auto;
     width: calc(100vw - 1.5rem);
     max-width: 380px;
   }
