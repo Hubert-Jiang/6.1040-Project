@@ -86,11 +86,11 @@ The application has undergone several major architectural refinements from the i
 Following user feedback during the P3 milestone, several UX and interface improvements were completed:
 
 ```carousel
-![Marketplace Feed & Anti-Self-Bidding](assets/listings.png)
+![Marketplace Feed & Anti-Self-Bidding](assets/P1/listings.png)
 <!-- slide -->
-![Instant Buyout & Item Creation](assets/create_listing.png)
+![Instant Buyout & Item Creation](assets/P1/create_listing.png)
 <!-- slide -->
-![Bilateral Settlement Disclosure](assets/listing_detail.png)
+![Bilateral Settlement Disclosure](assets/P1/listing_detail.png)
 ```
 
 1. **Anti-Self-Bidding Protection**:
