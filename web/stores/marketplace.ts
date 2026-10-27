@@ -240,7 +240,20 @@ export async function submitBid(
       return;
     }
 
-    setStatus(`Successfully submitted bid of $${amount}!`, "success");
+    const isBuyout =
+      currentItem?.buyout !== null &&
+      currentItem?.buyout !== undefined &&
+      amount >= currentItem.buyout;
+
+    if (isBuyout) {
+      setSelectedListing(null);
+      setStatus(
+        `Instant buyout successful for $${amount}! The auction has concluded and settlement details have been recorded.`,
+        "success",
+      );
+    } else {
+      setStatus(`Successfully submitted bid of $${amount}!`, "success");
+    }
     await loadFeed(session);
     if (onRefresh) await onRefresh();
   } catch (err) {

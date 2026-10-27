@@ -14,11 +14,13 @@ export interface SettlementDoc {
   buyerContact?: string;
   sellerName?: string;
   sellerContact?: string;
+  settledAt: number;
 }
 
 export class SettlingConcept {
   private readonly collection?: Collection<SettlementDoc>;
   private readonly memory = new Map<string, SettlementDoc>();
+  private counter = 0;
 
   constructor(
     db?: Db,
@@ -68,6 +70,7 @@ export class SettlingConcept {
     }
 
     const settlement = this.freshId();
+    const settledAt = Date.now() * 1000 + (this.counter++ % 1000);
     const doc: SettlementDoc = {
       _id: settlement,
       settlement,
@@ -82,6 +85,7 @@ export class SettlingConcept {
       buyerContact: buyerContact ? buyerContact.trim().slice(0, 100) : undefined,
       sellerName: sellerName ? sellerName.trim().slice(0, 80) : undefined,
       sellerContact: sellerContact ? sellerContact.trim().slice(0, 100) : undefined,
+      settledAt,
     };
 
     if (this.collection) {
@@ -124,12 +128,12 @@ export class SettlingConcept {
         .find({
           $or: [{ buyer: cleanUser }, { seller: cleanUser }],
         })
-        .sort({ _id: 1 })
+        .sort({ settledAt: -1, _id: -1 })
         .toArray();
     } else {
       docs = Array.from(this.memory.values())
         .filter((d) => d.buyer === cleanUser || d.seller === cleanUser)
-        .sort((a, b) => a._id.localeCompare(b._id));
+        .sort((a, b) => (b.settledAt ?? 0) - (a.settledAt ?? 0) || b._id.localeCompare(a._id));
     }
 
     return docs.map((d) => ({

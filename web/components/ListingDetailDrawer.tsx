@@ -106,7 +106,11 @@ export const ListingDetailDrawer = defineComponent({
         confirmButtonClass: "btn-buyout",
         execute: () => {
           if (item.value && item.value.buyout !== null) {
-            store.submitBid(item.value.auction, item.value.listing, item.value.buyout);
+            const auctionId = item.value.auction;
+            const listingId = item.value.listing;
+            const buyout = item.value.buyout;
+            closeDrawer();
+            store.submitBid(auctionId, listingId, buyout);
           }
         },
       };
@@ -122,7 +126,12 @@ export const ListingDetailDrawer = defineComponent({
         confirmLabel: `🏁 Finalize Auction ($${finalPrice})`,
         confirmButtonClass: "btn-close-auction",
         execute: () => {
-          if (item.value) store.closeAuction(item.value.auction, item.value.listing);
+          if (item.value) {
+            const auctionId = item.value.auction;
+            const listingId = item.value.listing;
+            closeDrawer();
+            store.closeAuction(auctionId, listingId);
+          }
         },
       };
     }
@@ -136,7 +145,12 @@ export const ListingDetailDrawer = defineComponent({
         confirmLabel: "Yes, Delete Listing",
         confirmButtonClass: "btn-danger",
         execute: () => {
-          if (item.value) store.cancelAuction(item.value.auction, item.value.listing);
+          if (item.value) {
+            const auctionId = item.value.auction;
+            const listingId = item.value.listing;
+            closeDrawer();
+            store.cancelAuction(auctionId, listingId);
+          }
         },
       };
     }

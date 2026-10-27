@@ -58,6 +58,9 @@ describe("SettlingConcept", () => {
     // Partition: _forUser where user is both buyer (in s2) and seller (in s1)
     const aliceSettlements = await settling._forUser({ user: "alice" });
     expect(aliceSettlements).toHaveLength(2);
+    // Reverse chronological order: s2 (recorded second) must appear before s1 (recorded first)
+    expect(aliceSettlements[0].settlement).toBe(s2);
+    expect(aliceSettlements[1].settlement).toBe(s1);
     expect(aliceSettlements.map((s) => s.settlement)).toEqual(expect.arrayContaining([s1, s2]));
     const titles = aliceSettlements.map((s) => s.title);
     expect(titles).toContain("Vintage Road Bike");
@@ -127,5 +130,47 @@ describe("SettlingConcept", () => {
         sellerAlias: "a",
       }),
     ).rejects.toThrow("Invalid settlement price.");
+  });
+
+  test("reverse chronological ordering: latest settlements appear at the top", async () => {
+    const settling = new SettlingConcept();
+    const user = "david";
+
+    const { settlement: id1 } = await settling.record({
+      buyer: user,
+      seller: "seller-1",
+      item: "item-1",
+      title: "First Item",
+      price: 10,
+      buyerAlias: "david-1",
+      sellerAlias: "seller-1",
+    });
+    const { settlement: id2 } = await settling.record({
+      buyer: user,
+      seller: "seller-2",
+      item: "item-2",
+      title: "Second Item",
+      price: 20,
+      buyerAlias: "david-2",
+      sellerAlias: "seller-2",
+    });
+    const { settlement: id3 } = await settling.record({
+      buyer: user,
+      seller: "seller-3",
+      item: "item-3",
+      title: "Third Item",
+      price: 30,
+      buyerAlias: "david-3",
+      sellerAlias: "seller-3",
+    });
+
+    const results = await settling._forUser({ user });
+    expect(results).toHaveLength(3);
+    expect(results.map((s) => s.settlement)).toEqual([id3, id2, id1]);
+    expect(results.map((s) => s.title)).toEqual([
+      "Third Item",
+      "Second Item",
+      "First Item",
+    ]);
   });
 });
