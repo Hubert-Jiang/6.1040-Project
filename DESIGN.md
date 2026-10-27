@@ -3,7 +3,8 @@
 **BeaverBazaar** is an anonymous peer-to-peer auction marketplace tailored for the MIT community, designed to replace chaotic dormspam email threads and spreadsheets with fair, synchronized, and privacy-preserving auctions.
 
 - **Deployed Application**: [https://beaverbazaar.mit-sdg.dev](https://beaverbazaar.mit-sdg.dev) *(Local: `http://127.0.0.1:8080`)*
-- **Demo Video**: [P4 Code-Complete Demo](https://youtu.be/PPSDaQ8sFDY)
+- **P3 Demo Video**: [P3 Beta Demo](https://youtu.be/PPSDaQ8sFDY)
+- **P4 Demo Video**: [P4 Code-Complete Demo](https://youtu.be/siV2iYF6g9s)
 - **Visual Design Study**: [Slide Presentation](https://docs.google.com/presentation/d/1lUvhIHo5sWtdN6N_uokCQdJ0MAK1Sp8GE7qkBk96m_0/edit?usp=sharing)
 - **Authoritative Specifications**: [design/compositions/BeaverBazaar.md](design/compositions/BeaverBazaar.md) & [generated/beaverbazaar.md](generated/beaverbazaar.md)
 
