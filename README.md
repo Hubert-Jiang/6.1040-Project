@@ -13,10 +13,11 @@
 - **Concept Specifications**:
   - [`Auctioning`](design/concepts/Auctioning.md) — Incremental bidding, buyout thresholds, and status progression.
   - [`Listing`](design/concepts/Listing.md) — Public item listings and seller lifecycle management.
-  - [`Notifying`](design/concepts/Notifying.md) — Asynchronous delivery of private counterparty disclosures.
+  - [`Notifying`](design/concepts/Notifying.md) — Asynchronous delivery of status events and outbid notices.
   - [`Profiling`](design/concepts/Profiling.md) — Out-of-band private contact information storage.
   - [`Pseudonyming`](design/concepts/Pseudonyming.md) — Bijective, contextual alias generation scoped per listing.
   - [`Sessioning`](design/concepts/Sessioning.md) — Opaque authenticated session tokens for Touchstone users.
+  - [`Settling`](design/concepts/Settling.md) — Immutable, readonly log of concluded transactions between buyers and sellers.
   - [`Application Types`](design/types.md) — Concept type bindings and instance mappings.
   - [`Composition Specification`](design/compositions/BeaverBazaar.md) — Authoritative composition, reactions, endpoints, and formers.
   - [`Assembled Read-Back`](generated/beaverbazaar.md) — Sync-engine read-back manifest.
@@ -35,16 +36,19 @@ BeaverBazaar is engineered using strict **Concept Design** principles via `@mit-
 | **`Pseudonyming`** | Provides contextual, bijective pseudonym mappings per listing. | `Pseudonyms(context, user, alias)` |
 | **`Auctioning`** | Governs competitive bidding, minimum increments, and buyouts under aliases. | `Auctions(owner, item, price, increment, active, buyout, highestBidder)` |
 | **`Notifying`** | Maintains inbox message queues for asynchronous status events. | `Notifications(user, message)` |
+| **`Settling`** | Preserves permanent, readonly settlement records of concluded transactions. | `Settlements(buyer, seller, item, title, price, buyerAlias, sellerAlias, buyerName, buyerContact, sellerName, sellerContact, settledAt)` |
 
 ### Synchronization Reactions
-Cross-concept coordination is handled entirely through four non-invasive sync-engine reactions:
+Cross-concept coordination is handled entirely through six non-invasive sync-engine reactions:
 1. **`CloseOnBuyout`**: Automatically closes an auction when a submitted bid meets or exceeds the instant buyout price.
 2. **`SyncAuctionListingStatus`**: Deactivates the public `Listing` as soon as its corresponding `Auction` closes, withdrawing it from the active feed.
-3. **`NotifySellerOnClose`**: Resolves the winning buyer's alias back to their real student identity and dispatches a private settlement notification to the seller with contact details and final price.
-4. **`NotifyBuyerOnClose`**: Resolves the seller's alias back to their real student identity and dispatches a private settlement notification to the buyer with contact details and final price.
+3. **`RecordSettlementOnClose`**: Records an immutable bilateral `Settlement` between buyer and seller with agreed terms and registered contact details when an auction closes.
+4. **`NotifySellerOnClose`**: Dispatches a private notification to the seller informing them of the sale and referencing the Settlement Log.
+5. **`NotifyBuyerOnClose`**: Dispatches a private notification to the winning buyer informing them of their win and referencing the Settlement Log.
+6. **`NotifyOutbidOnBid`**: Resolves the previous leading bidder upon a new higher bid and delivers an outbid notification with the listing deep-link.
 
 ### Access Control & Privacy Guarantees
-* **Session Enforcement**: All private endpoints (`/profile/*`, `/listings/create`, `/auctions/*`, `/notifications/*`) require an active session token validated through `Sessioning.current({ session })`.
+* **Session Enforcement**: All private endpoints (`/profile/*`, `/listings/create`, `/auctions/*`, `/notifications/*`, `/settlements/*`) require an active session token validated through `Sessioning.current({ session })`.
 * **Zero Identity Leakage**: Bidders and sellers are masked behind unique pseudonyms scoped to each listing context. Public feeds (`/marketplace/feed` and `/listings/get`) never expose actual student identities (`User`), emails, or phone numbers.
 * **Anti-Self-Bidding**: `Auctioning.bid` rejects bids where `auction.owner == bidder` with `OWNER_CANNOT_BID`. Because aliases are generated bijectively per listing, sellers cannot bid on their own items.
 * **Ownership Verification**: Auctions can only be closed or deleted by their verified seller (`NOT_OWNER`). Deleting an unbid auction atomically cleans up its associated `Listing`.
@@ -105,7 +109,7 @@ The project includes an automated test suite verifying concept principles, actio
 ```sh
 bun test
 ```
-*Current test suite: **26 tests passing across 8 files** (`tests/concepts/*.test.ts`, `tests/compositions/BeaverBazaar.test.ts`, `tests/auth/PetrockOIDC.test.ts`). Execution results are logged in [tests/test-output.txt](tests/test-output.txt).*
+*Current test suite: **65 tests passing across 11 files** (`tests/concepts/*.test.ts`, `tests/compositions/BeaverBazaar.test.ts`, `tests/security/SecurityVulnerabilities.test.ts`, `tests/web/marketplaceStore.test.ts`, `tests/auth/PetrockOIDC.test.ts`). Execution results are logged in [tests/test-output.txt](tests/test-output.txt).*
 
 ### Verify Design Specifications
 To verify that all concept Markdown files, types, and compositions strictly conform to sync-engine grammar and invariants:
@@ -129,9 +133,9 @@ bun run check
 2. **Buyer Discovery & Incremental Bidding**:
    Bob logs in as `bob@mit.edu` and configures his private contact details (`Bob Smith`, `bob@mit.edu`). Bob discovers Alice's bicycle on the marketplace feed under seller `NimbleFox`. Bob places an opening bid of **\$60** under his own pseudonym (e.g., `CleverRobin`).
 3. **Instant Buyout & Automated Closure**:
-   Later, Bob decides to guarantee the item and places an instant buyout bid of **\$75**. Because the bid reaches the buyout threshold, the `CloseOnBuyout` reaction immediately triggers `Auction.close`. The `SyncAuctionListingStatus` reaction instantly deactivates the listing and removes it from the active feed.
-4. **Private Bilateral Settlement**:
-   Upon auction closure, `NotifySellerOnClose` and `NotifyBuyerOnClose` resolve the counterparties' aliases back to their real student identities and deliver private settlement notifications:
-   - **Alice receives**: Notification that her bicycle sold for \$75 to Bob Smith (`bob@mit.edu`), along with Bob's contact details.
-   - **Bob receives**: Notification that he won the bicycle for \$75 from Alice Doe (`alice@mit.edu`), along with Alice's contact details.
-   - Alice and Bob contact each other directly to coordinate physical pickup at the Student Center and settle payment peer-to-peer.
+   Later, Bob decides to guarantee the item and confirms an instant buyout for **\$75**. The confirmation modal protects against accidental clicks; upon confirmation, the listing viewer cleanly closes, and the `CloseOnBuyout` reaction immediately triggers `Auction.close`. The `SyncAuctionListingStatus` reaction instantly deactivates the listing and removes it from the active feed.
+4. **Private Bilateral Settlement & Permanent Logging**:
+   Upon auction closure, `RecordSettlementOnClose` writes an immutable record into the Settlement Log containing both parties' verified names and contact methods. `NotifySellerOnClose` and `NotifyBuyerOnClose` alert both parties to review their Settlement Log:
+   - **Alice receives**: Notification that her bicycle sold for \$75, referencing the Settlement Log where Bob Smith's contact details (`bob@mit.edu`) are permanently preserved.
+   - **Bob receives**: Notification that he won the bicycle for \$75, referencing the Settlement Log where Alice Doe's contact details (`alice@mit.edu`, `617-555-0101`) are permanently preserved.
+   - Dismissing temporary notifications does not alter the immutable Settlement Log. Alice and Bob contact each other directly to coordinate physical pickup at the Student Center and settle payment peer-to-peer.

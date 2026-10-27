@@ -12,7 +12,7 @@
 
 ## 1. System Architecture & Concept Independence
 
-BeaverBazaar is structured following strict **Concept Design** principles using `@mit-sdg/sync-engine`. The domain is partitioned into six self-contained, independent concepts that never directly reference or import each other:
+BeaverBazaar is structured following strict **Concept Design** principles using `@mit-sdg/sync-engine`. The domain is partitioned into seven self-contained, independent concepts that never directly reference or import each other:
 
 ```mermaid
 graph TD
@@ -23,6 +23,7 @@ graph TD
   Pseudonyming[Pseudonyming]
   Auctioning[Auctioning]
   Notifying[Notifying]
+  Settling[Settling]
 
   User -->|Touchstone Auth| Sessioning
   Sessioning -->|Session Token| Composition((BeaverBazaar Composition))
@@ -31,6 +32,7 @@ graph TD
   Composition --> Pseudonyming
   Composition --> Auctioning
   Composition --> Notifying
+  Composition --> Settling
 ```
 
 ### Core Concepts
@@ -43,6 +45,7 @@ graph TD
 | **[Pseudonyming](design/concepts/Pseudonyming.md)** | Contextual, bijective alias generation | `Pseudonyms(context, user, alias)` | `getAlias`, `getUser` |
 | **[Auctioning](design/concepts/Auctioning.md)** | Competitive incremental bidding and buyouts | `Auctions(owner, item, price, increment, active, buyout, highestBidder)` | `create`, `bid`, `close`, `delete`, `_get`, `_active`, `_byItem` |
 | **[Notifying](design/concepts/Notifying.md)** | Asynchronous notification queue for users | `Notifications(user, message)` | `notify`, `dismiss`, `_all` |
+| **[Settling](design/concepts/Settling.md)** | Record immutable, readonly bilateral settlements | `Settlements(buyer, seller, item, title, price, buyerAlias, sellerAlias, buyerName, buyerContact, sellerName, sellerContact, settledAt)` | `record`, `_forUser` |
 
 ---
 
@@ -64,11 +67,17 @@ The application has undergone several major architectural refinements from the i
 
 ### D. Automated Lifecycle Cascades (`Reactions`)
 * **P1 Initial Proposal**: Manual coordination between bidding, listing deactivation, and notification.
-* **P4 Implementation**: Automated via four sync-engine reactions that propagate state transitions without coupling concepts:
+* **P4 Implementation**: Automated via six sync-engine reactions that propagate state transitions without coupling concepts:
   1. `CloseOnBuyout`: Automatically ends an auction when a bid meets or exceeds the buyout threshold.
   2. `SyncAuctionListingStatus`: Deactivates the public `Listing` as soon as the `Auction` closes.
-  3. `NotifySellerOnClose`: Dispatches private contact details and concluded price to the seller.
-  4. `NotifyBuyerOnClose`: Dispatches private contact details and concluded price to the buyer.
+  3. `RecordSettlementOnClose`: Records an immutable bilateral `Settlement` between buyer and seller with final terms and registered contact methods.
+  4. `NotifySellerOnClose`: Dispatches a notification to the seller informing them of the sale and referencing the Settlement Log.
+  5. `NotifyBuyerOnClose`: Dispatches a notification to the winning buyer informing them of their win and referencing the Settlement Log.
+  6. `NotifyOutbidOnBid`: Detects when a bidder is displaced on an incremental bid and dispatches an outbid notification with deep-linking to the listing drawer.
+
+### E. Decoupling Settlements from Ephemeral Notifications (`Settling`)
+* **P1/P3 Architecture**: Settlement details were stored exclusively inside notification strings. Dismissing a notification lost the counterparty's contact details permanently.
+* **P4 Implementation**: Decoupled into a dedicated `Settling` concept that persists an append-only, readonly log of concluded transactions (`/settlements/list`). Notifications remain transient and dismissable without affecting settlement logs. Added deep-linking ("View Listing →") for outbid notices and confirmation prompts before irreversible actions (bids, buyouts, early finalizations, deletions).
 
 ---
 
@@ -89,9 +98,13 @@ Following user feedback during the P3 milestone, several UX and interface improv
 2. **Simplified Authentication & Session Management**:
    Removed confusing boilerplate notices from the auth landing page and consolidated Profile Settings and Account Switching into a single screen with prominent active Kerberos session indicators.
 3. **Information Hierarchy in Inboxes**:
-   Partitioned the quick notification drawer (concise badge tags) from the full Settlement Inbox (structured cards detailing item name, concluded price, counterparty alias, verified student identity, and offline payment instructions).
+   Partitioned the quick notification drawer (concise badge tags) from the permanent Settlement Log (structured cards detailing item name, concluded price, counterparty alias, verified student identity, and offline payment instructions).
 4. **Mobile-First Responsive Layout**:
    Refactored CSS grid declarations (`repeat(auto-fill, minmax(min(100%, 22rem), 1fr))`) and converted navigation tabs into swipeable bars on viewports $\le 640\text{px}$, preventing horizontal clipping on mobile devices.
+5. **Confirmation Modals for Irreversible Actions**:
+   Added confirmation dialog prompts before placing bids, instant buyouts, finalizing auctions, and deleting unbid listings to prevent accidental clicks. On instant buyout, the listing drawer cleanly closes.
+6. **Marketplace Search & Scope Filtering**:
+   Implemented client-side keyword search with title/description scoping and role/status filtering ('Mine', 'Winning', 'Has Bids', 'Unbid', 'Instant Buyout').
 
 ---
 
@@ -124,8 +137,10 @@ All endpoints enforce strict authorization and access control policies:
 
 ## 5. Test Suite & Quality Verification
 
-BeaverBazaar maintains a comprehensive test suite with 26 passing tests across 8 test suites:
+BeaverBazaar maintains a comprehensive test suite with 65 passing tests across 11 test suites:
 
-* **Concept Isolation Tests** (`tests/concepts/*.test.ts`): Verify operational principles, action partition domains, input boundary checks, and refusals for each of the 6 concepts in complete isolation.
-* **End-to-End Composition Tests** (`tests/compositions/BeaverBazaar.test.ts`): Verify full multi-user marketplace scenarios (Alice listing, Bob bidding, buyout reaction cascade, listing deactivation, bilateral settlement dispatch, and deletion access controls).
+* **Concept Isolation Tests** (`tests/concepts/*.test.ts`): Verify operational principles, action partition domains, input boundary checks, reverse-chronological query ordering, and refusals for each of the 7 concepts (`Sessioning`, `Profiling`, `Listing`, `Pseudonyming`, `Auctioning`, `Notifying`, `Settling`) in complete isolation.
+* **End-to-End Composition Tests** (`tests/compositions/BeaverBazaar.test.ts`): Verify full multi-user marketplace scenarios (Alice listing, Bob bidding, buyout reaction cascade, listing deactivation, permanent bilateral settlement dispatch, outbid notifications, and deletion access controls).
+* **Security & Vulnerability Tests** (`tests/security/SecurityVulnerabilities.test.ts`): Verify protections against NoSQL injection attacks, price and bid bounds, string length constraints, and malicious image URI / XSS sanitization.
+* **Marketplace Store & Filter Tests** (`tests/web/marketplaceStore.test.ts`): Verify client-side keyword search across title and description scopes, status filtering ('Mine', 'Winning', 'Buyout'), and listing constraints.
 * **OIDC Integration Tests** (`tests/auth/PetrockOIDC.test.ts`): Verify RFC 6749 Basic auth encoding, authorization URL parameters, and claims parsing for MIT Touchstone.
