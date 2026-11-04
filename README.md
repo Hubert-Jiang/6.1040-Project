@@ -10,6 +10,7 @@
 - **Demo Videos**: [P3 Beta Demo](https://youtu.be/PPSDaQ8sFDY) & [P4 Code-Complete Demo](https://youtu.be/siV2iYF6g9s)
 - **Design Document (P4)**: [DESIGN.md](DESIGN.md)
 - **Visual Design Study**: [Slide Presentation](https://docs.google.com/presentation/d/1lUvhIHo5sWtdN6N_uokCQdJ0MAK1Sp8GE7qkBk96m_0/edit?usp=sharing)
+- **User Study**: [user-study.md](user-study.md)
 - **Concept Specifications**:
   - [`Auctioning`](design/concepts/Auctioning.md) — Incremental bidding, buyout thresholds, and status progression.
   - [`Listing`](design/concepts/Listing.md) — Public item listings and seller lifecycle management.
