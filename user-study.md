@@ -19,13 +19,15 @@ For this user study, we had two participants. The first participant seemed to ha
 - However, users will still be able to use the application regardless of understanding how the pseudonyms work
 - Physical flaw; such information is present but not super clear or accessible
 - Moderate flaw; it is pretty important to how the application is designed and also the identity of why the concepts are the way they are
+- Could do a brief tutorial that explains how pseudonyms work
 
-### Uninformative errors
+### Uninformative Errors
 - Many interactions are missing feedback, especially on unexpected errors
 - Server errors are uninformative
 - Physical flaw; the errors are completely missing
 - Major flaw; users are left bewildered as to why the interaction is failing
 - Issue worsens if only one attachment is illegal, but the rest are fine; the user wouldn't know why unless they looked closer
+- When server errors with `400` or simillar, supply more information
 
 ### Sorting by listings not owned
 - The users never mentioned this, but while pre-populating the listings, I noticed that there was no option to filter by listings owned by others
